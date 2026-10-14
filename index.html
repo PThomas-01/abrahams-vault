@@ -1,0 +1,292 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Abraham's Vault | Discover Cinema</title>
+    <meta name="description" content="Discover trending movies, explore cinema, and build your personal watchlist.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Authentication section */
+        #auth-links {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        #user-links {
+            display: none;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #welcome-user {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .logout-btn {
+            display: inline-block;
+            padding: 9px 14px;
+            background: #e50914;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: #b80710;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        @media (max-width: 900px) {
+            #user-links {
+                gap: 6px;
+            }
+
+            #welcome-user {
+                font-size: 12px;
+            }
+
+            .logout-btn {
+                padding: 7px 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+
+        <a href="index.html" class="logo">
+            ABRAHAM'S <span>VAULT</span><i>.</i>
+        </a>
+
+        <nav class="nav-links">
+            <a href="index.html" class="active">Home</a>
+            <a href="index.html#trending">Discover</a>
+            <a href="index.html#popular">Collection</a>
+            <a href="my-list.html">My Watchlist</a>
+
+            <!-- Shown when logged out -->
+            <span id="auth-links">
+                <a href="login.html">Log In</a>
+                <a href="signup.html">Sign Up</a>
+            </span>
+
+            <!-- Shown when logged in -->
+            <span id="user-links">
+                <span id="welcome-user"></span>
+
+                <button
+                    type="button"
+                    id="logout-btn"
+                    class="logout-btn"
+                >
+                    Log Out
+                </button>
+            </span>
+        </nav>
+
+        <div class="nav-actions">
+
+            <button
+                class="icon-btn"
+                id="search-toggle"
+                type="button"
+                aria-label="Open search"
+            >⌕</button>
+
+            <a href="#trending" class="explore-btn">
+                Explore Movies <span>↗</span>
+            </a>
+
+        </div>
+
+    </header>
+
+    <main>
+
+        <!-- HERO SECTION -->
+        <section class="hero">
+
+            <div class="hero-backdrop"></div>
+
+            <div class="hero-content">
+
+                <div class="eyebrow">
+                    <span class="live-dot"></span>
+                    YOUR NEXT MOVIE NIGHT STARTS HERE
+                </div>
+
+                <h1>
+                    Stories that<br>
+                    stay with <span>you.</span>
+                </h1>
+
+                <p class="hero-description">
+                    From unforgettable classics to the latest releases,
+                    discover the movies worth your time.
+                </p>
+
+                <div class="hero-buttons">
+                    <a href="#trending" class="primary-btn">
+                        Explore Movies <span>→</span>
+                    </a>
+
+                    <a href="#popular" class="secondary-btn">
+                        Browse Collection
+                    </a>
+                </div>
+
+                <div class="hero-note">
+                    <span class="note-line"></span>
+                    A WORLD OF CINEMA, ALL IN ONE PLACE
+                </div>
+
+            </div>
+
+            <div class="hero-index">
+                <span>01</span>
+                <span class="index-line"></span>
+                <span>03</span>
+            </div>
+
+        </section>
+
+        <!-- TRENDING MOVIES -->
+        <section class="movie-section" id="trending">
+
+            <div class="section-heading">
+                <div>
+                    <p class="section-kicker">HANDPICKED FOR YOU</p>
+                    <h2>Trending <span>now.</span></h2>
+                </div>
+
+                <a href="#popular" class="view-all">
+                    Explore collection <span>↗</span>
+                </a>
+            </div>
+
+          ```html
+<div class="filter-row">
+    <div class="filter-pills" id="industry-filters">
+        <button class="filter-pill selected" data-language="all" type="button">All Movies</button>
+        <button class="filter-pill" data-language="en" type="button">Hollywood</button>
+        <button class="filter-pill" data-language="ml" type="button">Mollywood</button>
+        <button class="filter-pill" data-language="te" type="button">Tollywood</button>
+        <button class="filter-pill" data-language="hi" type="button">Bollywood</button>
+    </div>
+
+    <span class="results-label">EXPLORE BY INDUSTRY</span>
+</div>
+
+<div class="filter-row">
+    <div class="filter-pills" id="genre-filters">
+        <button class="filter-pill selected" data-genre-id="all" type="button">All Genres</button>
+    </div>
+    <span class="results-label">FILTER BY GENRE</span>
+</div>
+```
+
+                <span class="results-label">
+                    LIVE MOVIE COLLECTION
+                </span>
+
+            </div>
+
+            <p id="movie-status" class="demo-note" role="status">
+                Loading movies from TMDB...
+            </p>
+
+            <div class="movie-grid" id="movie-grid"></div>
+
+        </section>
+
+        <!-- COLLECTION BANNER -->
+        <section class="collection-banner" id="popular">
+
+            <div>
+                <p class="section-kicker">YOUR PERSONAL CINEMA</p>
+
+                <h2>
+                    One more film.<br>
+                    <span>One more memory.</span>
+                </h2>
+
+                <p>
+                    Build a collection of films you love and find your next favourite.
+                </p>
+            </div>
+
+            <a href="#trending" class="primary-btn">
+                Discover your next film <span>→</span>
+            </a>
+
+        </section>
+
+        <!-- WATCHLIST -->
+        <section class="watchlist-section" id="watchlist">
+
+            <div class="section-heading">
+                <div>
+                    <p class="section-kicker">SAVED FOR LATER</p>
+                    <h2>My <span>watchlist.</span></h2>
+                </div>
+            </div>
+
+            <div id="watchlist-items" class="watchlist-items">
+                <p class="empty-watchlist">
+                    Your watchlist is waiting for its first film.
+                    Tap + on any movie to save it.
+                </p>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+
+        <a href="index.html" class="logo">
+            ABRAHAM'S <span>VAULT</span><i>.</i>
+        </a>
+
+        <p>Made for people who love a good story.</p>
+
+        <span>© 2026 Abraham's Vault · Discover cinema</span>
+
+    </footer>
+
+    <!-- Existing movie functionality -->
+    <script src="script.js"></script>
+
+    <!-- Login status, username and logout -->
+    <script src="navbar.js"></script>
+
+</body>
+</html>
+```
+

@@ -1,0 +1,513 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Abraham's Vault</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gold: #ffb547;
+            --background: #0b0b0d;
+            --card: #151518;
+            --text: #ffffff;
+            --muted: #a5a5ad;
+            --border: #303036;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background:
+                radial-gradient(ellipse at top, #292015 0%, transparent 55%),
+                var(--background);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 430px;
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .brand h1 {
+            font-size: 32px;
+            letter-spacing: 1px;
+        }
+
+        .brand span {
+            color: var(--gold);
+        }
+
+        .brand p {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .auth-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 18px 55px rgba(0, 0, 0, 0.35);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            padding: 5px;
+            margin-bottom: 26px;
+            background: #0b0b0d;
+            border-radius: 10px;
+        }
+
+        .tab {
+            flex: 1;
+            border: none;
+            border-radius: 7px;
+            padding: 12px;
+            background: transparent;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            background: var(--gold);
+            color: #17120a;
+        }
+
+        h2 {
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+
+        .description {
+            margin-bottom: 24px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            outline: none;
+            background: #0e0e11;
+            color: var(--text);
+            font-size: 15px;
+        }
+
+        input:focus {
+            border-color: var(--gold);
+        }
+
+        input::placeholder {
+            color: #777780;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 9px;
+            background: var(--gold);
+            color: #17120a;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .submit-button:hover {
+            opacity: 0.9;
+        }
+
+        .submit-button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .message {
+            display: none;
+            margin-bottom: 18px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.error {
+            background: #351719;
+            border: 1px solid #74343a;
+            color: #ffb6ba;
+        }
+
+        .message.success {
+            background: #17301f;
+            border: 1px solid #326744;
+            color: #b5f2c6;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 22px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: var(--gold);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 23px 20px;
+            }
+
+            .brand h1 {
+                font-size: 27px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="auth-container">
+
+        <header class="brand">
+            <h1>ABRAHAM'S <span>VAULT</span></h1>
+            <p>Your personal destination for movies.</p>
+        </header>
+
+        <section class="auth-card">
+
+            <div class="tabs">
+                <button
+                    type="button"
+                    class="tab active"
+                    id="login-tab"
+                    aria-selected="true">
+                    Login
+                </button>
+
+                <button
+                    type="button"
+                    class="tab"
+                    id="register-tab"
+                    aria-selected="false">
+                    Register
+                </button>
+            </div>
+
+            <div id="message" class="message" role="status"
+                 aria-live="polite"></div>
+
+            <!-- LOGIN FORM -->
+
+            <form id="login-form">
+                <h2>Welcome back</h2>
+                <p class="description">
+                    Log in to access your saved movies, ratings and reviews.
+                </p>
+
+                <div class="field">
+                    <label for="login-email">Email address</label>
+                    <input
+                        type="email"
+                        id="login-email"
+                        name="email"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required>
+                </div>
+
+                <div class="field">
+                    <label for="login-password">Password</label>
+                    <input
+                        type="password"
+                        id="login-password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required>
+                </div>
+
+                <button type="submit" class="submit-button">
+                    Login to Vault
+                </button>
+            </form>
+
+            <!-- REGISTRATION FORM -->
+
+            <form id="register-form" class="hidden">
+                <h2>Create your account</h2>
+                <p class="description">
+                    Join Abraham's Vault and start building your movie list.
+                </p>
+
+                <div class="field">
+                    <label for="register-username">Username</label>
+                    <input
+                        type="text"
+                        id="register-username"
+                        name="username"
+                        placeholder="Choose a username"
+                        autocomplete="username"
+                        maxlength="50"
+                        required>
+                </div>
+
+                <div class="field">
+                    <label for="register-email">Email address</label>
+                    <input
+                        type="email"
+                        id="register-email"
+                        name="email"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required>
+                </div>
+
+                <div class="field">
+                    <label for="register-password">Password</label>
+                    <input
+                        type="password"
+                        id="register-password"
+                        name="password"
+                        placeholder="Create a password"
+                        autocomplete="new-password"
+                        minlength="8"
+                        required>
+                </div>
+
+                <button type="submit" class="submit-button">
+                    Create Account
+                </button>
+            </form>
+
+        </section>
+
+        <a href="index.html" class="back-link">
+            ← Back to Abraham's Vault
+        </a>
+
+    </main>
+
+    <script>
+        const API_BASE_URL = "http://localhost:3000/api";
+
+        const loginForm = document.getElementById("login-form");
+        const registerForm = document.getElementById("register-form");
+
+        const loginTab = document.getElementById("login-tab");
+        const registerTab = document.getElementById("register-tab");
+
+        const messageBox = document.getElementById("message");
+
+        function showMessage(message, type = "error") {
+            messageBox.textContent = message;
+            messageBox.className = `message show ${type}`;
+        }
+
+        function clearMessage() {
+            messageBox.textContent = "";
+            messageBox.className = "message";
+        }
+
+        function switchTab(mode) {
+            clearMessage();
+
+            const showLogin = mode === "login";
+
+            loginForm.classList.toggle("hidden", !showLogin);
+            registerForm.classList.toggle("hidden", showLogin);
+
+            loginTab.classList.toggle("active", showLogin);
+            registerTab.classList.toggle("active", !showLogin);
+
+            loginTab.setAttribute("aria-selected", String(showLogin));
+            registerTab.setAttribute("aria-selected", String(!showLogin));
+        }
+
+        loginTab.addEventListener("click", () => switchTab("login"));
+        registerTab.addEventListener("click", () => switchTab("register"));
+
+        async function sendRequest(endpoint, payload) {
+            const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error ||
+                    data.message ||
+                    `Request failed (${response.status}).`
+                );
+            }
+
+            return data;
+        }
+
+        // LOGIN
+
+        loginForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const submitButton = loginForm.querySelector(
+                'button[type="submit"]'
+            );
+
+            submitButton.disabled = true;
+            submitButton.textContent = "Logging in...";
+            clearMessage();
+
+            const email = document.getElementById("login-email")
+                .value.trim();
+
+            const password = document.getElementById("login-password")
+                .value;
+
+            try {
+                const data = await sendRequest("login", {
+                    email,
+                    password
+                });
+
+                // server.js returns userId, username and token directly.
+                if (
+                    !data.token ||
+                    data.userId == null ||
+                    !data.username
+                ) {
+                    throw new Error(
+                        "The server response is missing account details. " +
+                        "Please check the login route in server.js."
+                    );
+                }
+
+                sessionStorage.setItem("vaultToken", data.token);
+                sessionStorage.setItem(
+                    "vaultUserId",
+                    String(data.userId)
+                );
+                sessionStorage.setItem(
+                    "vaultUsername",
+                    data.username
+                );
+
+                showMessage("Login successful! Opening your Vault...", "success");
+
+                window.location.href = "index.html";
+
+            } catch (error) {
+                console.error("Login error:", error);
+                showMessage(error.message);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = "Login to Vault";
+            }
+        });
+
+        // REGISTRATION
+
+        registerForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const submitButton = registerForm.querySelector(
+                'button[type="submit"]'
+            );
+
+            submitButton.disabled = true;
+            submitButton.textContent = "Creating account...";
+            clearMessage();
+
+            const username = document.getElementById("register-username")
+                .value.trim();
+
+            const email = document.getElementById("register-email")
+                .value.trim();
+
+            const password = document.getElementById("register-password")
+                .value;
+
+            try {
+                const data = await sendRequest("register", {
+                    username,
+                    email,
+                    password
+                });
+
+                showMessage(
+                    data.message ||
+                    "Account created! You can now log in.",
+                    "success"
+                );
+
+                registerForm.reset();
+
+                setTimeout(() => {
+                    switchTab("login");
+                    document.getElementById("login-email").value = email;
+                }, 1000);
+
+            } catch (error) {
+                console.error("Registration error:", error);
+                showMessage(error.message);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = "Create Account";
+            }
+        });
+    </script>
+
+</body>
+</html>

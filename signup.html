@@ -1,0 +1,408 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Abraham's Vault</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+            font-family: Arial, sans-serif;
+            background: #080808;
+            color: #fff;
+        }
+
+        .signup-container {
+            width: 100%;
+            max-width: 430px;
+            padding: 35px;
+            background: #141414;
+            border: 1px solid #292929;
+            border-radius: 14px;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.12);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .logo span {
+            color: #e50914;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 19px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #383838;
+            border-radius: 7px;
+            background: #202020;
+            color: white;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #e50914;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 48px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 19px;
+            padding: 5px;
+            color: white;
+        }
+
+        .toggle-password:focus-visible {
+            outline: 2px solid #e50914;
+            border-radius: 4px;
+        }
+
+        .signup-button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 7px;
+            background: #e50914;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .signup-button:hover {
+            background: #b80710;
+        }
+
+        .signup-button:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .message {
+            display: none;
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .message.success {
+            display: block;
+            color: #8df0a4;
+            background: #102417;
+            border: 1px solid #245c32;
+        }
+
+        .message.error {
+            display: block;
+            color: #ff9999;
+            background: #2b1111;
+            border: 1px solid #702525;
+        }
+
+        .login-link {
+            margin-top: 22px;
+            text-align: center;
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        a {
+            color: #e50914;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 18px;
+            text-align: center;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        @media (max-width: 480px) {
+            .signup-container {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="signup-container">
+        <div class="logo">ABRAHAM'S <span>VAULT</span></div>
+        <p class="subtitle">Create your account and enter your vault.</p>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Choose a username"
+                    minlength="3"
+                    maxlength="50"
+                    autocomplete="username"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email address</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    maxlength="254"
+                    autocomplete="email"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Create a password"
+                        minlength="8"
+                        maxlength="72"
+                        autocomplete="new-password"
+                        required
+                    >
+                    <button
+                        type="button"
+                        class="toggle-password"
+                        data-target="password"
+                        aria-label="Show password"
+                        aria-pressed="false"
+                    >👁️</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm password</label>
+                <div class="password-wrapper">
+                    <input
+                        type="password"
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        placeholder="Re-enter your password"
+                        minlength="8"
+                        maxlength="72"
+                        autocomplete="new-password"
+                        required
+                    >
+                    <button
+                        type="button"
+                        class="toggle-password"
+                        data-target="confirmPassword"
+                        aria-label="Show confirm password"
+                        aria-pressed="false"
+                    >👁️</button>
+                </div>
+            </div>
+
+            <button type="submit" class="signup-button" id="signupButton">
+                Create Account
+            </button>
+
+            <div
+                id="message"
+                class="message"
+                role="status"
+                aria-live="polite"
+            ></div>
+        </form>
+
+        <p class="login-link">
+            Already have an account?
+            <a href="login.html">Log in</a>
+        </p>
+
+        <a class="back-link" href="index.html">
+            ← Back to Abraham's Vault
+        </a>
+    </main>
+
+    <script>
+        const API_URL = "http://localhost:3000/api/auth/register";
+
+        const signupForm = document.getElementById("signupForm");
+        const signupButton = document.getElementById("signupButton");
+        const message = document.getElementById("message");
+
+        // Show or hide either password field.
+        document.querySelectorAll(".toggle-password").forEach(button => {
+            button.addEventListener("click", () => {
+                const input = document.getElementById(button.dataset.target);
+                const showPassword = input.type === "password";
+
+                input.type = showPassword ? "text" : "password";
+                button.textContent = showPassword ? "🙈" : "👁️";
+                button.setAttribute("aria-pressed", String(showPassword));
+                button.setAttribute(
+                    "aria-label",
+                    showPassword ? "Hide password" : "Show password"
+                );
+            });
+        });
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = "message " + type;
+        }
+
+        signupForm.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            const username = document.getElementById("username").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const confirmPassword =
+                document.getElementById("confirmPassword").value;
+
+            if (username.length < 3) {
+                showMessage(
+                    "Username must contain at least 3 characters.",
+                    "error"
+                );
+                return;
+            }
+
+            if (password.length < 8 || password.length > 72) {
+                showMessage(
+                    "Password must be between 8 and 72 characters.",
+                    "error"
+                );
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage("Passwords do not match.", "error");
+                return;
+            }
+
+            signupButton.disabled = true;
+            signupButton.textContent = "Creating Account...";
+            message.className = "message";
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        username,
+                        email,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message || "Unable to create your account."
+                    );
+                }
+
+                showMessage(
+                    "Account created successfully! You can now log in.",
+                    "success"
+                );
+
+                signupForm.reset();
+
+                document.querySelectorAll(".toggle-password").forEach(button => {
+                    button.textContent = "👁️";
+                    button.setAttribute("aria-pressed", "false");
+                    button.setAttribute(
+                        "aria-label",
+                        button.dataset.target === "password"
+                            ? "Show password"
+                            : "Show confirm password"
+                    );
+                });
+
+                setTimeout(() => {
+                    window.location.href = "login.html";
+                }, 1500);
+
+            } catch (error) {
+                showMessage(
+                    error.message === "Failed to fetch"
+                        ? "Cannot connect to the server. Make sure your backend is running."
+                        : error.message,
+                    "error"
+                );
+            } finally {
+                signupButton.disabled = false;
+                signupButton.textContent = "Create Account";
+            }
+        });
+    </script>
+
+</body>
+</html>
+```

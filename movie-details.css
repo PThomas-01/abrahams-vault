@@ -1,0 +1,133 @@
+
+.movie-details {
+    min-height: 80vh;
+    padding: 48px 7%;
+    color: #f4f1eb;
+}
+
+.details-backdrop {
+    min-height: 360px;
+    padding: 32px;
+    display: flex;
+    align-items: end;
+    background-size: cover;
+    background-position: center;
+    background-color: #19191c;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.details-content {
+    max-width: 750px;
+    padding: 24px;
+    border-radius: 8px;
+    background: rgba(10, 10, 12, 0.84);
+}
+
+.details-content h1 {
+    margin: 0 0 12px;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+}
+
+.details-meta {
+    color: #c3bdb3;
+    margin-bottom: 18px;
+}
+
+.details-overview {
+    line-height: 1.8;
+    color: #e0ddd7;
+}
+
+.details-lower {
+    display: flex;
+    gap: 28px;
+    margin-top: 28px;
+    align-items: start;
+}
+
+.details-poster {
+    width: 190px;
+    max-width: 35%;
+    border-radius: 8px;
+}
+
+.details-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.details-actions a,
+.details-actions button {
+    padding: 12px 18px;
+    border: 1px solid #8d877d;
+    border-radius: 5px;
+    background: #252528;
+    color: #f4f1eb;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.details-actions a:hover,
+.details-actions button:hover {
+    background: #3a3938;
+}
+
+@media (max-width: 650px) {
+    .movie-details {
+        padding: 24px 5%;
+    }
+
+    .details-backdrop {
+        padding: 16px;
+        min-height: 300px;
+    }
+
+    .details-content {
+        padding: 16px;
+    }
+
+    .details-lower {
+        gap: 16px;
+    }
+
+    .details-poster {
+        width: 120px;
+    }
+}
+
+.details-watchlist-btn {
+    background: #ffb547;
+    color: #0b0b0d;
+    border: 1px solid #ffb547;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.details-watchlist-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.details-watchlist-btn.is-saved {
+    background: transparent;
+    color: #ffb547;
+}
+
+.details-watchlist-btn:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.watchlist-status {
+    font-size: 13px;
+    color: #ffb547;
+    margin-top: 10px;
+}
+
