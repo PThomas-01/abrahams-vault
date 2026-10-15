@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,6 +16,59 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
+        /* Navbar logo image */
+     
+.navbar > .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.navbar > .logo img {
+    display: block;
+    width: auto;
+    height: 64px;
+    max-width: 120px;
+    object-fit: contain;
+}
+
+.navbar > .logo .logo-text {
+    font-family: 'Outfit', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+.navbar > .logo .logo-text > span {
+    color: #d9b66a;
+}
+
+.navbar > .logo .logo-text i {
+    color: #d9b66a;
+    font-style: normal;
+}
+
+@media (max-width: 600px) {
+    .navbar > .logo {
+        gap: 7px;
+    }
+
+    .navbar > .logo img {
+        height: 46px;
+        max-width: 75px;
+    }
+
+    .navbar > .logo .logo-text {
+        font-size: 18px;
+    }
+}
+
+
+
         /* Authentication section */
         #auth-links {
             display: inline-flex;
@@ -71,6 +124,15 @@
                 padding: 7px 10px;
             }
         }
+
+      
+@media (max-width: 600px) {
+    .navbar > .logo img {
+        height: 55px;
+        max-width: 230px;
+    }
+}
+
     </style>
 </head>
 
@@ -79,10 +141,12 @@
     <!-- NAVBAR -->
     <header class="navbar">
 
-        <a href="index.html" class="logo">
-            ABRAHAM'S <span>VAULT</span><i>.</i>
-        </a>
+<a href="index.html" class="logo" aria-label="Abraham's Vault Home">
+    <img src="assets/abrahams-vault-logo.png" alt="" aria-hidden="true">
+    <span class="logo-text">ABRAHAM'S <span>VAULT</span><i>.</i></span>
+</a>
 
+       
         <nav class="nav-links">
             <a href="index.html" class="active">Home</a>
             <a href="index.html#trending">Discover</a>
@@ -189,32 +253,29 @@
                 </a>
             </div>
 
-          ```html
-<div class="filter-row">
-    <div class="filter-pills" id="industry-filters">
-        <button class="filter-pill selected" data-language="all" type="button">All Movies</button>
-        <button class="filter-pill" data-language="en" type="button">Hollywood</button>
-        <button class="filter-pill" data-language="ml" type="button">Mollywood</button>
-        <button class="filter-pill" data-language="te" type="button">Tollywood</button>
-        <button class="filter-pill" data-language="hi" type="button">Bollywood</button>
-    </div>
+            <!-- Industry filters -->
+            <div class="filter-row">
+                <div class="filter-pills" id="industry-filters">
+                    <button class="filter-pill selected" data-language="all" type="button">All Movies</button>
+                    <button class="filter-pill" data-language="en" type="button">Hollywood</button>
+                    <button class="filter-pill" data-language="ml" type="button">Mollywood</button>
+                    <button class="filter-pill" data-language="te" type="button">Tollywood</button>
+                    <button class="filter-pill" data-language="hi" type="button">Bollywood</button>
+                </div>
 
-    <span class="results-label">EXPLORE BY INDUSTRY</span>
-</div>
-
-<div class="filter-row">
-    <div class="filter-pills" id="genre-filters">
-        <button class="filter-pill selected" data-genre-id="all" type="button">All Genres</button>
-    </div>
-    <span class="results-label">FILTER BY GENRE</span>
-</div>
-```
-
-                <span class="results-label">
-                    LIVE MOVIE COLLECTION
-                </span>
-
+                <span class="results-label">EXPLORE BY INDUSTRY</span>
             </div>
+
+            <!-- Genre filters -->
+            <div class="filter-row">
+                <div class="filter-pills" id="genre-filters">
+                    <button class="filter-pill selected" data-genre-id="all" type="button">All Genres</button>
+                </div>
+
+                <span class="results-label">FILTER BY GENRE</span>
+            </div>
+
+            <span class="results-label">LIVE MOVIE COLLECTION</span>
 
             <p id="movie-status" class="demo-note" role="status">
                 Loading movies from TMDB...
@@ -270,10 +331,6 @@
     <!-- FOOTER -->
     <footer class="footer">
 
-        <a href="index.html" class="logo">
-            ABRAHAM'S <span>VAULT</span><i>.</i>
-        </a>
-
         <p>Made for people who love a good story.</p>
 
         <span>© 2026 Abraham's Vault · Discover cinema</span>
@@ -288,5 +345,3 @@
 
 </body>
 </html>
-```
-

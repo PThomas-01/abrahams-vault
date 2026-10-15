@@ -42,6 +42,12 @@ function authenticateToken(req, res, next) {
         });
     }
 
+    if (!process.env.JWT_SECRET) {
+        return res.status(500).json({
+            error: "Authentication is not configured"
+        });
+    }
+
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
             return res.status(403).json({
@@ -90,10 +96,15 @@ app.get("/api/health", (req, res) => {
 app.get("/api/db-test", async (req, res) => {
     try {
         await pool.query("SELECT 1");
-        res.json({ status: "OK", database: "Connected" });
+        res.json({
+            status: "OK",
+            database: "Connected"
+        });
     } catch (error) {
         console.error("Database test error:", error.message);
-        res.status(500).json({ error: "Database connection failed" });
+        res.status(500).json({
+            error: "Database connection failed"
+        });
     }
 });
 
@@ -118,11 +129,18 @@ app.post("/api/register", async (req, res) => {
             });
         }
 
+        if (!process.env.JWT_SECRET) {
+            return res.status(500).json({
+                error: "Authentication is not configured"
+            });
+        }
+
         const cleanUsername = username.trim();
         const cleanEmail = email.trim();
 
         const [existing] = await pool.execute(
-            "SELECT id FROM users WHERE username = ? OR email = ?",
+            `SELECT id FROM users
+             WHERE username = ? OR email = ?`,
             [cleanUsername, cleanEmail]
         );
 
@@ -154,7 +172,9 @@ app.post("/api/register", async (req, res) => {
             });
         }
 
-        res.status(500).json({ error: "Registration failed" });
+        res.status(500).json({
+            error: "Registration failed"
+        });
     }
 });
 
@@ -172,6 +192,12 @@ app.post("/api/login", async (req, res) => {
         ) {
             return res.status(400).json({
                 error: "Email and password are required"
+            });
+        }
+
+        if (!process.env.JWT_SECRET) {
+            return res.status(500).json({
+                error: "Authentication is not configured"
             });
         }
 
@@ -216,15 +242,17 @@ app.post("/api/login", async (req, res) => {
         });
     } catch (error) {
         console.error("Login error:", error.message);
-        res.status(500).json({ error: "Login failed" });
+        res.status(500).json({
+            error: "Login failed"
+        });
     }
 });
 
 // =========================
 // TMDB API PROXY
-// Keeps the TMDB API key on the server
 // =========================
 
+// These fixed endpoints are allowed.
 const allowedFixedPaths = new Set([
     "/search/movie",
     "/discover/movie",
@@ -256,13 +284,17 @@ const allowedQueryKeys = new Set([
     "language"
 ]);
 
+// Validate the requested TMDB endpoint.
 function isAllowedTmdbPath(path) {
     if (allowedFixedPaths.has(path)) {
         return true;
     }
 
-    return /^\/movie\/\d+$/.test(path) ||
-           /^\/movie\/\d+\/videos$/.test(path);
+    return (
+        /^\/movie\/\d+$/.test(path) ||
+        /^\/movie\/\d+\/videos$/.test(path) ||
+        /^\/movie\/\d+\/credits$/.test(path)
+    );
 }
 
 app.get("/api/tmdb", async (req, res) => {
@@ -290,11 +322,49 @@ app.get("/api/tmdb", async (req, res) => {
         params.set("api_key", apiKey);
 
         for (const [key, value] of Object.entries(req.query)) {
-            if (
-                key !== "path" &&
-                allowedQueryKeys.has(key) &&
-                typeof value === "string"
-            ) {
+            if (key === "path" || typeof value !== "string") {
+                continue;
+            }
+
+            // Only allow the specific appended resources
+            // required by the movie details page.
+            if (key === "append_to_response") {
+                const allowedAppendValues = new Set([
+                    "videos",
+                    "credits"
+                ]);
+
+                const requestedValues = value.split(",");
+
+                if (
+                    requestedValues.length === 0 ||
+                    requestedValues.some(
+                        item => !allowedAppendValues.has(item)
+                    ) ||
+                    new Set(requestedValues).size !==
+                        requestedValues.length
+                ) {
+                    return res.status(400).json({
+                        error: "TMDB append option is not allowed"
+                    });
+                }
+
+                // append_to_response is supported only on movie details.
+                if (!/^\/movie\/\d+$/.test(path)) {
+                    return res.status(400).json({
+                        error: "TMDB append option is not allowed for this endpoint"
+                    });
+                }
+
+                params.set(
+                    key,
+                    requestedValues.join(",")
+                );
+
+                continue;
+            }
+
+            if (allowedQueryKeys.has(key)) {
                 params.set(key, value);
             }
         }
@@ -314,6 +384,7 @@ app.get("/api/tmdb", async (req, res) => {
         res.json(data);
     } catch (error) {
         console.error("TMDB error:", error.message);
+
         res.status(500).json({
             error: "Unable to retrieve movie data"
         });
@@ -322,9 +393,6 @@ app.get("/api/tmdb", async (req, res) => {
 
 // =========================
 // WATCHLIST / MY LIST
-// Actual database columns:
-// id, user_id, tmdb_movie_id,
-// movie_title, poster_path, added_at
 // =========================
 
 // Get My List
@@ -370,6 +438,7 @@ app.post(
             if (!checkUserAccess(req, res)) return;
 
             const userId = req.user.id;
+
             const movieId = Number(
                 req.body.movieId ??
                 req.body.tmdb_movie_id ??
@@ -411,12 +480,7 @@ app.post(
                 `INSERT INTO watchlist
                     (user_id, tmdb_movie_id, movie_title, poster_path)
                  VALUES (?, ?, ?, ?)`,
-                [
-                    userId,
-                    movieId,
-                    title.trim(),
-                    posterPath
-                ]
+                [userId, movieId, title.trim(), posterPath]
             );
 
             res.status(201).json({
@@ -462,7 +526,9 @@ app.delete(
                 });
             }
 
-            res.json({ message: "Movie removed from My List" });
+            res.json({
+                message: "Movie removed from My List"
+            });
         } catch (error) {
             console.error("Remove watchlist error:", error.message);
             res.status(500).json({
@@ -474,8 +540,6 @@ app.delete(
 
 // =========================
 // MOVIE RATINGS
-// Expected columns:
-// user_id, tmdb_movie_id, rating
 // =========================
 
 // Get community rating for a movie
@@ -532,7 +596,9 @@ app.get(
             );
 
             res.json({
-                rating: rows.length ? Number(rows[0].rating) : null
+                rating: rows.length
+                    ? Number(rows[0].rating)
+                    : null
             });
         } catch (error) {
             console.error("Get personal rating error:", error.message);
@@ -549,6 +615,7 @@ app.post("/api/ratings", authenticateToken, async (req, res) => {
         const movieId = Number(
             req.body.movieId ?? req.body.tmdb_movie_id
         );
+
         const rating = Number(req.body.rating);
 
         if (
@@ -586,9 +653,6 @@ app.post("/api/ratings", authenticateToken, async (req, res) => {
 
 // =========================
 // COMMUNITY REVIEWS
-// Expected columns:
-// id, user_id, tmdb_movie_id,
-// review_text, created_at, updated_at
 // =========================
 
 // Get community reviews for a movie
@@ -658,7 +722,9 @@ app.post("/api/reviews", authenticateToken, async (req, res) => {
             [req.user.id, movieId, reviewText.trim()]
         );
 
-        res.json({ message: "Review saved successfully" });
+        res.json({
+            message: "Review saved successfully"
+        });
     } catch (error) {
         console.error("Save review error:", error.message);
         res.status(500).json({
@@ -693,7 +759,9 @@ app.delete(
                 });
             }
 
-            res.json({ message: "Review deleted successfully" });
+            res.json({
+                message: "Review deleted successfully"
+            });
         } catch (error) {
             console.error("Delete review error:", error.message);
             res.status(500).json({
@@ -709,6 +777,10 @@ app.delete(
 
 async function startServer() {
     try {
+        if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET is missing from .env");
+        }
+
         await pool.query("SELECT 1");
 
         app.listen(PORT, () => {
@@ -717,7 +789,10 @@ async function startServer() {
             );
         });
     } catch (error) {
-        console.error("Database connection failed:", error.message);
+        console.error(
+            "Server startup failed:",
+            error.message
+        );
         process.exit(1);
     }
 }

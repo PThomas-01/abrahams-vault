@@ -161,7 +161,7 @@ async function toggleWatchlist(movie, button) {
     const movieId = Number(movie.id);
     const alreadySaved = savedMovies.has(movieId);
 
-    if (!Number.isFinite(movieId) || movieId <= 0) {
+    if (!Number.isSafeInteger(movieId) || movieId <= 0) {
         alert("Invalid movie ID. Please refresh the page and try again.");
         return;
     }
@@ -189,7 +189,7 @@ async function toggleWatchlist(movie, button) {
                         ...getAuthHeaders()
                     },
                     body: JSON.stringify({
-                        movieId: movieId,
+                        movieId,
                         title: movie.title || movie.original_title || "Untitled",
                         posterPath: movie.poster_path || null
                     })
@@ -574,7 +574,18 @@ function renderMovies() {
         card.className = "movie-card";
         card.style.cursor = "pointer";
 
+        // FIX: validate and save the selected ID before navigating.
         card.addEventListener("click", () => {
+            if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+                console.error("Invalid movie ID:", movie.id);
+                return;
+            }
+
+            sessionStorage.setItem(
+                "vaultSelectedMovieId",
+                String(movieId)
+            );
+
             window.location.href =
                 `movie-details.html?id=${encodeURIComponent(movieId)}`;
         });

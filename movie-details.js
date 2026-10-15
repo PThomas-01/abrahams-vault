@@ -3,7 +3,16 @@ const API_BASE_URL = "http://localhost:3000/api";
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";
 
 const params = new URLSearchParams(window.location.search);
-const movieId = Number(params.get("id"));
+const rawUrlId = params.get("id");
+const urlMovieId = Number(rawUrlId);
+const savedMovieId = Number(sessionStorage.getItem("vaultSelectedMovieId"));
+
+const movieId =
+    rawUrlId && Number.isSafeInteger(urlMovieId) && urlMovieId > 0
+        ? urlMovieId
+        : Number.isSafeInteger(savedMovieId) && savedMovieId > 0
+            ? savedMovieId
+            : NaN;
 
 const detailsContainer = document.getElementById("movie-details");
 const statusElement = document.getElementById("details-status");
@@ -15,7 +24,6 @@ let ratingCount = 0;
 let isSavingRating = false;
 let isInWatchlist = false;
 let ratingNotice = "";
-
 let reviews = [];
 let isSavingReview = false;
 let reviewNotice = "";
@@ -56,10 +64,7 @@ async function readResponse(response) {
 
 async function tmdbRequest(endpoint) {
     const url = new URL(endpoint, window.location.origin);
-
-    const proxyParams = new URLSearchParams({
-        path: url.pathname
-    });
+    const proxyParams = new URLSearchParams({ path: url.pathname });
 
     url.searchParams.forEach((value, key) => {
         proxyParams.set(key, value);
@@ -98,7 +103,6 @@ function formatDate(dateString) {
     if (!dateString) return "Date unavailable";
 
     const date = new Date(dateString);
-
     if (Number.isNaN(date.getTime())) return "Date unavailable";
 
     return date.toLocaleDateString("en-IN", {
@@ -115,17 +119,17 @@ function formatRuntime(minutes) {
     const remainingMinutes = minutes % 60;
 
     if (!hours) return `${remainingMinutes} min`;
-
     return `${hours}h ${remainingMinutes}m`;
 }
 
 // =====================================
-// LOAD MOVIE DETAILS
+// LOAD MOVIE DETAILS, CAST AND CREW
 // =====================================
 
 async function loadMovieDetails() {
-    if (!Number.isInteger(movieId) || movieId <= 0) {
-        statusElement.textContent = "Invalid movie link.";
+    if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+        statusElement.textContent =
+            "Invalid movie link. Return to the homepage and select a movie again.";
         return;
     }
 
@@ -133,9 +137,10 @@ async function loadMovieDetails() {
         statusElement.style.display = "block";
         statusElement.textContent = "Loading movie details...";
 
-        const [movie, videos] = await Promise.all([
+        const [movie, videos, credits] = await Promise.all([
             tmdbRequest(`/movie/${movieId}?language=en-US`),
-            tmdbRequest(`/movie/${movieId}/videos?language=en-US`)
+            tmdbRequest(`/movie/${movieId}/videos?language=en-US`),
+            tmdbRequest(`/movie/${movieId}/credits?language=en-US`)
         ]);
 
         currentMovie = movie;
@@ -145,8 +150,7 @@ async function loadMovieDetails() {
             video.type === "Trailer" &&
             video.official
         ) || videos.results?.find(video =>
-            video.site === "YouTube" &&
-            video.type === "Trailer"
+            video.site === "YouTube" && video.type === "Trailer"
         );
 
         const backdrop = movie.backdrop_path
@@ -161,6 +165,39 @@ async function loadMovieDetails() {
             .map(genre => escapeHTML(genre.name))
             .join(" · ");
 
+        const cast = (credits.cast || []).slice(0, 12);
+        const crew = credits.crew || [];
+        const director = crew.find(person => person.job === "Director");
+
+        const castMarkup = cast.length
+            ? cast.map(person => {
+                const profile = person.profile_path
+                    ? `${IMAGE_BASE_URL}w185${person.profile_path}`
+                    : "";
+
+                return `
+                    <article class="cast-card">
+                        <div class="cast-photo">
+                            ${
+                                profile
+                                    ? `<img src="${profile}" alt="${escapeHTML(person.name)}" loading="lazy">`
+                                    : `<div class="cast-photo-placeholder">?</div>`
+                            }
+                        </div>
+                        <div class="cast-info">
+                            <h3>${escapeHTML(person.name || "Unknown")}</h3>
+                            <p>${escapeHTML(person.character || "Role unavailable")}</p>
+                        </div>
+                    </article>
+                `;
+            }).join("")
+            : `<p class="cast-unavailable">Cast information is unavailable for this movie.</p>`;
+
+        /*
+         * IMPORTANT LAYOUT CHANGE:
+         * Poster, movie information, cast, ratings and reviews are
+         * direct children of .details-content.
+         */
         detailsContainer.innerHTML = `
             <section class="details-backdrop"
                 style="${backdrop
@@ -169,6 +206,7 @@ async function loadMovieDetails() {
             </section>
 
             <section class="details-content">
+
                 <div class="details-poster">
                     ${
                         poster
@@ -210,6 +248,13 @@ async function loadMovieDetails() {
                         ${genres || "Genres unavailable"}
                     </p>
 
+                    ${director ? `
+                        <p class="details-director">
+                            <strong>Director:</strong>
+                            ${escapeHTML(director.name)}
+                        </p>
+                    ` : ""}
+
                     <h2>Synopsis</h2>
 
                     <p class="details-overview">
@@ -238,29 +283,43 @@ async function loadMovieDetails() {
                                 : ""
                         }
                     </div>
-
-                    <section id="community-rating" class="community-rating">
-                        <h2>Abraham's Vault Rating</h2>
-                        <p class="rating-loading">Loading community ratings...</p>
-                    </section>
-
-                    <section id="movie-reviews" class="movie-reviews">
-                        <div class="reviews-heading">
-                            <h2>Community Reviews</h2>
-                            <p class="reviews-subtitle">
-                                Share your thoughts about this movie.
-                            </p>
-                        </div>
-
-                        <div id="review-form-container"></div>
-
-                        <div id="reviews-status" aria-live="polite">
-                            Loading reviews...
-                        </div>
-
-                        <div id="reviews-list"></div>
-                    </section>
                 </div>
+
+                <!-- CAST IS NOW OUTSIDE details-info -->
+                <section id="cast-section" class="cast-section">
+                    <h2>Cast &amp; Crew</h2>
+                    <p class="cast-subtitle">
+                        Meet the people behind this movie.
+                    </p>
+                    <div class="cast-grid">
+                        ${castMarkup}
+                    </div>
+                </section>
+
+                <!-- RATINGS ARE NOW OUTSIDE details-info -->
+                <section id="community-rating" class="community-rating">
+                    <h2>Abraham's Vault Rating</h2>
+                    <p class="rating-loading">Loading community ratings...</p>
+                </section>
+
+                <!-- REVIEWS ARE NOW OUTSIDE details-info -->
+                <section id="movie-reviews" class="movie-reviews">
+                    <div class="reviews-heading">
+                        <h2>Community Reviews</h2>
+                        <p class="reviews-subtitle">
+                            Share your thoughts about this movie.
+                        </p>
+                    </div>
+
+                    <div id="review-form-container"></div>
+
+                    <div id="reviews-status" aria-live="polite">
+                        Loading reviews...
+                    </div>
+
+                    <div id="reviews-list"></div>
+                </section>
+
             </section>
         `;
 
@@ -357,7 +416,6 @@ function renderRatingSection() {
 
         <div class="community-rating-summary">
             <div class="community-average">${escapeHTML(averageText)}</div>
-
             <div class="community-average-stars">${starDisplay}</div>
 
             <p class="rating-vote-count">
@@ -416,7 +474,12 @@ async function saveRating(rating) {
         return;
     }
 
-    if (isSavingRating || !Number.isInteger(rating) || rating < 1 || rating > 5) {
+    if (
+        isSavingRating ||
+        !Number.isInteger(rating) ||
+        rating < 1 ||
+        rating > 5
+    ) {
         return;
     }
 
@@ -444,7 +507,7 @@ async function saveRating(rating) {
 }
 
 // =====================================
-// MYSQL WATCHLIST — FIXED ROUTES
+// MYSQL WATCHLIST
 // =====================================
 
 async function loadWatchlistStatus() {
@@ -459,8 +522,6 @@ async function loadWatchlistStatus() {
 
     try {
         const userId = encodeURIComponent(getUserId());
-
-        // Backend route is GET /api/watchlist/:userId
         const movies = await apiRequest(`/watchlist/${userId}`);
 
         isInWatchlist = Array.isArray(movies) && movies.some(movie =>
@@ -494,15 +555,12 @@ async function toggleWatchlist() {
 
     try {
         if (isInWatchlist) {
-            // Backend route is DELETE /api/watchlist/:userId/:movieId
             await apiRequest(
                 `/watchlist/${userId}/${movieIdPath}`,
                 { method: "DELETE" }
             );
-
             isInWatchlist = false;
         } else {
-            // Backend route is POST /api/watchlist/:userId
             await apiRequest(`/watchlist/${userId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -512,7 +570,6 @@ async function toggleWatchlist() {
                     posterPath: currentMovie.poster_path || null
                 })
             });
-
             isInWatchlist = true;
         }
 
@@ -521,9 +578,7 @@ async function toggleWatchlist() {
             : "Add to My List";
     } catch (error) {
         console.error("Watchlist update error:", error);
-        console.error("Watchlist API message:", error.message);
         button.textContent = "My List update failed";
-
         window.alert(`Could not update My List: ${error.message}`);
     } finally {
         button.disabled = false;
