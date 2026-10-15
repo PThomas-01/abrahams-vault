@@ -20,18 +20,19 @@ Abraham's Vault is a movie discovery web application that helps users explore fi
 
 *Note: Feature availability on the live website depends on the deployed frontend, backend, database, and API configuration.*
 
-🏠 Homepage
-![alt text](homepage.png)
+## 📸 Screenshots
 
-🎬 Movie Details
-![alt text](movie-details.png)
+### 🏠 Homepage
+![Homepage](screenshots/homepage.png)
 
-🔐 Login Page
-![alt text](loginpage.png)
+### 🎬 Movie Details
+![Movie Details](screenshots/movie-details.png)
 
-📋 My Watchlist
-![alt text](mywatchlist.png)
+### 🔐 Login Page
+![Login Page](screenshots/loginpage.png)
 
+### 📋 My Watchlist
+![My Watchlist](screenshots/mywatchlist.png)
 
 ## 🛠️ Tech Stack
 
