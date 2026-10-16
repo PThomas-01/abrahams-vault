@@ -8,10 +8,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
 // =========================
 // DATABASE CONNECTION
@@ -23,6 +23,16 @@ const pool = mysql.createPool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME || "abraham_vault",
+
+    // DB_SSL_CA should contain the contents of ca.pem on Render.
+    // Locally, leave DB_SSL_CA unset if using local MySQL.
+    ssl: process.env.DB_SSL_CA
+        ? {
+            ca: process.env.DB_SSL_CA.replace(/\\n/g, "\n"),
+            rejectUnauthorized: true
+        }
+        : undefined,
+
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -55,10 +65,7 @@ function authenticateToken(req, res, next) {
             });
         }
 
-        req.user = {
-            id: Number(decoded.userId)
-        };
-
+        req.user = { id: Number(decoded.userId) };
         next();
     });
 }
@@ -83,7 +90,7 @@ function checkUserAccess(req, res) {
 }
 
 // =========================
-// HEALTH CHECK
+// HEALTH CHECKS
 // =========================
 
 app.get("/api/health", (req, res) => {
@@ -96,12 +103,14 @@ app.get("/api/health", (req, res) => {
 app.get("/api/db-test", async (req, res) => {
     try {
         await pool.query("SELECT 1");
+
         res.json({
             status: "OK",
             database: "Connected"
         });
     } catch (error) {
         console.error("Database test error:", error.message);
+
         res.status(500).json({
             error: "Database connection failed"
         });
@@ -242,6 +251,7 @@ app.post("/api/login", async (req, res) => {
         });
     } catch (error) {
         console.error("Login error:", error.message);
+
         res.status(500).json({
             error: "Login failed"
         });
@@ -252,7 +262,6 @@ app.post("/api/login", async (req, res) => {
 // TMDB API PROXY
 // =========================
 
-// These fixed endpoints are allowed.
 const allowedFixedPaths = new Set([
     "/search/movie",
     "/discover/movie",
@@ -284,7 +293,6 @@ const allowedQueryKeys = new Set([
     "language"
 ]);
 
-// Validate the requested TMDB endpoint.
 function isAllowedTmdbPath(path) {
     if (allowedFixedPaths.has(path)) {
         return true;
@@ -326,8 +334,6 @@ app.get("/api/tmdb", async (req, res) => {
                 continue;
             }
 
-            // Only allow the specific appended resources
-            // required by the movie details page.
             if (key === "append_to_response") {
                 const allowedAppendValues = new Set([
                     "videos",
@@ -337,7 +343,6 @@ app.get("/api/tmdb", async (req, res) => {
                 const requestedValues = value.split(",");
 
                 if (
-                    requestedValues.length === 0 ||
                     requestedValues.some(
                         item => !allowedAppendValues.has(item)
                     ) ||
@@ -349,18 +354,13 @@ app.get("/api/tmdb", async (req, res) => {
                     });
                 }
 
-                // append_to_response is supported only on movie details.
                 if (!/^\/movie\/\d+$/.test(path)) {
                     return res.status(400).json({
                         error: "TMDB append option is not allowed for this endpoint"
                     });
                 }
 
-                params.set(
-                    key,
-                    requestedValues.join(",")
-                );
-
+                params.set(key, requestedValues.join(","));
                 continue;
             }
 
@@ -392,18 +392,15 @@ app.get("/api/tmdb", async (req, res) => {
 });
 
 // =========================
-// WATCHLIST / MY LIST
+// WATCHLIST
 // =========================
 
-// Get My List
 app.get(
     "/api/watchlist/:userId",
     authenticateToken,
     async (req, res) => {
         try {
             if (!checkUserAccess(req, res)) return;
-
-            const userId = req.user.id;
 
             const [rows] = await pool.execute(
                 `SELECT
@@ -416,12 +413,13 @@ app.get(
                  FROM watchlist
                  WHERE user_id = ?
                  ORDER BY added_at DESC`,
-                [userId]
+                [req.user.id]
             );
 
             res.json(rows);
         } catch (error) {
             console.error("Load watchlist error:", error.message);
+
             res.status(500).json({
                 error: "Failed to load watchlist"
             });
@@ -429,7 +427,6 @@ app.get(
     }
 );
 
-// Add a movie to My List
 app.post(
     "/api/watchlist/:userId",
     authenticateToken,
@@ -491,6 +488,7 @@ app.post(
             });
         } catch (error) {
             console.error("Add watchlist error:", error.message);
+
             res.status(500).json({
                 error: "Failed to add movie"
             });
@@ -498,7 +496,6 @@ app.post(
     }
 );
 
-// Remove a movie from My List
 app.delete(
     "/api/watchlist/:userId/:movieId",
     authenticateToken,
@@ -531,6 +528,7 @@ app.delete(
             });
         } catch (error) {
             console.error("Remove watchlist error:", error.message);
+
             res.status(500).json({
                 error: "Failed to remove movie"
             });
@@ -538,11 +536,158 @@ app.delete(
     }
 );
 
+ // =========================
+ // WATCHED MOVIES LOG
+ // =========================
+
+app.get(
+    "/api/watched/:userId",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            if (!checkUserAccess(req, res)) return;
+
+            const [rows] = await pool.execute(
+                `SELECT
+                    id,
+                    user_id AS userId,
+                    tmdb_movie_id AS movieId,
+                    movie_title AS title,
+                    poster_path AS posterPath,
+                    watched_at AS watchedAt
+                 FROM watched_movies
+                 WHERE user_id = ?
+                 ORDER BY watched_at DESC`,
+                [req.user.id]
+            );
+
+            res.json(rows);
+        } catch (error) {
+            console.error("Load watched log error:", error.message);
+
+            res.status(500).json({
+                error: "Failed to load watched movies"
+            });
+        }
+    }
+);
+
+app.post(
+    "/api/watched/:userId",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            if (!checkUserAccess(req, res)) return;
+
+            const userId = req.user.id;
+
+            const movieId = Number(
+                req.body.movieId ??
+                req.body.tmdb_movie_id ??
+                req.body.id
+            );
+
+            const title =
+                req.body.title ?? req.body.movie_title;
+
+            const posterPath =
+                req.body.posterPath ??
+                req.body.poster_path ??
+                null;
+
+            if (
+                !Number.isInteger(movieId) ||
+                movieId <= 0 ||
+                typeof title !== "string" ||
+                !title.trim() ||
+                title.trim().length > 255 ||
+                (
+                    posterPath !== null &&
+                    (
+                        typeof posterPath !== "string" ||
+                        posterPath.length > 255
+                    )
+                )
+            ) {
+                return res.status(400).json({
+                    error: "Valid movie details are required"
+                });
+            }
+
+            await pool.execute(
+                `INSERT INTO watched_movies
+                    (user_id, tmdb_movie_id, movie_title, poster_path)
+                 VALUES (?, ?, ?, ?)`,
+                [userId, movieId, title.trim(), posterPath]
+            );
+
+            res.status(201).json({
+                message: "Movie added to your watched log",
+                movieId,
+                title: title.trim(),
+                posterPath
+            });
+        } catch (error) {
+            if (error.code === "ER_DUP_ENTRY") {
+                return res.status(409).json({
+                    error: "This movie is already in your watched log"
+                });
+            }
+
+            console.error("Add watched movie error:", error.message);
+
+            res.status(500).json({
+                error: "Failed to add movie to watched log"
+            });
+        }
+    }
+);
+
+app.delete(
+    "/api/watched/:userId/:movieId",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            if (!checkUserAccess(req, res)) return;
+
+            const movieId = Number(req.params.movieId);
+
+            if (!Number.isInteger(movieId) || movieId <= 0) {
+                return res.status(400).json({
+                    error: "Invalid movie ID"
+                });
+            }
+
+            const [result] = await pool.execute(
+                `DELETE FROM watched_movies
+                 WHERE user_id = ? AND tmdb_movie_id = ?`,
+                [req.user.id, movieId]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    error: "Movie not found in your watched log"
+                });
+            }
+
+            res.json({
+                message: "Movie removed from your watched log"
+            });
+        } catch (error) {
+            console.error("Remove watched movie error:", error.message);
+
+            res.status(500).json({
+                error: "Failed to remove movie from watched log"
+            });
+        }
+    }
+);
+
+
 // =========================
 // MOVIE RATINGS
 // =========================
 
-// Get community rating for a movie
 app.get("/api/ratings/:movieId", async (req, res) => {
     try {
         const movieId = Number(req.params.movieId);
@@ -554,9 +699,8 @@ app.get("/api/ratings/:movieId", async (req, res) => {
         }
 
         const [rows] = await pool.execute(
-            `SELECT
-                AVG(rating) AS averageRating,
-                COUNT(*) AS totalRatings
+            `SELECT AVG(rating) AS averageRating,
+                    COUNT(*) AS totalRatings
              FROM movie_ratings
              WHERE tmdb_movie_id = ?`,
             [movieId]
@@ -568,13 +712,13 @@ app.get("/api/ratings/:movieId", async (req, res) => {
         });
     } catch (error) {
         console.error("Get ratings error:", error.message);
+
         res.status(500).json({
             error: "Failed to load ratings"
         });
     }
 });
 
-// Get the logged-in user's rating
 app.get(
     "/api/ratings/:movieId/mine",
     authenticateToken,
@@ -602,6 +746,7 @@ app.get(
             });
         } catch (error) {
             console.error("Get personal rating error:", error.message);
+
             res.status(500).json({
                 error: "Failed to load your rating"
             });
@@ -609,7 +754,6 @@ app.get(
     }
 );
 
-// Add or update a rating
 app.post("/api/ratings", authenticateToken, async (req, res) => {
     try {
         const movieId = Number(
@@ -645,6 +789,7 @@ app.post("/api/ratings", authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error("Save rating error:", error.message);
+
         res.status(500).json({
             error: "Failed to save rating"
         });
@@ -655,7 +800,6 @@ app.post("/api/ratings", authenticateToken, async (req, res) => {
 // COMMUNITY REVIEWS
 // =========================
 
-// Get community reviews for a movie
 app.get("/api/reviews/:movieId", async (req, res) => {
     try {
         const movieId = Number(req.params.movieId);
@@ -685,13 +829,13 @@ app.get("/api/reviews/:movieId", async (req, res) => {
         res.json(reviews);
     } catch (error) {
         console.error("Load reviews error:", error.message);
+
         res.status(500).json({
             error: "Failed to load reviews"
         });
     }
 });
 
-// Add or update the logged-in user's review
 app.post("/api/reviews", authenticateToken, async (req, res) => {
     try {
         const movieId = Number(
@@ -727,13 +871,13 @@ app.post("/api/reviews", authenticateToken, async (req, res) => {
         });
     } catch (error) {
         console.error("Save review error:", error.message);
+
         res.status(500).json({
             error: "Failed to save review"
         });
     }
 });
 
-// Delete the logged-in user's own review
 app.delete(
     "/api/reviews/:reviewId",
     authenticateToken,
@@ -764,6 +908,7 @@ app.delete(
             });
         } catch (error) {
             console.error("Delete review error:", error.message);
+
             res.status(500).json({
                 error: "Failed to delete review"
             });
@@ -778,21 +923,25 @@ app.delete(
 async function startServer() {
     try {
         if (!process.env.JWT_SECRET) {
-            throw new Error("JWT_SECRET is missing from .env");
+            throw new Error("JWT_SECRET is missing");
+        }
+
+        if (
+            process.env.NODE_ENV === "production" &&
+            !process.env.DB_SSL_CA
+        ) {
+            throw new Error("DB_SSL_CA is required in production");
         }
 
         await pool.query("SELECT 1");
 
-        app.listen(PORT, () => {
+        app.listen(PORT, "0.0.0.0", () => {
             console.log(
-                `Abraham's Vault backend running at http://localhost:${PORT}`
+                `Abraham's Vault backend listening on port ${PORT}`
             );
         });
     } catch (error) {
-        console.error(
-            "Server startup failed:",
-            error.message
-        );
+        console.error("Server startup failed:", error.message);
         process.exit(1);
     }
 }
