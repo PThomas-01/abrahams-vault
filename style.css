@@ -1265,4 +1265,31 @@ h2,
     }
 }
 
+/* Watched Log and My Watchlist action buttons */
+.watchlist-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 12px;
+    box-sizing: border-box;
+}
 
+.watchlist-btn {
+    position: static;
+    inset: auto;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 42px;
+    padding: 11px 14px;
+    box-sizing: border-box;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 13px;
+    line-height: 1.4;
+    border-radius: 4px;
+    cursor: pointer;
+}

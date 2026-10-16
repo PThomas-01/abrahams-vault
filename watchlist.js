@@ -316,11 +316,15 @@ function renderWatchlist(movies) {
                 removeButton.textContent = "Remove";
             }
         });
+// Keep only the movie information on the poster
+overlay.append(heading, details);
+poster.appendChild(overlay);
 
-        overlay.append(heading, details, actions, removeButton);
-        poster.appendChild(overlay);
-        card.appendChild(poster);
-        grid.appendChild(card);
+// Keep both actions below the poster
+actions.appendChild(removeButton);
+card.appendChild(poster);
+card.appendChild(actions);
+grid.appendChild(card);
     });
 }
 

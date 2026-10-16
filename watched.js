@@ -189,3 +189,12 @@ grid.appendChild(card);
 }
 
 loadWatchedMovies();
+actions.appendChild(detailsLink);
+actions.appendChild(removeButton);
+
+overlay.append(heading, watchedDate);
+poster.appendChild(overlay);
+
+card.appendChild(poster);
+card.appendChild(actions);
+grid.appendChild(card);
