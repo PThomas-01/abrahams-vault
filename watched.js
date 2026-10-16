@@ -177,10 +177,14 @@ function renderWatchedMovies(movies) {
         });
 
         actions.appendChild(detailsLink);
-        overlay.append(heading, watchedDate, actions, removeButton);
-        poster.appendChild(overlay);
-        card.appendChild(poster);
-        grid.appendChild(card);
+actions.appendChild(removeButton);
+
+overlay.append(heading, watchedDate);
+poster.appendChild(overlay);
+
+card.appendChild(poster);
+card.appendChild(actions);
+grid.appendChild(card);
     });
 }
 
