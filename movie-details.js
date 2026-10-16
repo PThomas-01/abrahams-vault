@@ -23,6 +23,7 @@ let communityRating = null;
 let ratingCount = 0;
 let isSavingRating = false;
 let isInWatchlist = false;
+let isWatched = false;
 let ratingNotice = "";
 let reviews = [];
 let isSavingReview = false;
@@ -193,11 +194,6 @@ async function loadMovieDetails() {
             }).join("")
             : `<p class="cast-unavailable">Cast information is unavailable for this movie.</p>`;
 
-        /*
-         * IMPORTANT LAYOUT CHANGE:
-         * Poster, movie information, cast, ratings and reviews are
-         * direct children of .details-content.
-         */
         detailsContainer.innerHTML = `
             <section class="details-backdrop"
                 style="${backdrop
@@ -272,6 +268,13 @@ async function loadMovieDetails() {
                             Checking My List...
                         </button>
 
+                        <button
+                            id="watched-button"
+                            class="vault-action-button"
+                            type="button">
+                            Checking Watched Status...
+                        </button>
+
                         ${
                             trailer
                                 ? `<a class="vault-action-button trailer-button"
@@ -285,7 +288,6 @@ async function loadMovieDetails() {
                     </div>
                 </div>
 
-                <!-- CAST IS NOW OUTSIDE details-info -->
                 <section id="cast-section" class="cast-section">
                     <h2>Cast &amp; Crew</h2>
                     <p class="cast-subtitle">
@@ -296,13 +298,11 @@ async function loadMovieDetails() {
                     </div>
                 </section>
 
-                <!-- RATINGS ARE NOW OUTSIDE details-info -->
                 <section id="community-rating" class="community-rating">
                     <h2>Abraham's Vault Rating</h2>
                     <p class="rating-loading">Loading community ratings...</p>
                 </section>
 
-                <!-- REVIEWS ARE NOW OUTSIDE details-info -->
                 <section id="movie-reviews" class="movie-reviews">
                     <div class="reviews-heading">
                         <h2>Community Reviews</h2>
@@ -329,10 +329,14 @@ async function loadMovieDetails() {
         document.getElementById("watchlist-button")
             .addEventListener("click", toggleWatchlist);
 
+        document.getElementById("watched-button")
+            .addEventListener("click", toggleWatched);
+
         await Promise.allSettled([
             loadCommunityRating(),
             loadPersonalRating(),
             loadWatchlistStatus(),
+            loadWatchedStatus(),
             loadReviews()
         ]);
     } catch (error) {
@@ -546,7 +550,7 @@ async function toggleWatchlist() {
         return;
     }
 
-    if (!currentMovie) return;
+    if (!currentMovie || button.disabled) return;
 
     const userId = encodeURIComponent(getUserId());
     const movieIdPath = encodeURIComponent(String(movieId));
@@ -559,6 +563,7 @@ async function toggleWatchlist() {
                 `/watchlist/${userId}/${movieIdPath}`,
                 { method: "DELETE" }
             );
+
             isInWatchlist = false;
         } else {
             await apiRequest(`/watchlist/${userId}`, {
@@ -570,6 +575,7 @@ async function toggleWatchlist() {
                     posterPath: currentMovie.poster_path || null
                 })
             });
+
             isInWatchlist = true;
         }
 
@@ -580,6 +586,95 @@ async function toggleWatchlist() {
         console.error("Watchlist update error:", error);
         button.textContent = "My List update failed";
         window.alert(`Could not update My List: ${error.message}`);
+    } finally {
+        button.disabled = false;
+    }
+}
+
+// =====================================
+// WATCHED MOVIES LOG
+// =====================================
+
+async function loadWatchedStatus() {
+    const button = document.getElementById("watched-button");
+    if (!button) return;
+
+    if (!getToken() || !getUserId()) {
+        isWatched = false;
+        button.textContent = "Log in to use Watched Log";
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Checking Watched Status...";
+
+    try {
+        const userId = encodeURIComponent(getUserId());
+        const movies = await apiRequest(`/watched/${userId}`);
+
+        isWatched = Array.isArray(movies) && movies.some(movie =>
+            Number(movie.movieId ?? movie.tmdb_movie_id ?? movie.id) === movieId
+        );
+
+        button.textContent = isWatched
+            ? "Remove from Watched Log"
+            : "Add to Watched Log";
+    } catch (error) {
+        console.error("Watched status error:", error);
+        button.textContent = "Watched Log unavailable";
+    } finally {
+        button.disabled = false;
+    }
+}
+
+async function toggleWatched() {
+    const button = document.getElementById("watched-button");
+    if (!button || button.disabled) return;
+
+    if (!getToken() || !getUserId()) {
+        button.textContent = "Please log in first";
+        return;
+    }
+
+    if (!currentMovie) return;
+
+    const userId = encodeURIComponent(getUserId());
+    const movieIdPath = encodeURIComponent(String(movieId));
+
+    button.disabled = true;
+    button.textContent = isWatched ? "Removing..." : "Adding...";
+
+    try {
+        if (isWatched) {
+            await apiRequest(
+                `/watched/${userId}/${movieIdPath}`,
+                { method: "DELETE" }
+            );
+
+            isWatched = false;
+        } else {
+            await apiRequest(`/watched/${userId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    movieId,
+                    title: currentMovie.title,
+                    posterPath: currentMovie.poster_path || null
+                })
+            });
+
+            isWatched = true;
+        }
+
+        button.textContent = isWatched
+            ? "Remove from Watched Log"
+            : "Add to Watched Log";
+    } catch (error) {
+        console.error("Watched Log update error:", error);
+
+        window.alert(`Could not update Watched Log: ${error.message}`);
+
+        await loadWatchedStatus();
     } finally {
         button.disabled = false;
     }
@@ -638,6 +733,7 @@ function renderReviewForm() {
 
     const ownReview = getOwnReview();
     const initialText = editingReview && ownReview ? ownReview.reviewText : "";
+
     const buttonText = ownReview
         ? (editingReview ? "Update Review" : "Edit Your Review")
         : "Publish Review";
@@ -799,6 +895,7 @@ async function submitReview(event) {
             message.textContent =
                 "Your review must be between 10 and 3000 characters.";
         }
+
         return;
     }
 
@@ -815,6 +912,7 @@ async function submitReview(event) {
 
         editingReview = false;
         reviewNotice = "Your review has been saved!";
+
         await loadReviews();
     } catch (error) {
         console.error("Save review error:", error);
@@ -843,6 +941,7 @@ async function deleteReview(reviewId) {
 
         editingReview = false;
         reviewNotice = "Your review has been deleted.";
+
         await loadReviews();
         renderReviewForm();
     } catch (error) {

@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watched Log | Abraham's Vault</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            ABRAHAM'S <span>VAULT</span><i>.</i>
+        </a>
+
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="index.html#trending">Discover</a>
+            <a href="index.html#popular">Collection</a>
+            <a href="my-list.html">My Watchlist</a>
+            <a href="watched.html" class="active">Watched Log</a>
+        </nav>
+    </header>
+
+    <main class="section" id="watched-page">
+        <h1>My Watched Log</h1>
+        <p>Every movie you've watched, all in one place.</p>
+
+        <p id="watched-status" role="status" aria-live="polite">
+            Loading your Watched Log...
+        </p>
+
+        <div class="movie-grid" id="watched-movies-grid"></div>
+    </main>
+
+    <script src="watched.js"></script>
+</body>
+</html>
