@@ -684,6 +684,153 @@ app.delete(
 );
 
 
+ // =========================
+ // MY JOURNAL
+ // =========================
+
+ // Get all journal entries belonging to the logged-in user
+ app.get(
+     "/api/journal/:userId",
+     authenticateToken,
+     async (req, res) => {
+         try {
+             if (!checkUserAccess(req, res)) return;
+
+             const [entries] = await pool.execute(
+                 `SELECT
+                     id,
+                     tmdb_movie_id AS movieId,
+                     movie_title AS title,
+                     poster_path AS posterPath,
+                     journal_text AS journalText,
+                     created_at AS createdAt,
+                     updated_at AS updatedAt
+                  FROM movie_journal
+                  WHERE user_id = ?
+                  ORDER BY updated_at DESC`,
+                 [req.user.id]
+             );
+
+             res.json(entries);
+         } catch (error) {
+             console.error("Load journal error:", error.message);
+
+             res.status(500).json({
+                 error: "Failed to load journal entries"
+             });
+         }
+     }
+ );
+
+
+ // Create a journal entry or update an existing one
+ app.post(
+     "/api/journal/:userId",
+     authenticateToken,
+     async (req, res) => {
+         try {
+             if (!checkUserAccess(req, res)) return;
+
+             const { movieId, title, posterPath, journalText } = req.body;
+
+             const validMovieId = Number(movieId);
+
+             if (
+                 !Number.isSafeInteger(validMovieId) ||
+                 validMovieId <= 0 ||
+                 typeof title !== "string" ||
+                 !title.trim() ||
+                 title.trim().length > 255 ||
+                 typeof journalText !== "string" ||
+                 !journalText.trim() ||
+                 journalText.length > 10000 ||
+                 (
+                     posterPath != null &&
+                     (
+                         typeof posterPath !== "string" ||
+                         posterPath.length > 255
+                     )
+                 )
+             ) {
+                 return res.status(400).json({
+                     error: "Provide valid movie details and a journal entry of up to 10,000 characters"
+                 });
+             }
+
+             await pool.execute(
+                 `INSERT INTO movie_journal
+                     (user_id, tmdb_movie_id, movie_title,
+                      poster_path, journal_text)
+                  VALUES (?, ?, ?, ?, ?)
+                  ON DUPLICATE KEY UPDATE
+                     movie_title = VALUES(movie_title),
+                     poster_path = VALUES(poster_path),
+                     journal_text = VALUES(journal_text)`,
+                 [
+                     req.user.id,
+                     validMovieId,
+                     title.trim(),
+                     posterPath || null,
+                     journalText.trim()
+                 ]
+             );
+
+             res.json({
+                 message: "Journal entry saved successfully"
+             });
+         } catch (error) {
+             console.error("Save journal error:", error.message);
+
+             res.status(500).json({
+                 error: "Failed to save journal entry"
+             });
+         }
+     }
+ );
+
+
+ // Delete a journal entry
+ app.delete(
+     "/api/journal/:userId/:movieId",
+     authenticateToken,
+     async (req, res) => {
+         try {
+             if (!checkUserAccess(req, res)) return;
+
+             const movieId = Number(req.params.movieId);
+
+             if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+                 return res.status(400).json({
+                     error: "Invalid movie ID"
+                 });
+             }
+
+             const [result] = await pool.execute(
+                 `DELETE FROM movie_journal
+                  WHERE user_id = ? AND tmdb_movie_id = ?`,
+                 [req.user.id, movieId]
+             );
+
+             if (result.affectedRows === 0) {
+                 return res.status(404).json({
+                     error: "Journal entry not found"
+                 });
+             }
+
+             res.json({
+                 message: "Journal entry deleted successfully"
+             });
+         } catch (error) {
+             console.error("Delete journal error:", error.message);
+
+             res.status(500).json({
+                 error: "Failed to delete journal entry"
+             });
+         }
+     }
+ );
+
+
 // =========================
 // MOVIE RATINGS
 // =========================
@@ -916,34 +1063,55 @@ app.delete(
     }
 );
 
-// =========================
-// START SERVER
-// =========================
 
-async function startServer() {
-    try {
-        if (!process.env.JWT_SECRET) {
-            throw new Error("JWT_SECRET is missing");
-        }
+ // =========================
+ // START SERVER
+ // =========================
 
-        if (
-            process.env.NODE_ENV === "production" &&
-            !process.env.DB_SSL_CA
-        ) {
-            throw new Error("DB_SSL_CA is required in production");
-        }
+ async function startServer() {
+     try {
+         if (!process.env.JWT_SECRET) {
+             throw new Error("JWT_SECRET is missing");
+         }
 
-        await pool.query("SELECT 1");
+         if (
+             process.env.NODE_ENV === "production" &&
+             !process.env.DB_SSL_CA
+         ) {
+             throw new Error("DB_SSL_CA is required in production");
+         }
 
-        app.listen(PORT, "0.0.0.0", () => {
-            console.log(
-                `Abraham's Vault backend listening on port ${PORT}`
-            );
-        });
-    } catch (error) {
-        console.error("Server startup failed:", error.message);
-        process.exit(1);
-    }
-}
+         // Test the database connection
+         await pool.query("SELECT 1");
 
-startServer();
+         // Create the journal table if it doesn't exist
+         await pool.query(`
+             CREATE TABLE IF NOT EXISTS movie_journal (
+                 id INT AUTO_INCREMENT PRIMARY KEY,
+                 user_id INT NOT NULL,
+                 tmdb_movie_id INT NOT NULL,
+                 movie_title VARCHAR(255) NOT NULL,
+                 poster_path VARCHAR(255),
+                 journal_text TEXT NOT NULL,
+                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                     ON UPDATE CURRENT_TIMESTAMP,
+                 UNIQUE KEY unique_user_movie
+                     (user_id, tmdb_movie_id)
+             )
+         `);
+
+         // Start accepting requests
+         app.listen(PORT, "0.0.0.0", () => {
+             console.log(
+                 `Abraham's Vault backend listening on port ${PORT}`
+             );
+         });
+
+     } catch (error) {
+         console.error("Server startup failed:", error.message);
+         process.exit(1);
+     }
+ }
+
+ startServer();
