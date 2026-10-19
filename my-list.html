@@ -29,5 +29,32 @@
     </main>
     <script src="top5.js"></script>
     <script src="watchlist.js"></script>
+    <script src="navbar.js"></script>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const backButton = document.createElement("button");
+        backButton.type = "button";
+        backButton.className = "vault-back-btn";
+        backButton.textContent = "← Back";
+
+        backButton.addEventListener("click", () => {
+            if (window.history.length > 1 && document.referrer) {
+                window.history.back();
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        const main = document.querySelector("main");
+        if (main) {
+            main.prepend(backButton);
+        }
+    });
+</script>
+
+
 </body>
 </html>

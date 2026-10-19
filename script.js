@@ -1,5 +1,6 @@
 
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
+const BACKDROP_BASE_URL = "https://image.tmdb.org/t/p/original";
 const API_BASE_URL = "https://abrahams-vault-backend.onrender.com/api";
 
 const movieGrid = document.getElementById("movie-grid");
@@ -7,6 +8,27 @@ const movieStatus = document.getElementById("movie-status");
 const industryContainer = document.getElementById("industry-filters");
 const genreContainer = document.getElementById("genre-filters");
 const watchlistContainer = document.getElementById("watchlist-items");
+
+// Cinematic homepage elements
+const featuredBackdrop = document.getElementById("featured-backdrop");
+const featuredTitle = document.getElementById("featured-title");
+const featuredLabel = document.getElementById("featured-label");
+const featuredMeta = document.getElementById("featured-meta");
+const featuredDescription = document.getElementById("featured-description");
+const featuredDetails = document.getElementById("featured-details");
+const featuredList = document.getElementById("featured-list");
+const featuredStatus = document.getElementById("featured-status");
+const featuredPrev = document.getElementById("featured-prev");
+const featuredNext = document.getElementById("featured-next");
+const featuredIndicators = document.getElementById("featured-indicators");
+const featuredCounter = document.getElementById("featured-counter");
+
+let featuredMovies = [];
+let featuredIndex = 0;
+let featuredAutoplayTimer = null;
+let featuredPauseUntil = 0;
+const trendingRow = document.getElementById("trending-row");
+const popularRow = document.getElementById("popular-row");
 
 const savedMovies = new Map();
 
@@ -66,7 +88,7 @@ async function readResponse(response) {
 }
 
 // =========================
-// TMDB API
+// TMDB API THROUGH RENDER
 // =========================
 
 async function tmdbRequest(endpoint) {
@@ -84,6 +106,24 @@ async function tmdbRequest(endpoint) {
     );
 
     return readResponse(response);
+}
+
+// =========================
+// MOVIE DETAILS NAVIGATION
+// =========================
+
+function openMovieDetails(movie) {
+    const movieId = Number(movie?.id);
+
+    if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+        console.error("Invalid movie ID:", movie?.id);
+        return;
+    }
+
+    sessionStorage.setItem("vaultSelectedMovieId", String(movieId));
+
+    window.location.href =
+        `movie-details.html?id=${encodeURIComponent(movieId)}`;
 }
 
 // =========================
@@ -148,6 +188,11 @@ function updateAllWatchlistButtons() {
     document.querySelectorAll(".watchlist-btn[data-id]").forEach(button => {
         updateWatchlistButtons(Number(button.dataset.id));
     });
+
+    // Also refresh the featured movie's My List button.
+    if (featuredList?.dataset.id) {
+        updateWatchlistButtons(Number(featuredList.dataset.id));
+    }
 }
 
 // =========================
@@ -165,6 +210,8 @@ async function toggleWatchlist(movie, button) {
         alert("Invalid movie ID. Please refresh the page and try again.");
         return;
     }
+
+    if (button.disabled) return;
 
     button.disabled = true;
 
@@ -220,11 +267,12 @@ async function toggleWatchlist(movie, button) {
 }
 
 function updateWatchlistButtons(movieId) {
-    document.querySelectorAll(
-        `.watchlist-btn[data-id="${Number(movieId)}"]`
-    ).forEach(button => {
-        const isSaved = savedMovies.has(Number(movieId));
+    const id = Number(movieId);
+    const isSaved = savedMovies.has(id);
 
+    document.querySelectorAll(
+        `.watchlist-btn[data-id="${id}"]`
+    ).forEach(button => {
         button.classList.toggle("saved", isSaved);
         button.textContent = isSaved ? "✓" : "＋";
         button.setAttribute(
@@ -232,6 +280,15 @@ function updateWatchlistButtons(movieId) {
             isSaved ? "Remove from watchlist" : "Add to watchlist"
         );
     });
+
+    if (
+        featuredList &&
+        Number(featuredList.dataset.id) === id
+    ) {
+        featuredList.textContent = isSaved
+            ? "✓ In My List"
+            : "＋ My List";
+    }
 }
 
 // =========================
@@ -294,6 +351,362 @@ function renderWatchlist() {
         item.append(name, removeButton);
         watchlistContainer.appendChild(item);
     });
+}
+
+// =========================
+// CINEMATIC FEATURED MOVIE
+// =========================
+
+
+function renderFeaturedMovie(movie) {
+    if (!movie) return;
+
+    const title = movie.title || movie.original_title || "Untitled";
+    const year = movie.release_date
+        ? movie.release_date.slice(0, 4)
+        : "Year unknown";
+    const rating = Number(movie.vote_average || 0).toFixed(1);
+
+    if (featuredTitle) featuredTitle.textContent = title;
+
+    if (featuredLabel) {
+        featuredLabel.textContent = "FEATURED TODAY";
+    }
+
+    if (featuredMeta) {
+        featuredMeta.textContent = `${year} · ★ ${rating} · Movie`;
+    }
+
+    if (featuredDescription) {
+        featuredDescription.textContent =
+            movie.overview ||
+            "Discover this film in Abraham's Vault.";
+    }
+
+    if (featuredBackdrop) {
+        const imagePath = movie.backdrop_path || movie.poster_path;
+        const imageBase = movie.backdrop_path
+            ? BACKDROP_BASE_URL
+            : IMAGE_BASE_URL;
+
+        featuredBackdrop.style.backgroundImage = imagePath
+            ? `url("${imageBase}${imagePath}")`
+            : "none";
+    }
+
+    if (featuredDetails) {
+        featuredDetails.href =
+            `movie-details.html?id=${encodeURIComponent(movie.id)}`;
+
+        featuredDetails.onclick = event => {
+            event.preventDefault();
+            openMovieDetails(movie);
+        };
+    }
+
+    if (featuredList) {
+        featuredList.dataset.id = String(movie.id);
+        featuredList.disabled = false;
+        featuredList.textContent = savedMovies.has(Number(movie.id))
+            ? "✓ In My List"
+            : "＋ My List";
+
+        featuredList.onclick = () => toggleWatchlist(movie, featuredList);
+    }
+
+    if (featuredCounter) {
+        featuredCounter.textContent =
+            `${String(featuredIndex + 1).padStart(2, "0")} / ` +
+            `${String(featuredMovies.length).padStart(2, "0")}`;
+    }
+
+    if (featuredIndicators) {
+        featuredIndicators.querySelectorAll(".hero-indicator")
+            .forEach((button, index) => {
+                const active = index === featuredIndex;
+                button.classList.toggle("active", active);
+                button.setAttribute("aria-current", active ? "true" : "false");
+                button.setAttribute(
+                    "aria-label",
+                    `Show featured movie ${index + 1}: ${
+                        featuredMovies[index]?.title || "Movie"
+                    }`
+                );
+            });
+    }
+
+    if (featuredStatus) featuredStatus.textContent = "";
+}
+
+function renderFeaturedIndicators() {
+    if (!featuredIndicators) return;
+
+    featuredIndicators.replaceChildren();
+
+    featuredMovies.forEach((movie, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "hero-indicator";
+        button.addEventListener("click", () => {
+            showFeaturedMovie(index, true);
+        });
+
+        featuredIndicators.appendChild(button);
+    });
+}
+
+function showFeaturedMovie(index, resetAutoplay = false) {
+    if (!featuredMovies.length) return;
+
+    featuredIndex =
+        (index + featuredMovies.length) % featuredMovies.length;
+
+    const hero = document.getElementById("featured-movie");
+
+    if (hero) {
+        hero.classList.remove("is-changing");
+        void hero.offsetWidth;
+        hero.classList.add("is-changing");
+
+        if (hero._contentAnimationTimer) {
+            clearTimeout(hero._contentAnimationTimer);
+        }
+
+        if (hero._contentAnimationTimer !== undefined) {
+            // Keep the content animation responsive during slide changes.
+        }
+
+        hero._contentAnimationTimer = setTimeout(() => {
+            hero.classList.remove("is-changing");
+        }, 450);
+    }
+
+    renderFeaturedMovie(featuredMovies[featuredIndex]);
+
+    if (resetAutoplay) {
+        featuredPauseUntil = Date.now() + 10000;
+    }
+}
+
+function startFeaturedAutoplay() {
+    if (featuredAutoplayTimer) {
+        clearInterval(featuredAutoplayTimer);
+    }
+
+    if (featuredMovies.length < 2) return;
+
+    featuredAutoplayTimer = setInterval(() => {
+        const hero = document.getElementById("featured-movie");
+
+        if (document.hidden) return;
+        if (hero && hero.matches(":hover")) return;
+        if (Date.now() < featuredPauseUntil) return;
+
+        showFeaturedMovie(featuredIndex + 1);
+    }, 6000);
+}
+
+function setupFeaturedCarousel() {
+    featuredPrev?.addEventListener("click", () => {
+        showFeaturedMovie(featuredIndex - 1, true);
+    });
+
+    featuredNext?.addEventListener("click", () => {
+        showFeaturedMovie(featuredIndex + 1, true);
+    });
+
+    const hero = document.getElementById("featured-movie");
+
+    hero?.addEventListener("mouseenter", () => {
+        featuredPauseUntil = Date.now() + 10000;
+    });
+
+    hero?.addEventListener("focusin", () => {
+        featuredPauseUntil = Date.now() + 10000;
+    });
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+            featuredPauseUntil = Date.now() + 3000;
+        }
+    });
+}
+
+// =========================
+// CINEMATIC HORIZONTAL MOVIE CARDS
+// =========================
+
+function createHorizontalMovieCard(movie) {
+    const movieId = Number(movie.id);
+    const title = movie.title || movie.original_title || "Untitled";
+    const year = movie.release_date
+        ? movie.release_date.slice(0, 4)
+        : "Year unknown";
+
+    const card = document.createElement("article");
+    card.className = "cinema-movie-card";
+
+    const detailsLink = document.createElement("a");
+    detailsLink.className = "cinema-poster-link";
+    detailsLink.href =
+        `movie-details.html?id=${encodeURIComponent(movieId)}`;
+    detailsLink.setAttribute("aria-label", `View ${title} details`);
+
+    detailsLink.addEventListener("click", event => {
+        event.preventDefault();
+        openMovieDetails(movie);
+    });
+
+    if (movie.poster_path) {
+        const poster = document.createElement("img");
+        poster.className = "cinema-poster";
+        poster.src = IMAGE_BASE_URL + movie.poster_path;
+        poster.alt = `${title} poster`;
+        poster.loading = "lazy";
+
+        poster.addEventListener("error", () => {
+            const fallback = document.createElement("div");
+            fallback.className =
+                "cinema-poster cinema-poster-fallback";
+            fallback.textContent = title;
+            poster.replaceWith(fallback);
+        });
+
+        detailsLink.appendChild(poster);
+    } else {
+        const fallback = document.createElement("div");
+        fallback.className =
+            "cinema-poster cinema-poster-fallback";
+        fallback.textContent = title;
+        detailsLink.appendChild(fallback);
+    }
+
+    const info = document.createElement("div");
+    info.className = "cinema-card-info";
+
+    const name = document.createElement("a");
+    name.className = "cinema-card-title";
+    name.href = detailsLink.href;
+    name.textContent = title;
+
+    name.addEventListener("click", event => {
+        event.preventDefault();
+        openMovieDetails(movie);
+    });
+
+    const meta = document.createElement("span");
+    meta.className = "cinema-card-meta";
+    meta.textContent =
+        `${year}  ·  ★ ${Number(movie.vote_average || 0).toFixed(1)}`;
+
+    const actions = document.createElement("div");
+    actions.className = "cinema-card-actions";
+
+    const listButton = document.createElement("button");
+    listButton.type = "button";
+    listButton.className = "watchlist-btn cinema-card-list-btn";
+    listButton.dataset.id = movieId;
+    listButton.textContent = savedMovies.has(movieId) ? "✓" : "＋";
+
+    listButton.setAttribute(
+        "aria-label",
+        savedMovies.has(movieId)
+            ? "Remove from watchlist"
+            : "Add to watchlist"
+    );
+
+    if (savedMovies.has(movieId)) {
+        listButton.classList.add("saved");
+    }
+
+    listButton.addEventListener("click", event => {
+        event.stopPropagation();
+        toggleWatchlist(movie, listButton);
+    });
+
+    actions.appendChild(listButton);
+    info.append(name, meta, actions);
+    card.append(detailsLink, info);
+
+    return card;
+}
+
+function renderHorizontalRow(container, movieList) {
+    if (!container) return;
+
+    container.replaceChildren();
+
+    if (!movieList.length) {
+        const message = document.createElement("p");
+        message.className = "cinema-row-message";
+        message.textContent = "No movies are available right now.";
+        container.appendChild(message);
+        return;
+    }
+
+    movieList.forEach(movie => {
+        container.appendChild(createHorizontalMovieCard(movie));
+    });
+}
+
+// =========================
+// LOAD TRENDING AND POPULAR ROWS
+// =========================
+
+async function loadHomeRows() {
+    const requests = [];
+
+    if (trendingRow) {
+        requests.push(
+            tmdbRequest("/trending/movie/week?language=en-US")
+                .then(data => {
+    const results = data.results || [];
+
+    renderHorizontalRow(trendingRow, results);
+
+    // Use five movies for the featured carousel.
+    featuredMovies = results
+        .filter(movie => movie.backdrop_path || movie.poster_path)
+        .slice(0, 5);
+
+    if (featuredMovies.length) {
+        renderFeaturedIndicators();
+        showFeaturedMovie(0);
+        startFeaturedAutoplay();
+    } else if (featuredStatus) {
+        featuredStatus.textContent =
+            "No featured movies are available right now.";
+    }
+})
+                .catch(error => {
+                    console.error("Trending movies error:", error);
+
+                    trendingRow.textContent =
+                        "Couldn't load trending movies.";
+
+                    if (featuredStatus) {
+                        featuredStatus.textContent =
+                            "Couldn't load the featured film. Please refresh.";
+                    }
+                })
+        );
+    }
+
+    if (popularRow) {
+        requests.push(
+            tmdbRequest("/movie/popular?language=en-US&page=1")
+                .then(data => {
+                    renderHorizontalRow(popularRow, data.results || []);
+                })
+                .catch(error => {
+                    console.error("Popular movies error:", error);
+                    popularRow.textContent =
+                        "Couldn't load popular movies.";
+                })
+        );
+    }
+
+    await Promise.all(requests);
 }
 
 // =========================
@@ -445,7 +858,7 @@ function buildMovieEndpoint() {
 }
 
 // =========================
-// LOAD MOVIES
+// LOAD MAIN MOVIE COLLECTION
 // =========================
 
 async function loadMovies(append = false) {
@@ -463,7 +876,9 @@ async function loadMovies(append = false) {
     const currentRequest = requestNumber;
     isLoadingMore = true;
 
-    if (movieStatus) movieStatus.textContent = "Loading movies...";
+    if (movieStatus) {
+        movieStatus.textContent = "Loading movies...";
+    }
 
     try {
         const data = await tmdbRequest(buildMovieEndpoint());
@@ -544,7 +959,7 @@ async function loadMovies(append = false) {
 }
 
 // =========================
-// RENDER MOVIE CARDS
+// RENDER MAIN MOVIE CARDS
 // =========================
 
 function renderMovies() {
@@ -574,20 +989,8 @@ function renderMovies() {
         card.className = "movie-card";
         card.style.cursor = "pointer";
 
-        // FIX: validate and save the selected ID before navigating.
         card.addEventListener("click", () => {
-            if (!Number.isSafeInteger(movieId) || movieId <= 0) {
-                console.error("Invalid movie ID:", movie.id);
-                return;
-            }
-
-            sessionStorage.setItem(
-                "vaultSelectedMovieId",
-                String(movieId)
-            );
-
-            window.location.href =
-                `movie-details.html?id=${encodeURIComponent(movieId)}`;
+            openMovieDetails(movie);
         });
 
         const poster = document.createElement("div");
@@ -621,7 +1024,6 @@ function renderMovies() {
         watchButton.type = "button";
         watchButton.className = "watchlist-btn";
         watchButton.dataset.id = movieId;
-
         watchButton.textContent = savedMovies.has(movieId) ? "✓" : "＋";
 
         if (savedMovies.has(movieId)) {
@@ -674,17 +1076,16 @@ function renderMovies() {
 }
 
 // =========================
-// SEARCH
+// SEARCH AND LIVE SUGGESTIONS
 // =========================
 
 const searchToggle = document.getElementById("search-toggle");
 
-
 if (searchToggle) {
     searchToggle.addEventListener("click", () => {
-        const existingContainer = document.getElementById("movie-search-container");
+        const existingContainer =
+            document.getElementById("movie-search-container");
 
-        // Close the search bar
         if (existingContainer) {
             existingContainer.remove();
             searchQuery = "";
@@ -695,7 +1096,6 @@ if (searchToggle) {
         const navbar = document.querySelector(".navbar");
         if (!navbar) return;
 
-        // Search container
         const container = document.createElement("div");
         container.id = "movie-search-container";
         container.style.cssText =
@@ -703,7 +1103,6 @@ if (searchToggle) {
             "z-index:100;background:#19191c;border:1px solid #444;" +
             "border-radius:7px;overflow:hidden;";
 
-        // Search input
         const search = document.createElement("input");
         search.id = "movie-search";
         search.type = "search";
@@ -715,7 +1114,6 @@ if (searchToggle) {
             "background:#19191c;color:#f4f1eb;border:none;" +
             "outline:none;font-size:15px;";
 
-        // Live suggestions dropdown
         const resultsBox = document.createElement("div");
         resultsBox.id = "movie-search-results";
         resultsBox.style.cssText =
@@ -726,7 +1124,7 @@ if (searchToggle) {
         navbar.appendChild(container);
 
         let searchTimer;
-        let requestNumber = 0;
+        let suggestionRequestNumber = 0;
 
         function showMessage(message) {
             resultsBox.replaceChildren();
@@ -737,37 +1135,28 @@ if (searchToggle) {
 
         async function searchMovies(query, currentRequest) {
             try {
-                const response = await fetch(
-                    "http://localhost:3000/api/tmdb?path=/search/movie&query=" +
-                    encodeURIComponent(query) +
-                    "&include_adult=false"
+                // Use the deployed backend rather than localhost.
+                const data = await tmdbRequest(
+                    `/search/movie?query=${encodeURIComponent(query)}` +
+                    "&include_adult=false&language=en-US"
                 );
 
-                if (!response.ok) {
-                    throw new Error("Movie search failed");
-                }
+                if (currentRequest !== suggestionRequestNumber) return;
 
-                const data = await response.json();
-
-                // Ignore older requests if the user has typed more
-                if (currentRequest !== requestNumber) return;
-
-                const movies = Array.isArray(data.results)
+                const results = Array.isArray(data.results)
                     ? data.results
-                    : Array.isArray(data.data?.results)
-                        ? data.data.results
-                        : [];
+                    : [];
 
                 resultsBox.replaceChildren();
                 resultsBox.style.display = "block";
                 resultsBox.style.padding = "0";
 
-                if (movies.length === 0) {
+                if (results.length === 0) {
                     showMessage("No matching movies found.");
                     return;
                 }
 
-                movies.slice(0, 7).forEach(movie => {
+                results.slice(0, 7).forEach(movie => {
                     const item = document.createElement("button");
                     item.type = "button";
                     item.style.cssText =
@@ -776,11 +1165,11 @@ if (searchToggle) {
                         "border:none;border-bottom:1px solid #303035;" +
                         "text-align:left;cursor:pointer;";
 
-                    // Movie poster
                     if (movie.poster_path) {
                         const poster = document.createElement("img");
                         poster.src =
-                            "https://image.tmdb.org/t/p/w92" + movie.poster_path;
+                            "https://image.tmdb.org/t/p/w92" +
+                            movie.poster_path;
                         poster.alt = "";
                         poster.style.cssText =
                             "width:42px;height:63px;object-fit:cover;" +
@@ -788,15 +1177,13 @@ if (searchToggle) {
                         item.appendChild(poster);
                     }
 
-                    // Movie title and release year
                     const info = document.createElement("div");
                     info.style.cssText =
                         "min-width:0;display:flex;flex-direction:column;gap:5px;";
 
                     const title = document.createElement("span");
                     title.textContent = movie.title || "Untitled movie";
-                    title.style.cssText =
-                        "font-size:14px;font-weight:600;";
+                    title.style.cssText = "font-size:14px;font-weight:600;";
 
                     const year = document.createElement("span");
                     year.textContent = movie.release_date
@@ -816,17 +1203,18 @@ if (searchToggle) {
                     });
 
                     item.addEventListener("click", () => {
-                        window.location.href =
-                            "movie-details.html?id=" +
-                            encodeURIComponent(movie.id);
+                        openMovieDetails(movie);
                     });
 
                     resultsBox.appendChild(item);
                 });
             } catch (error) {
-                if (currentRequest !== requestNumber) return;
+                if (currentRequest !== suggestionRequestNumber) return;
+
                 console.error("Live movie search error:", error);
-                showMessage("Couldn't load movies. Check that your backend is running.");
+                showMessage(
+                    "Couldn't load movies. Please try again in a moment."
+                );
             }
         }
 
@@ -834,7 +1222,7 @@ if (searchToggle) {
             clearTimeout(searchTimer);
 
             const query = search.value.trim();
-            const currentRequest = ++requestNumber;
+            const currentRequest = ++suggestionRequestNumber;
 
             if (query.length < 2) {
                 resultsBox.replaceChildren();
@@ -849,8 +1237,7 @@ if (searchToggle) {
             }, 250);
         });
 
-        // Close suggestions when clicking outside the search
-        document.addEventListener("click", function closeSearch(event) {
+        function closeSearch(event) {
             if (
                 !container.contains(event.target) &&
                 event.target !== searchToggle
@@ -858,7 +1245,12 @@ if (searchToggle) {
                 container.remove();
                 document.removeEventListener("click", closeSearch);
             }
-        });
+        }
+
+        // Avoid immediately closing the search when the icon is clicked.
+        setTimeout(() => {
+            document.addEventListener("click", closeSearch);
+        }, 0);
 
         search.focus();
     });
@@ -871,6 +1263,9 @@ if (searchToggle) {
 async function initializeApp() {
     setupIndustryFilters();
     setupYearFilter();
+
+    // Load cinematic rows independently from the main collection.
+    loadHomeRows();
 
     await loadSavedMoviesFromDatabase();
 
@@ -886,5 +1281,5 @@ async function initializeApp() {
         }
     }
 }
-
+setupFeaturedCarousel();
 initializeApp();

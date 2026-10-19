@@ -1295,3 +1295,923 @@ h2,
     border-radius: 4px;
     cursor: pointer;
 }
+
+/* Abraham's Vault: shared light theme */
+html[data-theme="light"],
+html[data-theme="light"] body {
+    background-color: #f4f4f7;
+    color: #19191d;
+}
+
+html[data-theme="light"] .navbar,
+html[data-theme="light"] nav {
+    background-color: #ffffff;
+    color: #19191d;
+}
+
+html[data-theme="light"] .profile-header,
+html[data-theme="light"] .top-movie,
+html[data-theme="light"] .settings-card,
+html[data-theme="light"] .top5-editor,
+html[data-theme="light"] .top5-result,
+html[data-theme="light"] .top5-selected-row {
+    background-color: #ffffff;
+    color: #19191d;
+    border-color: #dddddd;
+}
+
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea {
+    background-color: #ffffff;
+    color: #19191d;
+    border-color: #cccccc;
+}
+
+/* =========================================
+   FINAL SHARED THEME + NAVBAR FIX
+========================================= */
+
+/* Shared theme variables */
+html[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f4f4f7;
+    --surface: #ffffff;
+    --text: #19191d;
+    --muted: #62616a;
+    --accent: #b87512;
+    --line: rgba(0, 0, 0, 0.12);
+}
+
+/* Main page colours */
+html[data-theme="light"] body {
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* Navbar */
+html[data-theme="light"] .navbar {
+    background: #ffffff;
+    color: var(--text);
+    border-bottom: 1px solid var(--line);
+}
+
+html[data-theme="light"] .nav-links a {
+    color: var(--muted);
+}
+
+html[data-theme="light"] .nav-links a:hover,
+html[data-theme="light"] .nav-links a.active {
+    color: var(--text);
+}
+
+/* Keep the complete brand logo consistent on every page */
+.navbar .logo {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-family: "Outfit", sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -1.2px;
+    text-decoration: none;
+}
+
+.navbar .logo span,
+.navbar .logo i {
+    color: var(--accent);
+}
+
+.navbar .logo i {
+    font-style: normal;
+}
+
+/* Back button beside the logo */
+.navbar .vault-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin: 0 0 0 14px;
+    padding: 7px 12px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.navbar .vault-back-btn:hover {
+    background: var(--line);
+}
+
+/* Home hero */
+html[data-theme="light"] .hero {
+    background:
+        radial-gradient(ellipse at 82% 48%, rgba(220, 160, 85, 0.16), transparent 35%),
+        radial-gradient(ellipse at 70% 75%, rgba(150, 125, 180, 0.10), transparent 40%),
+        linear-gradient(110deg, #ffffff, #f5f0e9 55%, #f4f4f7);
+}
+
+html[data-theme="light"] .hero-backdrop {
+    background:
+        linear-gradient(90deg, #ffffff, transparent 70%),
+        radial-gradient(ellipse at 70% 40%, rgba(184, 117, 18, 0.08), transparent 36%);
+}
+
+html[data-theme="light"] .hero-description,
+html[data-theme="light"] .secondary-btn {
+    color: var(--text);
+}
+
+html[data-theme="light"] .hero-note,
+html[data-theme="light"] .hero-index,
+html[data-theme="light"] .results-label,
+html[data-theme="light"] .demo-note {
+    color: var(--muted);
+}
+
+/* Shared panels and collection sections */
+html[data-theme="light"] .collection-banner,
+html[data-theme="light"] .community-rating,
+html[data-theme="light"] .review-form,
+html[data-theme="light"] .review-login-prompt,
+html[data-theme="light"] .profile-header,
+html[data-theme="light"] .top-movie,
+html[data-theme="light"] .settings-card,
+html[data-theme="light"] .top5-editor,
+html[data-theme="light"] .top5-result,
+html[data-theme="light"] .top5-selected-row,
+html[data-theme="light"] .saved-item,
+html[data-theme="light"] .journal-empty,
+html[data-theme="light"] .journal-entry,
+html[data-theme="light"] .journal-card {
+    background-color: #ffffff;
+    color: #19191d;
+    border-color: #dddddd;
+}
+
+/* Movie cards: preserve readable text over poster artwork */
+html[data-theme="light"] .poster-overlay,
+html[data-theme="light"] .poster-overlay h3,
+html[data-theme="light"] .poster-overlay p,
+html[data-theme="light"] .poster .movie-type {
+    color: #ffffff;
+}
+
+html[data-theme="light"] .poster::after {
+    background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.05),
+        transparent 25%,
+        rgba(0, 0, 0, 0.1) 45%,
+        rgba(0, 0, 0, 0.88) 100%
+    );
+}
+
+html[data-theme="light"] .poster-fallback {
+    background: #e6e6eb;
+    color: #19191d;
+}
+
+/* Inputs and text fields */
+html[data-theme="light"] input,
+html[data-theme="light"] select,
+html[data-theme="light"] textarea {
+    background-color: #ffffff;
+    color: #19191d;
+    border-color: #cccccc;
+}
+
+html[data-theme="light"] .profile-info p,
+html[data-theme="light"] .settings-card p,
+html[data-theme="light"] .settings-intro,
+html[data-theme="light"] .top5-status,
+html[data-theme="light"] .reviews-subtitle,
+html[data-theme="light"] .review-date,
+html[data-theme="light"] .review-body,
+html[data-theme="light"] .review-login-prompt p,
+html[data-theme="light"] .your-rating-text,
+html[data-theme="light"] .rating-vote-count,
+html[data-theme="light"] .rating-message,
+html[data-theme="light"] .empty-watchlist,
+html[data-theme="light"] .watchlist-meta {
+    color: #55545b;
+}
+
+/* Reviews */
+html[data-theme="light"] .movie-reviews {
+    color: #19191d;
+}
+
+html[data-theme="light"] .review-form textarea {
+    background: #ffffff;
+    color: #19191d;
+    border-color: #cccccc;
+}
+
+html[data-theme="light"] .review-card {
+    border-bottom-color: var(--line);
+}
+
+html[data-theme="light"] .review-cancel-button,
+html[data-theme="light"] .review-edit-button {
+    color: #333333;
+    border-color: #cccccc;
+}
+
+/* Watchlist and journal links */
+html[data-theme="light"] .watchlist-action-btn {
+    color: #87530a;
+    border-color: #b87512;
+}
+
+html[data-theme="light"] .watchlist-action-btn:hover {
+    background: #b87512;
+    color: #ffffff;
+}
+
+/* Footer */
+html[data-theme="light"] .footer {
+    border-top-color: var(--line);
+}
+
+html[data-theme="light"] .footer p,
+html[data-theme="light"] .footer > span {
+    color: var(--muted);
+}
+
+/* Mobile navbar */
+@media (max-width: 600px) {
+    .navbar .logo {
+        font-size: 21px;
+    }
+
+    .navbar .vault-back-btn {
+        margin-left: 8px;
+        padding: 6px 9px;
+        font-size: 12px;
+    }
+}
+
+/* FIX: Force the brand logo to render visibly */
+header.navbar > a.logo,
+.navbar .logo {
+    display: inline-flex !important;
+    align-items: center;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: max-content;
+    height: auto !important;
+    position: relative;
+    z-index: 100;
+    overflow: visible !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    font-size: 24px !important;
+    line-height: 1.6;
+    white-space: nowrap !important;
+    color: var(--text) !important;
+    -webkit-text-fill-color: var(--text) !important;
+}
+
+.navbar .logo span,
+.navbar .logo i {
+    color: var(--accent) !important;
+    -webkit-text-fill-color: var(--accent) !important;
+}
+
+@media (max-width: 600px) {
+    .navbar .logo {
+        font-size: 21px !important;
+    }
+}
+
+/* =========================================
+   CINEMATIC HOMEPAGE
+========================================= */
+
+.cinema-hero {
+    position: relative;
+    min-height: 590px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    isolation: isolate;
+    background: #09090b;
+    color: #fff;
+}
+
+.cinema-hero-backdrop,
+.cinema-hero-shade {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+}
+
+.cinema-hero-backdrop {
+    background-position: center 28%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    transform: scale(1.02);
+    transition: background-image .35s ease;
+}
+
+.cinema-hero-shade {
+    background:
+        linear-gradient(90deg, #09090b 0%, rgba(9,9,11,.94) 23%,
+        rgba(9,9,11,.68) 49%, rgba(9,9,11,.12) 100%),
+        linear-gradient(0deg, #09090b 0%, transparent 40%,
+        rgba(9,9,11,.15) 100%);
+}
+
+.cinema-hero-content {
+    width: min(670px, 86%);
+    padding: 82px 0 100px 7%;
+}
+
+.cinema-eyebrow,
+.cinema-feature-label,
+.cinema-row-caption,
+.cinema-hero-bottom {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.cinema-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #e8e5df;
+    margin-bottom: 24px;
+}
+
+.cinema-live-dot {
+    width: 7px;
+    height: 7px;
+    background: #e50914;
+    border-radius: 50%;
+    box-shadow: 0 0 12px #e5091480;
+}
+
+.cinema-feature-label {
+    color: #ffb547;
+    margin-bottom: 12px;
+}
+
+.cinema-hero h1 {
+    max-width: 650px;
+    margin: 0 0 18px;
+    color: #fff;
+    font-family: Outfit, sans-serif;
+    font-size: clamp(38px, 5.5vw, 70px);
+    line-height: 1.04;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+}
+
+.cinema-feature-meta {
+    margin-bottom: 17px;
+    color: #e8e8eb;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.cinema-feature-description {
+    max-width: 540px;
+    margin: 0;
+    color: #d1d1d6;
+    font-size: 15px;
+    line-height: 1.8;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cinema-hero-buttons {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 27px;
+}
+
+.cinema-primary-btn,
+.cinema-secondary-btn {
+    min-height: 46px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 0 22px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s, transform .2s;
+}
+
+.cinema-primary-btn {
+    color: #101014;
+    background: #fff;
+    border: 1px solid #fff;
+}
+
+.cinema-primary-btn:hover {
+    background: #e7e7e7;
+    transform: translateY(-2px);
+}
+
+.cinema-secondary-btn {
+    color: #fff;
+    background: rgba(55,55,62,.8);
+    border: 1px solid #66666d;
+}
+
+.cinema-secondary-btn:hover:not(:disabled) {
+    background: #4a4a52;
+}
+
+.cinema-secondary-btn:disabled {
+    opacity: .55;
+    cursor: wait;
+}
+
+.cinema-feature-status {
+    min-height: 15px;
+    color: #aaaab2;
+    font-size: 12px;
+}
+
+.cinema-hero-bottom {
+    position: absolute;
+    bottom: 22px;
+    left: 7%;
+    right: 7%;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    color: #a7a7ae;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+}
+
+.cinema-row-section {
+    padding: 35px 0 12px 7%;
+    overflow: hidden;
+    background: #09090b;
+    color: #f4f1eb;
+    scroll-margin-top: 90px;
+}
+
+.cinema-row-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 18px;
+    padding-right: 7%;
+    margin-bottom: 21px;
+}
+
+.cinema-row-heading .section-kicker {
+    margin-bottom: 7px;
+}
+
+.cinema-row-heading h2 {
+    margin: 0;
+    font-family: Outfit, sans-serif;
+    font-size: clamp(24px, 3vw, 34px);
+    letter-spacing: -.5px;
+}
+
+.cinema-row-heading h2 span {
+    color: #ffb547;
+}
+
+.cinema-row-caption {
+    padding-bottom: 5px;
+    color: #92929b;
+    font-size: 9px;
+    white-space: nowrap;
+}
+
+.cinema-horizontal-row {
+    display: flex;
+    gap: 17px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 3px 7% 23px 0;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: #444 #141417;
+}
+
+.cinema-horizontal-row::-webkit-scrollbar {
+    height: 5px;
+}
+
+.cinema-horizontal-row::-webkit-scrollbar-track {
+    background: #141417;
+}
+
+.cinema-horizontal-row::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 10px;
+}
+
+.cinema-movie-card {
+    flex: 0 0 175px;
+    width: 175px;
+    min-width: 0;
+    scroll-snap-align: start;
+    overflow: hidden;
+    border: 1px solid #242429;
+    border-radius: 8px;
+    background: #111114;
+    transition: transform .22s ease, border-color .22s ease;
+}
+
+.cinema-movie-card:hover {
+    transform: translateY(-4px);
+    border-color: #55555d;
+}
+
+.cinema-poster-link {
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    background: #202025;
+}
+
+.cinema-poster {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .35s ease;
+}
+
+.cinema-movie-card:hover .cinema-poster {
+    transform: scale(1.045);
+}
+
+.cinema-poster-fallback {
+    display: grid;
+    place-items: center;
+    padding: 15px;
+    box-sizing: border-box;
+    color: #ddd;
+    text-align: center;
+}
+
+.cinema-card-info {
+    padding: 12px;
+}
+
+.cinema-card-title {
+    display: block;
+    overflow: hidden;
+    color: #f5f5f6;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cinema-card-title:hover {
+    color: #ffb547;
+}
+
+.cinema-card-meta {
+    display: block;
+    margin-top: 6px;
+    color: #a7a7af;
+    font-size: 11px;
+}
+
+.cinema-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.cinema-card-list-btn {
+    width: 32px;
+    height: 32px;
+}
+
+.cinema-row-message {
+    color: #b5b5bd;
+    padding: 15px 0;
+    font-size: 14px;
+}
+
+#movie-collection {
+    padding-top: 55px;
+    scroll-margin-top: 90px;
+}
+
+#movie-collection .section-heading {
+    margin-bottom: 24px;
+}
+
+#watchlist {
+    scroll-margin-top: 90px;
+}
+
+@media (min-width: 1500px) {
+    .cinema-movie-card {
+        flex-basis: 195px;
+        width: 195px;
+    }
+}
+
+@media (max-width: 700px) {
+    .cinema-hero {
+        min-height: 570px;
+        align-items: end;
+    }
+
+    .cinema-hero-backdrop {
+        background-position: center;
+    }
+
+    .cinema-hero-shade {
+        background:
+            linear-gradient(0deg, #09090b 0%, rgba(9,9,11,.92) 28%,
+            rgba(9,9,11,.45) 72%, rgba(9,9,11,.2) 100%);
+    }
+
+    .cinema-hero-content {
+        width: 86%;
+        padding: 60px 0 85px;
+        margin: 0 auto;
+    }
+
+    .cinema-hero h1 {
+        font-size: clamp(36px, 10vw, 54px);
+    }
+
+    .cinema-feature-description {
+        font-size: 13px;
+    }
+
+    .cinema-hero-bottom {
+        left: 7%;
+        right: 7%;
+        font-size: 8px;
+    }
+
+    .cinema-hero-bottom span:last-child {
+        display: none;
+    }
+
+    .cinema-row-section {
+        padding-top: 28px;
+        padding-left: 5%;
+    }
+
+    .cinema-row-heading {
+        padding-right: 5%;
+    }
+
+    .cinema-row-caption {
+        display: none;
+    }
+
+    .cinema-horizontal-row {
+        gap: 12px;
+        padding-right: 5%;
+    }
+
+    .cinema-movie-card {
+        flex-basis: 145px;
+        width: 145px;
+    }
+}
+
+/* =========================================
+   FEATURED TODAY — FIVE-MOVIE CAROUSEL
+========================================= */
+
+.cinema-hero {
+    --hero-transition: 450ms;
+
+    min-height: 620px;
+}
+
+/* Smooth backdrop transition */
+.cinema-hero-backdrop {
+    transition: opacity var(--hero-transition) ease,
+                transform 7s ease;
+    will-change: opacity, transform;
+}
+
+.cinema-hero.is-changing .cinema-hero-backdrop {
+    opacity: 0.45;
+    transform: scale(1.06);
+}
+
+/* Keep the featured content above the backdrop */
+.cinema-hero-content {
+    position: relative;
+    z-index: 2;
+    animation: featured-content-in 450ms ease both;
+}
+
+@keyframes featured-content-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Previous / next arrows */
+.hero-arrow {
+    position: absolute;
+    z-index: 5;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    border-radius: 50%;
+    background: rgba(10, 10, 13, 0.58);
+    color: #fff;
+    font-size: 20px;
+    line-height: 1;
+    backdrop-filter: blur(8px);
+    transition: background 180ms ease,
+                border-color 180ms ease,
+                transform 180ms ease;
+}
+
+.hero-arrow:hover {
+    background: #ffb547;
+    border-color: #ffb547;
+    color: #111;
+}
+
+.hero-arrow:active {
+    transform: translateY(-50%) scale(0.94);
+}
+
+.hero-arrow:focus-visible,
+.hero-indicator:focus-visible {
+    outline: 2px solid #ffb547;
+    outline-offset: 4px;
+}
+
+.hero-arrow-prev {
+    left: 24px;
+}
+
+.hero-arrow-next {
+    right: 24px;
+}
+
+/* Five slide indicators */
+.hero-indicators {
+    position: absolute;
+    z-index: 5;
+    right: 7%;
+    bottom: 65px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hero-indicator {
+    width: 24px;
+    height: 4px;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.42);
+    cursor: pointer;
+    transition: width 220ms ease,
+                background 220ms ease;
+}
+
+.hero-indicator:hover {
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.hero-indicator.active {
+    width: 42px;
+    background: #ffb547;
+}
+
+/* Counter stays legible */
+#featured-counter {
+    color: #ffb547;
+    white-space: nowrap;
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .cinema-hero-content,
+    .cinema-hero-backdrop,
+    .hero-arrow,
+    .hero-indicator {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+    .hero-arrow-prev {
+        left: 14px;
+    }
+
+    .hero-arrow-next {
+        right: 14px;
+    }
+
+    .hero-indicators {
+        right: 7%;
+        bottom: 58px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .cinema-hero {
+        min-height: 590px;
+    }
+
+    .hero-arrow {
+        top: 43%;
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+    }
+
+    .hero-arrow-prev {
+        left: 10px;
+    }
+
+    .hero-arrow-next {
+        right: 10px;
+    }
+
+    .hero-indicators {
+        right: auto;
+        left: 7%;
+        bottom: 49px;
+        gap: 6px;
+    }
+
+    .hero-indicator {
+        width: 17px;
+        height: 4px;
+    }
+
+    .hero-indicator.active {
+        width: 30px;
+    }
+
+    .cinema-hero-bottom {
+        bottom: 19px;
+    }
+}
+
+/* Light theme support */
+html[data-theme="light"] .cinema-hero {
+    background: #09090b;
+    color: #fff;
+}
+
+html[data-theme="light"] .cinema-hero h1,
+html[data-theme="light"] .cinema-hero .cinema-eyebrow,
+html[data-theme="light"] .cinema-hero .cinema-feature-meta,
+html[data-theme="light"] .cinema-hero .cinema-feature-description {
+    color: #fff;
+}
+
+html[data-theme="light"] .hero-arrow {
+    background: rgba(10, 10, 13, 0.72);
+    color: #fff;
+}
+
+html[data-theme="light"] .hero-arrow:hover {
+    background: #ffb547;
+    color: #111;
+}

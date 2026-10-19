@@ -1,0 +1,387 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Settings | Abraham's Vault</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #0b0b0d;
+            color: #f5f5f5;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .settings-container {
+            width: min(760px, 92%);
+            margin: 45px auto;
+        }
+
+        .settings-container h1 {
+            margin-bottom: 8px;
+        }
+
+        .settings-intro {
+            color: #aaa;
+            margin-bottom: 28px;
+        }
+
+        .settings-card {
+            background: #151518;
+            border: 1px solid #303036;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .settings-card h2 {
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        .settings-card p {
+            color: #aaa;
+            line-height: 1.5;
+        }
+
+        .settings-card label {
+            display: block;
+            margin: 16px 0 7px;
+            font-size: 14px;
+        }
+
+        .settings-card input,
+        .settings-card select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #38383f;
+            border-radius: 8px;
+            background: #0e0e11;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .settings-button {
+            margin-top: 18px;
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 8px;
+            background: #ffb547;
+            color: #17120a;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .settings-button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .settings-message {
+            display: none;
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .settings-message.show {
+            display: block;
+        }
+
+        .settings-message.success {
+            background: #17301f;
+            color: #b5f2c6;
+        }
+
+        .settings-message.error {
+            background: #351719;
+            color: #ffb6ba;
+        }
+
+        .danger-button {
+            background: #e50914;
+            color: white;
+        }
+
+        body[data-theme="light"] {
+            background: #f4f4f7;
+            color: #19191d;
+        }
+
+        body[data-theme="light"] .settings-card {
+            background: #fff;
+            border-color: #ddd;
+        }
+
+        body[data-theme="light"] .settings-card p,
+        body[data-theme="light"] .settings-intro {
+            color: #555;
+        }
+
+        body[data-theme="light"] .settings-card input,
+        body[data-theme="light"] .settings-card select {
+            background: white;
+            color: #19191d;
+            border-color: #ccc;
+        }
+
+        @media (max-width: 600px) {
+            .settings-card {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="navbar"></div>
+
+    <main class="settings-container">
+        <h1>Settings</h1>
+        <p class="settings-intro">
+            Manage your display preferences and account.
+        </p>
+
+        <section class="settings-card">
+            <h2>Display</h2>
+            <p>Choose the appearance you prefer.</p>
+
+            <label for="theme-select">Theme</label>
+            <select id="theme-select">
+                <option value="dark">Dark mode</option>
+                <option value="light">Light mode</option>
+            </select>
+
+            <button class="settings-button" id="save-theme" type="button">
+                Save display settings
+            </button>
+            <div id="theme-message" class="settings-message"
+                 role="status" aria-live="polite"></div>
+        </section>
+
+        <section class="settings-card">
+            <h2>Change username</h2>
+            <p>Your new username will appear in the navigation bar.</p>
+
+            <form id="username-form">
+                <label for="new-username">New username</label>
+                <input id="new-username" type="text"
+                       minlength="3" maxlength="30" required>
+
+                <button class="settings-button" type="submit">
+                    Update username
+                </button>
+            </form>
+            <div id="username-message" class="settings-message"
+                 role="status" aria-live="polite"></div>
+        </section>
+
+        <section class="settings-card">
+            <h2>Change password</h2>
+            <p>Confirm your current password before choosing a new one.</p>
+
+            <form id="password-form">
+                <label for="current-password">Current password</label>
+                <input id="current-password" type="password"
+                       autocomplete="current-password" required>
+
+                <label for="new-password">New password</label>
+                <input id="new-password" type="password"
+                       minlength="8" maxlength="72"
+                       autocomplete="new-password" required>
+
+                <button class="settings-button" type="submit">
+                    Update password
+                </button>
+            </form>
+            <div id="password-message" class="settings-message"
+                 role="status" aria-live="polite"></div>
+        </section>
+
+        <section class="settings-card">
+            <h2>Log out</h2>
+            <p>Sign out of your Abraham's Vault account on this browser.</p>
+            <button class="settings-button danger-button"
+                    id="settings-logout" type="button">
+                Log Out
+            </button>
+        </section>
+    </main>
+
+    <script>
+        const API_BASE_URL =
+            "https://abrahams-vault-backend.onrender.com/api";
+
+        const userId = sessionStorage.getItem("vaultUserId");
+        const token = sessionStorage.getItem("vaultToken");
+
+        function logoutFromSettings() {
+            sessionStorage.removeItem("vaultToken");
+            sessionStorage.removeItem("vaultUserId");
+            sessionStorage.removeItem("vaultUsername");
+
+            for (const key of [
+                "token", "authToken", "accessToken", "jwt"
+            ]) {
+                sessionStorage.removeItem(key);
+                localStorage.removeItem(key);
+            }
+
+            window.location.href = "index.html";
+        }
+
+        if (!userId || !token) {
+            window.location.replace("login.html");
+        }
+
+        function showSettingsMessage(id, message, type) {
+            const element = document.getElementById(id);
+            element.textContent = message;
+            element.className = `settings-message show ${type}`;
+        }
+
+        async function accountRequest(path, payload) {
+            const response = await fetch(`${API_BASE_URL}${path}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error || data.message ||
+                    `Request failed (${response.status})`
+                );
+            }
+
+            return data;
+        }
+
+        // Display settings
+        const themeSelect = document.getElementById("theme-select");
+
+        function applyTheme(theme) {
+            document.documentElement.dataset.theme = theme;
+            document.body.dataset.theme = theme;
+        }
+
+        const savedTheme = localStorage.getItem("vaultTheme") || "dark";
+        themeSelect.value = savedTheme;
+        applyTheme(savedTheme);
+
+        document.getElementById("save-theme").addEventListener("click", () => {
+    const theme = themeSelect.value;
+    localStorage.setItem("vaultTheme", theme);
+    applyTheme(theme);
+    showSettingsMessage("theme-message", "Display preference saved.", "success");
+});
+
+        // Change username
+        document.getElementById("username-form")
+            .addEventListener("submit", async event => {
+                event.preventDefault();
+
+                const username =
+                    document.getElementById("new-username").value.trim();
+
+                try {
+                    const data = await accountRequest(
+                        `/account/${encodeURIComponent(userId)}/username`,
+                        { username }
+                    );
+
+                    sessionStorage.setItem(
+                        "vaultUsername",
+                        data.username || username
+                    );
+
+                    showSettingsMessage(
+                        "username-message",
+                        data.message || "Username updated successfully.",
+                        "success"
+                    );
+
+                    document.getElementById("new-username").value = "";
+                } catch (error) {
+                    showSettingsMessage(
+                        "username-message", error.message, "error"
+                    );
+                }
+            });
+
+        // Change password
+        document.getElementById("password-form")
+            .addEventListener("submit", async event => {
+                event.preventDefault();
+
+                const currentPassword =
+                    document.getElementById("current-password").value;
+                const newPassword =
+                    document.getElementById("new-password").value;
+
+                try {
+                    const data = await accountRequest(
+                        `/account/${encodeURIComponent(userId)}/password`,
+                        { currentPassword, newPassword }
+                    );
+
+                    showSettingsMessage(
+                        "password-message",
+                        data.message ||
+                        "Password updated. Please log in again.",
+                        "success"
+                    );
+
+                    document.getElementById("password-form").reset();
+
+                    // Sign out locally after a successful password change.
+                    setTimeout(logoutFromSettings, 1200);
+                } catch (error) {
+                    showSettingsMessage(
+                        "password-message", error.message, "error"
+                    );
+                }
+            });
+
+        document.getElementById("settings-logout")
+            .addEventListener("click", logoutFromSettings);
+    </script>
+
+    <script src="navbar.js"></script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const backButton = document.createElement("button");
+        backButton.type = "button";
+        backButton.className = "vault-back-btn";
+        backButton.textContent = "← Back";
+
+        backButton.addEventListener("click", () => {
+            if (window.history.length > 1 && document.referrer) {
+                window.history.back();
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+
+        const main = document.querySelector("main");
+        if (main) {
+            main.prepend(backButton);
+        }
+    });
+</script>
+
+
+</body>
+</html>
