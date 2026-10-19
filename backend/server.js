@@ -123,7 +123,9 @@ app.get("/api/db-test", async (req, res) => {
 // REGISTER
 // =========================
 
-app.post("/api/register", async (req, res) => {
+app.post(
+    ["/api/register", "/api/auth/register"],
+    async (req, res) => {
     
     try {
         const { username, email, password } = req.body;
@@ -194,7 +196,9 @@ app.post("/api/register", async (req, res) => {
 // LOGIN
 // =========================
 
-app.post("/api/login", async (req, res) => {
+app.post(
+    ["/api/login", "/api/auth/login"],
+    async (req, res) => {
     try {
         const { email, password } = req.body;
 
