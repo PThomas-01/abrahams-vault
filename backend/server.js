@@ -1,5 +1,5 @@
 
-require("dotenv").config();
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 
 const express = require("express");
 const cors = require("cors");
@@ -124,6 +124,7 @@ app.get("/api/db-test", async (req, res) => {
 // =========================
 
 app.post("/api/register", async (req, res) => {
+    
     try {
         const { username, email, password } = req.body;
 
@@ -1216,6 +1217,329 @@ app.delete(
 
 
  // =========================
+ // FOLLOW / UNFOLLOW SYSTEM
+ // =========================
+
+// Follow a user
+app.post("/api/follow/:userId", authenticateToken, async (req, res) => {
+    try {
+        const targetUserId = Number(req.params.userId);
+        const currentUserId = req.user.id;
+
+        if (!Number.isSafeInteger(targetUserId) || targetUserId <= 0) {
+            return res.status(400).json({ error: "Invalid user ID" });
+        }
+
+        if (targetUserId === currentUserId) {
+            return res.status(400).json({
+                error: "You cannot follow yourself"
+            });
+        }
+
+        const [users] = await pool.execute(
+            "SELECT id FROM users WHERE id = ?",
+            [targetUserId]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const [result] = await pool.execute(
+            `INSERT IGNORE INTO follows (follower_id, following_id)
+             VALUES (?, ?)`,
+            [currentUserId, targetUserId]
+        );
+
+        res.json({
+            message: result.affectedRows
+                ? "User followed successfully"
+                : "You are already following this user",
+            following: true
+        });
+    } catch (error) {
+        console.error("Follow user error:", error.message);
+        res.status(500).json({ error: "Failed to follow user" });
+    }
+});
+
+// Unfollow a user
+app.delete("/api/follow/:userId", authenticateToken, async (req, res) => {
+    try {
+        const targetUserId = Number(req.params.userId);
+
+        if (!Number.isSafeInteger(targetUserId) || targetUserId <= 0) {
+            return res.status(400).json({ error: "Invalid user ID" });
+        }
+
+        if (targetUserId === req.user.id) {
+            return res.status(400).json({
+                error: "You cannot unfollow yourself"
+            });
+        }
+
+        const [result] = await pool.execute(
+            `DELETE FROM follows
+             WHERE follower_id = ? AND following_id = ?`,
+            [req.user.id, targetUserId]
+        );
+
+        res.json({
+            message: result.affectedRows
+                ? "User unfollowed successfully"
+                : "You were not following this user",
+            following: false
+        });
+    } catch (error) {
+        console.error("Unfollow user error:", error.message);
+        res.status(500).json({ error: "Failed to unfollow user" });
+    }
+});
+
+// Check whether the logged-in user follows a profile
+app.get(
+    "/api/follow/:userId/status",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const targetUserId = Number(req.params.userId);
+
+            if (!Number.isSafeInteger(targetUserId) || targetUserId <= 0) {
+                return res.status(400).json({ error: "Invalid user ID" });
+            }
+
+            const [users] = await pool.execute(
+                "SELECT id FROM users WHERE id = ?",
+                [targetUserId]
+            );
+
+            if (users.length === 0) {
+                return res.status(404).json({ error: "User not found" });
+            }
+
+            const [rows] = await pool.execute(
+                `SELECT 1 FROM follows
+                 WHERE follower_id = ? AND following_id = ?
+                 LIMIT 1`,
+                [req.user.id, targetUserId]
+            );
+
+            res.json({
+                following: rows.length > 0,
+                isSelf: req.user.id === targetUserId
+            });
+        } catch (error) {
+            console.error("Follow status error:", error.message);
+            res.status(500).json({ error: "Failed to check follow status" });
+        }
+    }
+);
+
+// Get follower and following counts for a profile
+app.get("/api/follow/:userId/counts", async (req, res) => {
+    try {
+        const userId = Number(req.params.userId);
+
+        if (!Number.isSafeInteger(userId) || userId <= 0) {
+            return res.status(400).json({ error: "Invalid user ID" });
+        }
+
+        const [users] = await pool.execute(
+            "SELECT id FROM users WHERE id = ?",
+            [userId]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const [rows] = await pool.execute(
+            `SELECT
+                (SELECT COUNT(*) FROM follows
+                 WHERE following_id = ?) AS followers,
+                (SELECT COUNT(*) FROM follows
+                 WHERE follower_id = ?) AS following`,
+            [userId, userId]
+        );
+
+        res.json({
+            followers: Number(rows[0].followers),
+            following: Number(rows[0].following)
+        });
+    } catch (error) {
+        console.error("Follow counts error:", error.message);
+        res.status(500).json({ error: "Failed to load follow counts" });
+    }
+});
+
+// Get a profile's followers
+app.get("/api/follow/:userId/followers", async (req, res) => {
+    try {
+        const userId = Number(req.params.userId);
+
+        if (!Number.isSafeInteger(userId) || userId <= 0) {
+            return res.status(400).json({ error: "Invalid user ID" });
+        }
+
+        const [users] = await pool.execute(
+            "SELECT id FROM users WHERE id = ?",
+            [userId]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const [rows] = await pool.execute(
+            `SELECT u.id AS userId, u.username, f.created_at AS followedAt
+             FROM follows f
+             JOIN users u ON u.id = f.follower_id
+             WHERE f.following_id = ?
+             ORDER BY f.created_at DESC`,
+            [userId]
+        );
+
+        res.json(rows);
+    } catch (error) {
+        console.error("Load followers error:", error.message);
+        res.status(500).json({ error: "Failed to load followers" });
+    }
+});
+
+// Get the accounts a profile follows
+app.get("/api/follow/:userId/following", async (req, res) => {
+    try {
+        const userId = Number(req.params.userId);
+
+        if (!Number.isSafeInteger(userId) || userId <= 0) {
+            return res.status(400).json({ error: "Invalid user ID" });
+        }
+
+        const [users] = await pool.execute(
+            "SELECT id FROM users WHERE id = ?",
+            [userId]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const [rows] = await pool.execute(
+            `SELECT u.id AS userId, u.username, f.created_at AS followedAt
+             FROM follows f
+             JOIN users u ON u.id = f.following_id
+             WHERE f.follower_id = ?
+             ORDER BY f.created_at DESC`,
+            [userId]
+        );
+
+        res.json(rows);
+    } catch (error) {
+        console.error("Load following list error:", error.message);
+        res.status(500).json({ error: "Failed to load following list" });
+    }
+});
+
+
+ // =========================
+ // FIND USERS
+ // =========================
+
+app.get("/api/users/search", async (req, res) => {
+    try {
+        const q = String(req.query.q || "").trim();
+
+        if (q.length < 2) {
+            return res.json([]);
+        }
+
+        const [users] = await pool.execute(
+            `SELECT id, username
+             FROM users
+             WHERE username LIKE ?
+             ORDER BY username ASC
+             LIMIT 20`,
+            [`%${q}%`]
+        );
+
+        res.set("Cache-Control", "no-store");
+        return res.status(200).json(users);
+    } catch (error) {
+        console.error("Find Users API error:", error);
+
+        return res.status(500).json({
+            error: "Unable to search users",
+            details: process.env.NODE_ENV === "production"
+                ? undefined
+                : error.message
+        });
+    }
+});
+
+
+/* Update username */
+app.patch(
+    "/api/account/:userId/username",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const requestedUserId = Number(req.params.userId);
+            const authenticatedUserId = Number(req.user.id);
+            const username = String(req.body.username || "").trim();
+
+            if (
+                !Number.isSafeInteger(requestedUserId) ||
+                requestedUserId <= 0 ||
+                requestedUserId !== authenticatedUserId
+            ) {
+                return res.status(403).json({
+                    error: "You can only update your own username."
+                });
+            }
+
+            if (!/^[A-Za-z0-9_]{3,30}$/.test(username)) {
+                return res.status(400).json({
+                    error: "Username must be 3–30 characters using letters, numbers, or underscores."
+                });
+            }
+
+            const [existing] = await pool.execute(
+                "SELECT id FROM users WHERE username = ? AND id <> ?",
+                [username, authenticatedUserId]
+            );
+
+            if (existing.length > 0) {
+                return res.status(409).json({
+                    error: "That username is already taken."
+                });
+            }
+
+            await pool.execute(
+                "UPDATE users SET username = ? WHERE id = ?",
+                [username, authenticatedUserId]
+            );
+
+            return res.json({
+                message: "Username updated successfully.",
+                username
+            });
+        } catch (error) {
+            console.error("Username update error:", error);
+
+            if (error.code === "ER_DUP_ENTRY") {
+                return res.status(409).json({
+                    error: "That username is already taken."
+                });
+            }
+
+            return res.status(500).json({
+                error: "Unable to update username."
+            });
+        }
+    }
+);
+
+ // =========================
  // START SERVER
  // =========================
 
@@ -1252,6 +1576,7 @@ app.delete(
              )
          `);
 
+        
          // Start accepting requests
          app.listen(PORT, "0.0.0.0", () => {
              console.log(
