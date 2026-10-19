@@ -18,53 +18,33 @@
     <style>
         /* Navbar logo image */
      
-.navbar > .logo {
-    display: inline-flex;
+
+.navbar {
+    height: 82px;
+    padding: 0 7%;
+    display: flex;
     align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
-    text-decoration: none;
+    justify-content: flex-start;
+    gap: 28px;
+    background: rgba(11, 11, 13, 0.96);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-.navbar > .logo img {
-    display: block;
-    width: auto;
-    height: 64px;
-    max-width: 120px;
-    object-fit: contain;
+.nav-links {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    margin-left: auto;
 }
 
-.navbar > .logo .logo-text {
-    font-family: 'Outfit', sans-serif;
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    color: #ffffff;
-    white-space: nowrap;
-}
-
-.navbar > .logo .logo-text > span {
-    color: #d9b66a;
-}
-
-.navbar > .logo .logo-text i {
-    color: #d9b66a;
-    font-style: normal;
-}
-
-@media (max-width: 600px) {
-    .navbar > .logo {
-        gap: 7px;
-    }
-
-    .navbar > .logo img {
-        height: 46px;
-        max-width: 75px;
-    }
-
-    .navbar > .logo .logo-text {
-        font-size: 18px;
-    }
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-left: 12px;
 }
 
 
@@ -147,32 +127,26 @@
 </a>
 
        
-        <nav class="nav-links">
-            <a href="index.html" class="active">Home</a>
-            <a href="index.html#trending">Discover</a>
-            <a href="index.html#popular">Collection</a>
-            <a href="my-list.html">My Watchlist</a>
-            <a href="watched.html">Watched Log</a>
+        
 
-            <!-- Shown when logged out -->
-            <span id="auth-links">
-                <a href="login.html">Log In</a>
-                <a href="signup.html">Sign Up</a>
-            </span>
+<nav class="nav-links">
+    <a href="index.html" class="active">Home</a>
+    <a href="index.html#popular">Collection</a>
+    <a href="my-list.html">My Watchlist</a>
+    <a href="watched.html">Watched Log</a>
+    <a href="journal.html">My Journal</a>
+    <a href="profile.html" id="profile-link" style="display: none;">Profile</a>
 
-            <!-- Shown when logged in -->
-            <span id="user-links">
-                <span id="welcome-user"></span>
+    <span id="auth-links">
+        <a href="login.html">Log In</a>
+        <a href="signup.html">Sign Up</a>
+    </span>
 
-                <button
-                    type="button"
-                    id="logout-btn"
-                    class="logout-btn"
-                >
-                    Log Out
-                </button>
-            </span>
-        </nav>
+    <span id="user-links">
+        <span id="welcome-user"></span>
+    </span>
+</nav>
+
 
         <div class="nav-actions">
 
@@ -183,9 +157,7 @@
                 aria-label="Open search"
             >⌕</button>
 
-            <a href="#trending" class="explore-btn">
-                Explore Movies <span>↗</span>
-            </a>
+            
 
         </div>
 
@@ -339,6 +311,7 @@
     </footer>
 
     <!-- Existing movie functionality -->
+     <script src="top5.js"></script>
     <script src="script.js"></script>
 
     <!-- Login status, username and logout -->

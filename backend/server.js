@@ -26,12 +26,10 @@ const pool = mysql.createPool({
 
     // DB_SSL_CA should contain the contents of ca.pem on Render.
     // Locally, leave DB_SSL_CA unset if using local MySQL.
-    ssl: process.env.DB_SSL_CA
-        ? {
-            ca: process.env.DB_SSL_CA.replace(/\\n/g, "\n"),
-            rejectUnauthorized: true
-        }
-        : undefined,
+    ssl: {
+    ca: require("fs").readFileSync("C:/Users/P Thomas Abraham/Downloads/ca.pem", "utf8"),
+    rejectUnauthorized: true
+},
 
     waitForConnections: true,
     connectionLimit: 10,
@@ -829,6 +827,155 @@ app.delete(
          }
      }
  );
+
+
+ // =========================
+ // USER TOP 5 MOVIES
+ // =========================
+
+// Public: retrieve a user's Top 5 movies for their profile
+app.get("/api/top-movies/:userId", async (req, res) => {
+    try {
+        const userId = Number(req.params.userId);
+
+        if (!Number.isSafeInteger(userId) || userId <= 0) {
+            return res.status(400).json({
+                error: "Invalid user ID"
+            });
+        }
+
+        const [users] = await pool.execute(
+            "SELECT id FROM users WHERE id = ?",
+            [userId]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({
+                error: "User not found"
+            });
+        }
+
+        const [movies] = await pool.execute(
+            `SELECT
+                tmdb_movie_id AS movieId,
+                movie_title AS title,
+                poster_path AS posterPath,
+                rank_position AS rankPosition
+             FROM user_top_movies
+             WHERE user_id = ?
+             ORDER BY rank_position ASC`,
+            [userId]
+        );
+
+        res.json(movies);
+    } catch (error) {
+        console.error("Load Top 5 error:", error);
+
+        res.status(500).json({
+            error: "Failed to load Top 5 movies"
+        });
+    }
+});
+
+
+// Private write access: save or replace the logged-in user's Top 5
+app.put(
+    "/api/top-movies/:userId",
+    authenticateToken,
+    async (req, res) => {
+        let connection;
+
+        try {
+            if (!checkUserAccess(req, res)) return;
+
+            const movies = req.body.movies;
+
+            if (!Array.isArray(movies) || movies.length > 5) {
+                return res.status(400).json({
+                    error: "Provide a list of up to 5 movies"
+                });
+            }
+
+            const seenMovieIds = new Set();
+
+            for (const movie of movies) {
+                const movieId = Number(movie?.movieId);
+                const title = movie?.title;
+                const posterPath = movie?.posterPath ?? null;
+
+                if (
+                    !Number.isSafeInteger(movieId) ||
+                    movieId <= 0 ||
+                    typeof title !== "string" ||
+                    !title.trim() ||
+                    title.trim().length > 255 ||
+                    (
+                        posterPath !== null &&
+                        (
+                            typeof posterPath !== "string" ||
+                            posterPath.length > 255
+                        )
+                    ) ||
+                    seenMovieIds.has(movieId)
+                ) {
+                    return res.status(400).json({
+                        error: "Each movie must have a valid, unique movie ID, title, and optional poster path"
+                    });
+                }
+
+                seenMovieIds.add(movieId);
+            }
+
+            connection = await pool.getConnection();
+            await connection.beginTransaction();
+
+            // Replace the existing rankings with the submitted list
+            await connection.execute(
+                "DELETE FROM user_top_movies WHERE user_id = ?",
+                [req.user.id]
+            );
+
+            for (let i = 0; i < movies.length; i++) {
+                const movie = movies[i];
+
+                await connection.execute(
+                    `INSERT INTO user_top_movies
+                        (user_id, tmdb_movie_id, movie_title,
+                         poster_path, rank_position)
+                     VALUES (?, ?, ?, ?, ?)`,
+                    [
+                        req.user.id,
+                        Number(movie.movieId),
+                        movie.title.trim(),
+                        movie.posterPath ?? null,
+                        i + 1
+                    ]
+                );
+            }
+
+            await connection.commit();
+
+            res.json({
+                message: "Top 5 movies saved successfully",
+                total: movies.length
+            });
+        } catch (error) {
+            if (connection) {
+                await connection.rollback();
+            }
+
+            console.error("Save Top 5 error:", error.message);
+
+            res.status(500).json({
+                error: "Failed to save Top 5 movies"
+            });
+        } finally {
+            if (connection) {
+                connection.release();
+            }
+        }
+    }
+);
 
 
 // =========================

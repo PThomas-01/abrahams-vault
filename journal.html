@@ -1,0 +1,46 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Journal | Abraham's Vault</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="journal.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">Abraham's Vault</a>
+
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="my-list.html">My Watchlist</a>
+            <a href="watched.html">Watched Log</a>
+            <a href="journal.html" class="active">My Journal</a>
+        </div>
+    </nav>
+
+    <main class="journal-container">
+        <header class="journal-header">
+            <p class="journal-eyebrow">YOUR PERSONAL MOVIE DIARY</p>
+            <h1>My Journal</h1>
+            <p>Capture your thoughts, memories, and feelings about every movie.</p>
+        </header>
+
+        <div id="journal-message" role="status"></div>
+
+        <section id="journal-entries" class="journal-grid">
+            <p class="journal-loading">Loading your journal...</p>
+        </section>
+
+        <section id="journal-empty" class="journal-empty" hidden>
+            <h2>Your story starts here.</h2>
+            <p>Your movie journal entries will appear here once you write them.</p>
+            <a href="index.html" class="journal-browse-btn">Discover Movies</a>
+        </section>
+    </main>
+
+    <script src="journal.js"></script>
+</body>
+</html>

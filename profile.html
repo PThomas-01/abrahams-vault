@@ -1,0 +1,639 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile | Abraham's Vault</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .profile-page {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 24px;
+            color: #f5f5f5;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            padding: 28px;
+            background: #1b1b1b;
+            border-radius: 16px;
+            margin-bottom: 35px;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #343434;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            font-weight: bold;
+            color: #ffffff;
+            flex-shrink: 0;
+        }
+
+        .profile-info h1 {
+            margin: 0 0 10px;
+            font-size: 30px;
+        }
+
+        .profile-info p {
+            color: #bdbdbd;
+            margin: 0;
+        }
+
+        .profile-section h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .top-movies {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .top-movie {
+            background: #1b1b1b;
+            border-radius: 12px;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .top-movie img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 2 / 3;
+            object-fit: cover;
+            background: #292929;
+        }
+
+        .movie-info {
+            padding: 12px;
+        }
+
+        .movie-rank {
+            color: #f0c15a;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .movie-info h3 {
+            font-size: 15px;
+            margin: 8px 0 0;
+            overflow-wrap: anywhere;
+        }
+
+        .profile-message {
+            color: #bdbdbd;
+            padding: 24px;
+            background: #1b1b1b;
+            border-radius: 12px;
+            text-align: center;
+            grid-column: 1 / -1;
+        }
+
+        .profile-error {
+            color: #ff9999;
+        }
+
+        @media (max-width: 700px) {
+            .top-movies {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .profile-header {
+                padding: 18px;
+                gap: 15px;
+            }
+
+            .profile-avatar {
+                width: 72px;
+                height: 72px;
+                font-size: 28px;
+            }
+
+            .profile-info h1 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="navbar"></div>
+
+    <main class="profile-page">
+        <section class="profile-header">
+            <div class="profile-avatar" id="profileAvatar">?</div>
+
+            <div class="profile-info">
+                <h1 id="profileUsername">Loading profile...</h1>
+                <p>Movie lover • Abraham's Vault</p>
+            </div>
+        </section>
+
+        <section class="profile-section">
+            <h2>🎬 Top 5 Movies of All Time</h2>
+
+            <div class="top-movies" id="topMovies">
+                <div class="profile-message">Loading Top 5 movies...</div>
+            </div>
+        </section>
+    </main>
+
+    <script src="navbar.js"></script>
+
+    <script>
+        const API_BASE = "http://localhost:3000/api";
+
+        const params = new URLSearchParams(window.location.search);
+        const profileUserId = params.get("id");
+
+        const usernameElement =
+            document.getElementById("profileUsername");
+
+        const avatarElement =
+            document.getElementById("profileAvatar");
+
+        const moviesElement =
+            document.getElementById("topMovies");
+
+        async function loadProfile() {
+            if (!profileUserId || !/^\d+$/.test(profileUserId) ||
+                Number(profileUserId) <= 0) {
+                usernameElement.textContent = "Profile";
+                moviesElement.innerHTML =
+                    '<div class="profile-message">No valid user ID provided. Open a profile using profile.html?id=USER_ID.</div>';
+                return;
+            }
+
+            try {
+                const [userResponse, moviesResponse] = await Promise.all([
+                    fetch(`${API_BASE}/users/${profileUserId}`),
+                    fetch(`${API_BASE}/top-movies/${profileUserId}`)
+                ]);
+
+                if (!moviesResponse.ok) {
+                    throw new Error("Could not load Top 5 movies.");
+                }
+
+              
+let username = `User ${profileUserId}`;
+
+if (userResponse.ok) {
+    const userData = await userResponse.json();
+
+    username =
+        userData.username ||
+        userData.user?.username ||
+        username;
+}
+
+            // If this is the logged-in user's own profile,
+            // use their saved username as a fallback.
+            const storedUserId = sessionStorage.getItem("vaultUserId");
+            const storedUsername = sessionStorage.getItem("vaultUsername");
+
+            if (
+                String(storedUserId) === String(profileUserId) &&
+                storedUsername &&
+                username === `User ${profileUserId}`
+            ) {
+                username = storedUsername;
+            }
+
+
+                usernameElement.textContent = username;
+                avatarElement.textContent =
+                    username.charAt(0).toUpperCase();
+
+                const movies = await moviesResponse.json();
+                renderTopMovies(movies);
+
+            } catch (error) {
+                console.error("Profile loading error:", error);
+                moviesElement.innerHTML =
+                    '<div class="profile-message profile-error">Unable to load this profile. Please try again later.</div>';
+            }
+        }
+
+        
+function renderTopMovies(movies) {
+    moviesElement.replaceChildren();
+
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.textContent = "Edit Top 5";
+    editButton.style.cssText =
+        "padding:9px 15px;margin-bottom:16px;border-radius:6px;cursor:pointer;";
+
+    let editing = false;
+    editButton.onclick = () => {
+        editing = !editing;
+        editButton.textContent = editing ? "Done Editing" : "Edit Top 5";
+        moviesElement.querySelectorAll(".top5-remove").forEach(button => {
+            button.style.display = editing ? "block" : "none";
+        });
+    };
+
+    moviesElement.parentElement.insertBefore(editButton, moviesElement);
+
+    if (!Array.isArray(movies) || movies.length === 0) {
+        const message = document.createElement("div");
+        message.className = "profile-message";
+        message.textContent = "No Top 5 movies yet. Add one from any movie page.";
+        moviesElement.appendChild(message);
+        return;
+    }
+
+    moviesElement.style.gridTemplateColumns =
+        "repeat(auto-fill,minmax(105px,1fr))";
+    moviesElement.style.gap = "12px";
+
+    movies.forEach(movie => {
+        const card = document.createElement("article");
+        card.className = "top-movie";
+        card.style.position = "relative";
+
+        const poster = document.createElement("img");
+        poster.alt = movie.title || "Movie poster";
+        poster.loading = "lazy";
+        poster.src = movie.posterPath
+            ? (movie.posterPath.startsWith("http")
+                ? movie.posterPath
+                : `https://image.tmdb.org/t/p/w185${movie.posterPath}`)
+            : "";
+        poster.style.width = "100%";
+        poster.style.aspectRatio = "2/3";
+        poster.style.objectFit = "cover";
+
+        const info = document.createElement("div");
+        info.className = "movie-info";
+
+        const rank = document.createElement("div");
+        rank.className = "movie-rank";
+        rank.textContent = `#${movie.rankPosition}`;
+
+        const title = document.createElement("h3");
+        title.textContent = movie.title || "Untitled";
+        title.style.fontSize = "12px";
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "top5-remove";
+        remove.textContent = "Remove";
+        remove.style.cssText =
+            "display:none;width:100%;padding:6px;margin-top:8px;cursor:pointer;";
+        remove.onclick = async () => {
+            if (!confirm(`Remove ${movie.title} from your Top 5?`)) return;
+            try {
+                const api = "http://localhost:3000/api";
+                const token = sessionStorage.getItem("vaultToken");
+                const userId = sessionStorage.getItem("vaultUserId");
+
+                const response = await fetch(
+                    `${api}/top-movies/${encodeURIComponent(userId)}`,
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            movies: movies
+                                .filter(item => Number(item.movieId) !== Number(movie.movieId))
+                                .map(item => ({
+                                    movieId: item.movieId,
+                                    title: item.title,
+                                    posterPath: item.posterPath
+                                }))
+                        })
+                    }
+                );
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || "Could not remove movie.");
+                await loadProfile();
+            } catch (error) {
+                alert(error.message);
+            }
+        };
+
+        info.append(rank, title, remove);
+        card.append(poster, info);
+        moviesElement.appendChild(card);
+    });
+}
+
+
+        
+function getStoredToken() {
+    function findToken(value) {
+        if (typeof value !== "string") return null;
+
+        if (/^[\w-]+\.[\w-]+\.[\w-]+$/.test(value)) {
+            return value;
+        }
+
+        try {
+            const parsed = JSON.parse(value);
+            if (parsed && typeof parsed === "object") {
+                for (const [key, item] of Object.entries(parsed)) {
+                    if (/token|auth/i.test(key)) {
+                        const found = findToken(item);
+                        if (found) return found;
+                    }
+                }
+            }
+        } catch {}
+
+        return null;
+    }
+
+    for (const storage of [localStorage, sessionStorage]) {
+        for (let i = 0; i < storage.length; i++) {
+            const token = findToken(
+                storage.getItem(storage.key(i))
+            );
+            if (token) return token;
+        }
+    }
+
+    return null;
+}
+
+
+function getTokenUserId(token) {
+    try {
+        const payload = token.split(".")[1]
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
+
+        const decoded = JSON.parse(atob(payload));
+
+        return Number(
+            decoded.userId ??
+            decoded.id ??
+            decoded.user_id ??
+            decoded.sub
+        );
+    } catch {
+        return null;
+    }
+}
+
+
+function setupTopMoviesEditor() {
+    const token = getStoredToken();
+    if (!token) {
+        console.log("Log in to edit your Top 5 movies.");
+        return;
+    }
+
+   const loggedInUserId =
+    Number(sessionStorage.getItem("vaultUserId")) ||
+    getTokenUserId(token);
+
+    // Only show editing controls on your own profile.
+    if (!loggedInUserId ||
+        String(loggedInUserId) !== String(profileUserId)) {
+        return;
+    }
+
+    const section = moviesElement.parentElement;
+    const editor = document.createElement("div");
+    editor.style.cssText =
+        "margin:20px 0;padding:18px;border:1px solid #444;border-radius:12px";
+
+    const heading = document.createElement("h3");
+    heading.textContent = "Edit My Top 5";
+
+    const description = document.createElement("p");
+    description.textContent =
+        "Search for movies and select up to five. Your selection order determines the ranking.";
+
+    const search = document.createElement("input");
+    search.type = "search";
+    search.placeholder = "Search for a movie...";
+    search.style.cssText =
+        "padding:10px;width:100%;max-width:400px;margin:8px 0";
+
+    const searchButton = document.createElement("button");
+    searchButton.textContent = "Search";
+    searchButton.style.cssText = "padding:10px 16px;margin:8px";
+
+    const results = document.createElement("div");
+    results.style.cssText =
+        "display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:15px 0";
+
+    const selectedHeading = document.createElement("h4");
+    selectedHeading.textContent = "Your selected movies";
+
+    const selectedList = document.createElement("div");
+    selectedList.style.cssText =
+        "display:flex;flex-direction:column;gap:8px;margin:10px 0";
+
+    const saveButton = document.createElement("button");
+    saveButton.textContent = "Save Top 5";
+    saveButton.style.cssText = "padding:12px 20px;margin-top:12px";
+
+    const status = document.createElement("p");
+    status.setAttribute("role", "status");
+
+    let selected = [];
+
+    function renderSelected() {
+        selectedList.replaceChildren();
+
+        selected.forEach((movie, index) => {
+            const row = document.createElement("div");
+            row.style.cssText =
+                "display:flex;align-items:center;gap:10px;flex-wrap:wrap";
+
+            const label = document.createElement("span");
+            label.textContent = `#${index + 1} — ${movie.title}`;
+
+            const remove = document.createElement("button");
+            remove.textContent = "Remove";
+            remove.type = "button";
+            remove.onclick = () => {
+                selected = selected.filter(
+                    item => item.movieId !== movie.movieId
+                );
+                renderSelected();
+            };
+
+            row.append(label, remove);
+            selectedList.appendChild(row);
+        });
+
+        if (selected.length === 0) {
+            selectedList.textContent = "No movies selected yet.";
+        }
+    }
+
+    async function searchMovies() {
+        const query = search.value.trim();
+
+        if (!query) {
+            status.textContent = "Enter a movie title first.";
+            return;
+        }
+
+        searchButton.disabled = true;
+        status.textContent = "Searching...";
+        results.replaceChildren();
+
+        try {
+            const params = new URLSearchParams({
+                path: "/search/movie",
+                query,
+                include_adult: "false"
+            });
+
+            const response = await fetch(
+                `${API_BASE}/tmdb?${params}`
+            );
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Movie search failed.");
+            }
+
+            const movies = (data.results || []).slice(0, 10);
+
+            if (!movies.length) {
+                status.textContent = "No movies found.";
+                return;
+            }
+
+            status.textContent = "Choose a movie to add it.";
+
+            movies.forEach(movie => {
+                const card = document.createElement("div");
+                card.style.cssText =
+                    "padding:10px;border:1px solid #555;border-radius:8px";
+
+                const title = document.createElement("p");
+                title.textContent = movie.title;
+
+                const year = document.createElement("small");
+                year.textContent =
+                    movie.release_date?.slice(0, 4) || "";
+
+                const addButton = document.createElement("button");
+                addButton.type = "button";
+                addButton.textContent = "Add to Top 5";
+
+                const alreadySelected = selected.some(
+                    item => item.movieId === movie.id
+                );
+
+                addButton.disabled =
+                    alreadySelected || selected.length >= 5;
+
+                if (alreadySelected) {
+                    addButton.textContent = "Added";
+                }
+
+                addButton.onclick = () => {
+                    if (selected.length >= 5) {
+                        status.textContent =
+                            "You can select a maximum of five movies.";
+                        return;
+                    }
+
+                    if (selected.some(
+                        item => item.movieId === movie.id
+                    )) return;
+
+                    selected.push({
+                        movieId: movie.id,
+                        title: movie.title,
+                        posterPath: movie.poster_path || null
+                    });
+
+                    renderSelected();
+                    searchMovies();
+                };
+
+                card.append(title, year, document.createElement("br"), addButton);
+                results.appendChild(card);
+            });
+        } catch (error) {
+            status.textContent = error.message;
+        } finally {
+            searchButton.disabled = false;
+        }
+    }
+
+    searchButton.onclick = searchMovies;
+
+    search.addEventListener("keydown", event => {
+        if (event.key === "Enter") searchMovies();
+    });
+
+    saveButton.onclick = async () => {
+        saveButton.disabled = true;
+        status.textContent = "Saving your Top 5...";
+
+        try {
+            const response = await fetch(
+                `${API_BASE}/top-movies/${loggedInUserId}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ movies: selected })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Could not save Top 5.");
+            }
+
+            status.textContent = "Top 5 saved successfully!";
+            await loadProfile();
+            renderSelected();
+        } catch (error) {
+            status.textContent = error.message;
+        } finally {
+            saveButton.disabled = false;
+        }
+    };
+
+    editor.append(
+        heading,
+        description,
+        search,
+        searchButton,
+        results,
+        selectedHeading,
+        selectedList,
+        saveButton,
+        status
+    );
+
+    section.insertBefore(editor, moviesElement);
+    renderSelected();
+}
+
+loadProfile();
+setupTopMoviesEditor();
+
+    </script>
+</body>
+</html>

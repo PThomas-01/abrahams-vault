@@ -106,6 +106,8 @@ button {
     width: 40px;
     height: 40px;
     font-size: 23px;
+    flex-shrink: 0;
+    margin-left: 10px;
 }
 
 .explore-btn,

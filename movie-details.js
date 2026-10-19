@@ -25,10 +25,16 @@ let isSavingRating = false;
 let isInWatchlist = false;
 let isWatched = false;
 let ratingNotice = "";
+
 let reviews = [];
 let isSavingReview = false;
 let reviewNotice = "";
 let editingReview = false;
+
+let journalEntry = null;
+let journalNotice = "";
+let isSavingJournal = false;
+let journalLoaded = false;
 
 // =====================================
 // AUTHENTICATION AND API HELPERS
@@ -104,7 +110,10 @@ function formatDate(dateString) {
     if (!dateString) return "Date unavailable";
 
     const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return "Date unavailable";
+
+    if (Number.isNaN(date.getTime())) {
+        return "Date unavailable";
+    }
 
     return date.toLocaleDateString("en-IN", {
         day: "numeric",
@@ -120,6 +129,7 @@ function formatRuntime(minutes) {
     const remainingMinutes = minutes % 60;
 
     if (!hours) return `${remainingMinutes} min`;
+
     return `${hours}h ${remainingMinutes}m`;
 }
 
@@ -145,13 +155,15 @@ async function loadMovieDetails() {
         ]);
 
         currentMovie = movie;
+        window.currentMovie = movie;
 
         const trailer = videos.results?.find(video =>
             video.site === "YouTube" &&
             video.type === "Trailer" &&
             video.official
         ) || videos.results?.find(video =>
-            video.site === "YouTube" && video.type === "Trailer"
+            video.site === "YouTube" &&
+            video.type === "Trailer"
         );
 
         const backdrop = movie.backdrop_path
@@ -185,6 +197,7 @@ async function loadMovieDetails() {
                                     : `<div class="cast-photo-placeholder">?</div>`
                             }
                         </div>
+
                         <div class="cast-info">
                             <h3>${escapeHTML(person.name || "Unknown")}</h3>
                             <p>${escapeHTML(person.character || "Role unavailable")}</p>
@@ -194,7 +207,7 @@ async function loadMovieDetails() {
             }).join("")
             : `<p class="cast-unavailable">Cast information is unavailable for this movie.</p>`;
 
-        detailsContainer.innerHTML = `
+      detailsContainer.innerHTML = `
             <section class="details-backdrop"
                 style="${backdrop
                     ? `background-image: linear-gradient(to top, #0b0b0d 4%, rgba(11,11,13,.72) 58%, rgba(11,11,13,.2)), url('${backdrop}')`
@@ -275,6 +288,13 @@ async function loadMovieDetails() {
                             Checking Watched Status...
                         </button>
 
+                        <button
+                            id="journal-button"
+                            class="vault-action-button"
+                            type="button">
+                            Write in My Journal
+                        </button>
+
                         ${
                             trailer
                                 ? `<a class="vault-action-button trailer-button"
@@ -296,6 +316,21 @@ async function loadMovieDetails() {
                     <div class="cast-grid">
                         ${castMarkup}
                     </div>
+                </section>
+
+                <section id="movie-journal-section" class="movie-reviews">
+                    <div class="reviews-heading">
+                        <h2>My Journal</h2>
+                        <p class="reviews-subtitle">
+                            Your private thoughts and memories about this movie.
+                        </p>
+                    </div>
+
+                    <div id="movie-journal-status" aria-live="polite">
+                        Checking your journal...
+                    </div>
+
+                    <div id="movie-journal-form-container" hidden></div>
                 </section>
 
                 <section id="community-rating" class="community-rating">
@@ -323,6 +358,11 @@ async function loadMovieDetails() {
             </section>
         `;
 
+        // Add the Top 5 button after the movie details HTML exists.
+        if (window.VaultTop5) {
+            await window.VaultTop5.addDetailsButton(movie);
+        }
+
         statusElement.textContent = "";
         statusElement.style.display = "none";
 
@@ -332,15 +372,20 @@ async function loadMovieDetails() {
         document.getElementById("watched-button")
             .addEventListener("click", toggleWatched);
 
+        document.getElementById("journal-button")
+            .addEventListener("click", openMovieJournal);
+
         await Promise.allSettled([
             loadCommunityRating(),
             loadPersonalRating(),
             loadWatchlistStatus(),
             loadWatchedStatus(),
-            loadReviews()
+            loadReviews(),
+            loadJournalEntry()
         ]);
     } catch (error) {
         console.error("Movie details error:", error);
+
         statusElement.style.display = "block";
         statusElement.textContent =
             error.message || "Could not load movie details.";
@@ -500,6 +545,7 @@ async function saveRating(rating) {
 
         currentUserRating = rating;
         await loadCommunityRating();
+
         ratingNotice = "Your rating has been saved!";
     } catch (error) {
         console.error("Save rating error:", error);
@@ -585,6 +631,7 @@ async function toggleWatchlist() {
     } catch (error) {
         console.error("Watchlist update error:", error);
         button.textContent = "My List update failed";
+
         window.alert(`Could not update My List: ${error.message}`);
     } finally {
         button.disabled = false;
@@ -681,6 +728,233 @@ async function toggleWatched() {
 }
 
 // =====================================
+// MY PRIVATE MOVIE JOURNAL
+// =====================================
+
+async function loadJournalEntry() {
+    const button = document.getElementById("journal-button");
+    const status = document.getElementById("movie-journal-status");
+
+    if (!button || !status) return;
+
+    if (!getToken() || !getUserId()) {
+        journalEntry = null;
+        journalLoaded = false;
+
+        button.textContent = "Write in My Journal";
+        status.textContent = "Log in to write in your private journal.";
+        return;
+    }
+
+    try {
+        const userId = encodeURIComponent(getUserId());
+        const entries = await apiRequest(`/journal/${userId}`);
+
+        journalEntry = Array.isArray(entries)
+            ? entries.find(entry =>
+                Number(entry.movieId ?? entry.tmdb_movie_id) === movieId
+            ) || null
+            : null;
+
+        journalLoaded = true;
+
+        button.textContent = journalEntry
+            ? "Edit My Journal Entry"
+            : "Write in My Journal";
+
+        status.textContent = journalEntry
+            ? "You have a journal entry for this movie."
+            : "You haven't written about this movie yet.";
+    } catch (error) {
+        console.error("Load journal entry error:", error);
+        status.textContent = "Could not load your journal entry.";
+    }
+}
+
+async function openMovieJournal() {
+    const section = document.getElementById("movie-journal-section");
+    const container = document.getElementById(
+        "movie-journal-form-container"
+    );
+    const status = document.getElementById("movie-journal-status");
+
+    if (!section || !container || !status) return;
+
+    if (!getToken() || !getUserId()) {
+        status.textContent = "Please log in to write in My Journal.";
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+    }
+
+    if (!journalLoaded) {
+        status.textContent = "Loading your journal entry...";
+        await loadJournalEntry();
+
+        if (!journalLoaded) {
+            return;
+        }
+    }
+
+    journalNotice = "";
+    container.hidden = false;
+
+    renderMovieJournalForm();
+
+    section.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+function renderMovieJournalForm() {
+    const container = document.getElementById(
+        "movie-journal-form-container"
+    );
+
+    if (!container) return;
+
+    const savedText = journalEntry?.journalText || "";
+
+    container.innerHTML = `
+        <form id="movie-journal-form" class="review-form">
+            <label for="movie-journal-text">
+                Your private thoughts about ${escapeHTML(
+                    currentMovie?.title || "this movie"
+                )}
+            </label>
+
+            <textarea
+                id="movie-journal-text"
+                name="journalText"
+                rows="7"
+                maxlength="10000"
+                placeholder="What did this movie make you think or feel? Record your memories, favourite moments, or personal reflections..."
+                required
+            >${escapeHTML(savedText)}</textarea>
+
+            <p class="review-help">
+                Up to 10,000 characters. Your journal is separate from public reviews.
+            </p>
+
+            <p class="review-form-message" aria-live="polite">
+                ${escapeHTML(journalNotice)}
+            </p>
+
+            <div class="review-form-actions">
+                <button
+                    type="submit"
+                    class="vault-action-button"
+                    ${isSavingJournal ? "disabled" : ""}>
+                    ${isSavingJournal
+                        ? "Saving..."
+                        : journalEntry
+                            ? "Update Journal Entry"
+                            : "Save to My Journal"}
+                </button>
+
+                <button
+                    type="button"
+                    id="cancel-movie-journal"
+                    class="review-cancel-button"
+                    ${isSavingJournal ? "disabled" : ""}>
+                    Cancel
+                </button>
+            </div>
+        </form>
+    `;
+
+    document.getElementById("movie-journal-form")
+        .addEventListener("submit", saveMovieJournalEntry);
+
+    document.getElementById("cancel-movie-journal")
+        .addEventListener("click", () => {
+            if (isSavingJournal) return;
+
+            container.hidden = true;
+            journalNotice = "";
+        });
+}
+
+async function saveMovieJournalEntry(event) {
+    event.preventDefault();
+
+    if (!getToken() || !getUserId()) {
+        journalNotice = "Please log in again.";
+        renderMovieJournalForm();
+        return;
+    }
+
+    if (isSavingJournal) return;
+
+    const textarea = document.getElementById("movie-journal-text");
+    const journalText = textarea?.value.trim() || "";
+
+    if (!journalText) {
+        journalNotice = "Please write something before saving.";
+        renderMovieJournalForm();
+        return;
+    }
+
+    if (journalText.length > 10000) {
+        journalNotice = "Your entry must not exceed 10,000 characters.";
+        renderMovieJournalForm();
+        return;
+    }
+
+    isSavingJournal = true;
+    journalNotice = "Saving your journal entry...";
+    renderMovieJournalForm();
+
+    try {
+        const userId = encodeURIComponent(getUserId());
+
+        await apiRequest(`/journal/${userId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                movieId,
+                title: currentMovie.title,
+                posterPath: currentMovie.poster_path || null,
+                journalText
+            })
+        });
+
+        journalEntry = {
+            ...(journalEntry || {}),
+            movieId,
+            title: currentMovie.title,
+            posterPath: currentMovie.poster_path || null,
+            journalText
+        };
+
+        journalLoaded = true;
+        journalNotice = "Your journal entry has been saved!";
+
+        const status = document.getElementById("movie-journal-status");
+
+        if (status) {
+            status.textContent = "Your journal entry is saved privately.";
+        }
+
+        const button = document.getElementById("journal-button");
+
+        if (button) {
+            button.textContent = "Edit My Journal Entry";
+        }
+    } catch (error) {
+        console.error("Save journal entry error:", error);
+
+        journalNotice =
+            error.message || "Could not save your journal entry.";
+    } finally {
+        isSavingJournal = false;
+
+        // Refresh the form message without losing the saved text.
+        renderMovieJournalForm();
+    }
+}
+
+// =====================================
 // COMMUNITY REVIEWS
 // =====================================
 
@@ -705,7 +979,10 @@ async function loadReviews() {
         renderReviews();
     } catch (error) {
         console.error("Load reviews error:", error);
-        status.textContent = "Could not load reviews. Please try refreshing.";
+
+        status.textContent =
+            "Could not load reviews. Please try refreshing.";
+
         renderReviewForm();
     }
 }
@@ -732,7 +1009,8 @@ function renderReviewForm() {
     }
 
     const ownReview = getOwnReview();
-    const initialText = editingReview && ownReview ? ownReview.reviewText : "";
+    const initialText =
+        editingReview && ownReview ? ownReview.reviewText : "";
 
     const buttonText = ownReview
         ? (editingReview ? "Update Review" : "Edit Your Review")
@@ -754,14 +1032,17 @@ function renderReviewForm() {
                 required
             >${escapeHTML(initialText)}</textarea>
 
-            <p class="review-help">Share your thoughts in 10–3000 characters.</p>
+            <p class="review-help">
+                Share your thoughts in 10–3000 characters.
+            </p>
 
             <p class="review-form-message" id="review-form-message"
                aria-live="polite">${escapeHTML(reviewNotice)}</p>
 
             <div class="review-form-actions">
                 <button type="submit" class="vault-action-button"
-                    id="submit-review-button" ${isSavingReview ? "disabled" : ""}>
+                    id="submit-review-button"
+                    ${isSavingReview ? "disabled" : ""}>
                     ${escapeHTML(isSavingReview ? "Saving..." : buttonText)}
                 </button>
 
@@ -815,19 +1096,25 @@ function renderReviews() {
                 <div class="review-card-header">
                     <div class="review-author">
                         <div class="review-avatar">
-                            ${escapeHTML((review.username || "U").charAt(0).toUpperCase())}
+                            ${escapeHTML(
+                                (review.username || "U").charAt(0).toUpperCase()
+                            )}
                         </div>
 
                         <div>
                             <h3>${escapeHTML(review.username || "Vault user")}</h3>
                             <p class="review-date">
-                                ${escapeHTML(formatDate(review.updatedAt || review.createdAt))}
+                                ${escapeHTML(
+                                    formatDate(review.updatedAt || review.createdAt)
+                                )}
                                 ${wasEdited ? " · Edited" : ""}
                             </p>
                         </div>
                     </div>
 
-                    ${isOwnReview ? `<span class="review-owner-label">Your review</span>` : ""}
+                    ${isOwnReview
+                        ? `<span class="review-owner-label">Your review</span>`
+                        : ""}
                 </div>
 
                 <p class="review-body">${escapeHTML(review.reviewText)}</p>
@@ -853,6 +1140,7 @@ function renderReviews() {
         button.addEventListener("click", () => {
             editingReview = true;
             reviewNotice = "";
+
             renderReviewForm();
 
             const textarea = document.getElementById("review-text");
@@ -916,6 +1204,7 @@ async function submitReview(event) {
         await loadReviews();
     } catch (error) {
         console.error("Save review error:", error);
+
         reviewNotice = error.message || "Could not save your review.";
     } finally {
         isSavingReview = false;
@@ -946,6 +1235,7 @@ async function deleteReview(reviewId) {
         renderReviewForm();
     } catch (error) {
         console.error("Delete review error:", error);
+
         reviewNotice = error.message || "Could not delete your review.";
         renderReviewForm();
     }

@@ -679,43 +679,185 @@ function renderMovies() {
 
 const searchToggle = document.getElementById("search-toggle");
 
+
 if (searchToggle) {
     searchToggle.addEventListener("click", () => {
-        const existingSearch = document.getElementById("movie-search");
+        const existingContainer = document.getElementById("movie-search-container");
 
-        if (existingSearch) {
-            existingSearch.remove();
+        // Close the search bar
+        if (existingContainer) {
+            existingContainer.remove();
             searchQuery = "";
             loadMovies();
             return;
         }
 
+        const navbar = document.querySelector(".navbar");
+        if (!navbar) return;
+
+        // Search container
+        const container = document.createElement("div");
+        container.id = "movie-search-container";
+        container.style.cssText =
+            "position:absolute;right:7%;top:72px;width:min(340px,85vw);" +
+            "z-index:100;background:#19191c;border:1px solid #444;" +
+            "border-radius:7px;overflow:hidden;";
+
+        // Search input
         const search = document.createElement("input");
         search.id = "movie-search";
         search.type = "search";
         search.placeholder = "Search movies...";
         search.setAttribute("aria-label", "Search movies");
-
+        search.autocomplete = "off";
         search.style.cssText =
-            "position:absolute;right:7%;top:72px;z-index:20;" +
-            "width:min(280px,85vw);padding:13px 16px;" +
-            "background:#19191c;color:#f4f1eb;" +
-            "border:1px solid #888;border-radius:5px;outline:none;";
+            "width:100%;box-sizing:border-box;padding:14px 16px;" +
+            "background:#19191c;color:#f4f1eb;border:none;" +
+            "outline:none;font-size:15px;";
 
-        const navbar = document.querySelector(".navbar");
-        if (!navbar) return;
+        // Live suggestions dropdown
+        const resultsBox = document.createElement("div");
+        resultsBox.id = "movie-search-results";
+        resultsBox.style.cssText =
+            "max-height:420px;overflow-y:auto;display:none;" +
+            "border-top:1px solid #38383d;";
 
-        navbar.appendChild(search);
+        container.append(search, resultsBox);
+        navbar.appendChild(container);
 
         let searchTimer;
+        let requestNumber = 0;
+
+        function showMessage(message) {
+            resultsBox.replaceChildren();
+            resultsBox.textContent = message;
+            resultsBox.style.cssText +=
+                ";display:block;padding:14px;color:#b9b9c0;font-size:14px;";
+        }
+
+        async function searchMovies(query, currentRequest) {
+            try {
+                const response = await fetch(
+                    "http://localhost:3000/api/tmdb?path=/search/movie&query=" +
+                    encodeURIComponent(query) +
+                    "&include_adult=false"
+                );
+
+                if (!response.ok) {
+                    throw new Error("Movie search failed");
+                }
+
+                const data = await response.json();
+
+                // Ignore older requests if the user has typed more
+                if (currentRequest !== requestNumber) return;
+
+                const movies = Array.isArray(data.results)
+                    ? data.results
+                    : Array.isArray(data.data?.results)
+                        ? data.data.results
+                        : [];
+
+                resultsBox.replaceChildren();
+                resultsBox.style.display = "block";
+                resultsBox.style.padding = "0";
+
+                if (movies.length === 0) {
+                    showMessage("No matching movies found.");
+                    return;
+                }
+
+                movies.slice(0, 7).forEach(movie => {
+                    const item = document.createElement("button");
+                    item.type = "button";
+                    item.style.cssText =
+                        "display:flex;align-items:center;gap:12px;width:100%;" +
+                        "padding:10px 12px;background:#19191c;color:#f4f1eb;" +
+                        "border:none;border-bottom:1px solid #303035;" +
+                        "text-align:left;cursor:pointer;";
+
+                    // Movie poster
+                    if (movie.poster_path) {
+                        const poster = document.createElement("img");
+                        poster.src =
+                            "https://image.tmdb.org/t/p/w92" + movie.poster_path;
+                        poster.alt = "";
+                        poster.style.cssText =
+                            "width:42px;height:63px;object-fit:cover;" +
+                            "border-radius:3px;flex-shrink:0;";
+                        item.appendChild(poster);
+                    }
+
+                    // Movie title and release year
+                    const info = document.createElement("div");
+                    info.style.cssText =
+                        "min-width:0;display:flex;flex-direction:column;gap:5px;";
+
+                    const title = document.createElement("span");
+                    title.textContent = movie.title || "Untitled movie";
+                    title.style.cssText =
+                        "font-size:14px;font-weight:600;";
+
+                    const year = document.createElement("span");
+                    year.textContent = movie.release_date
+                        ? movie.release_date.slice(0, 4)
+                        : "Release year unavailable";
+                    year.style.cssText = "font-size:12px;color:#aaa;";
+
+                    info.append(title, year);
+                    item.appendChild(info);
+
+                    item.addEventListener("mouseenter", () => {
+                        item.style.background = "#303036";
+                    });
+
+                    item.addEventListener("mouseleave", () => {
+                        item.style.background = "#19191c";
+                    });
+
+                    item.addEventListener("click", () => {
+                        window.location.href =
+                            "movie-details.html?id=" +
+                            encodeURIComponent(movie.id);
+                    });
+
+                    resultsBox.appendChild(item);
+                });
+            } catch (error) {
+                if (currentRequest !== requestNumber) return;
+                console.error("Live movie search error:", error);
+                showMessage("Couldn't load movies. Check that your backend is running.");
+            }
+        }
 
         search.addEventListener("input", () => {
             clearTimeout(searchTimer);
 
+            const query = search.value.trim();
+            const currentRequest = ++requestNumber;
+
+            if (query.length < 2) {
+                resultsBox.replaceChildren();
+                resultsBox.style.display = "none";
+                return;
+            }
+
+            showMessage("Searching movies...");
+
             searchTimer = setTimeout(() => {
-                searchQuery = search.value.trim();
-                loadMovies();
-            }, 350);
+                searchMovies(query, currentRequest);
+            }, 250);
+        });
+
+        // Close suggestions when clicking outside the search
+        document.addEventListener("click", function closeSearch(event) {
+            if (
+                !container.contains(event.target) &&
+                event.target !== searchToggle
+            ) {
+                container.remove();
+                document.removeEventListener("click", closeSearch);
+            }
         });
 
         search.focus();
