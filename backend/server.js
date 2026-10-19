@@ -13,6 +13,9 @@ const PORT = Number(process.env.PORT || 3000);
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
+
+const fs = require("fs");
+
 // =========================
 // DATABASE CONNECTION
 // =========================
@@ -24,12 +27,13 @@ const pool = mysql.createPool({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME || "abraham_vault",
 
-    // DB_SSL_CA should contain the contents of ca.pem on Render.
-    // Locally, leave DB_SSL_CA unset if using local MySQL.
-    ssl: {
-    ca: require("fs").readFileSync("C:/Users/P Thomas Abraham/Downloads/ca.pem", "utf8"),
-    rejectUnauthorized: true
-},
+    // Enable SSL only when a CA certificate is configured.
+    ssl: process.env.DB_SSL_CA
+        ? {
+            ca: process.env.DB_SSL_CA,
+            rejectUnauthorized: true
+        }
+        : undefined,
 
     waitForConnections: true,
     connectionLimit: 10,
