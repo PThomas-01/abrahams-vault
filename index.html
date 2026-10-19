@@ -10,312 +10,213 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="style.css">
-
-    <style>
-        /* Navbar logo image */
-     
-
-.navbar {
-    height: 82px;
-    padding: 0 7%;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 28px;
-    background: rgba(11, 11, 13, 0.96);
-    border-bottom: 1px solid var(--line);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.nav-links {
-    display: flex;
-    gap: 30px;
-    align-items: center;
-    margin-left: auto;
-}
-
-.nav-actions {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-left: 12px;
-}
-
-
-
-        /* Authentication section */
-        #auth-links {
-            display: inline-flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        #user-links {
-            display: none;
-            align-items: center;
-            gap: 12px;
-        }
-
-        #welcome-user {
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .logout-btn {
-            display: inline-block;
-            padding: 9px 14px;
-            background: #e50914;
-            color: #ffffff;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .logout-btn:hover {
-            background: #b80710;
-        }
-
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        @media (max-width: 900px) {
-            #user-links {
-                gap: 6px;
-            }
-
-            #welcome-user {
-                font-size: 12px;
-            }
-
-            .logout-btn {
-                padding: 7px 10px;
-            }
-        }
-
-      
-@media (max-width: 600px) {
-    .navbar > .logo img {
-        height: 55px;
-        max-width: 230px;
-    }
-}
-
-    </style>
 </head>
 
 <body>
+<header class="navbar">
+    <a href="index.html" class="logo" aria-label="Abraham's Vault Home">
+        <img src="assets/abrahams-vault-logo.png" alt="" aria-hidden="true">
+        <span class="logo-text">ABRAHAM'S <span>VAULT</span><i>.</i></span>
+    </a>
 
-    <!-- NAVBAR -->
-    <header class="navbar">
-
-<a href="index.html" class="logo" aria-label="Abraham's Vault Home">
-    <img src="assets/abrahams-vault-logo.png" alt="" aria-hidden="true">
-    <span class="logo-text">ABRAHAM'S <span>VAULT</span><i>.</i></span>
-</a>
-
+    <nav class="nav-links">
+        <a href="index.html" class="active">Home</a>
        
-        
+        <a href="my-list.html">My Watchlist</a>
+        <a href="watched.html">Watched Log</a>
+        <a href="journal.html">My Journal</a>
+        <a href="find-users.html">Find Users</a>
+        <a href="profile.html" id="profile-link" style="display:none;">Profile</a>
+        <a href="top100.html">Top 100 Movies</a>
+        <span id="auth-links">
+            <a href="login.html">Log In</a>
+            <a href="signup.html">Sign Up</a>
+        </span>
 
-<nav class="nav-links">
-    <a href="index.html" class="active">Home</a>
-    <a href="index.html#popular">Collection</a>
-    <a href="my-list.html">My Watchlist</a>
-    <a href="watched.html">Watched Log</a>
-    <a href="journal.html">My Journal</a>
-    <a href="profile.html" id="profile-link" style="display: none;">Profile</a>
+        <span id="user-links" style="display:none;">
+            <span id="welcome-user"></span>
+        </span>
+    </nav>
 
-    <span id="auth-links">
-        <a href="login.html">Log In</a>
-        <a href="signup.html">Sign Up</a>
-    </span>
+    <div class="nav-actions">
+        <button class="icon-btn" id="search-toggle" type="button"
+                aria-label="Open search">⌕</button>
+    </div>
+</header>
 
-    <span id="user-links">
-        <span id="welcome-user"></span>
-    </span>
-</nav>
+<main>
+   
+    <!-- CINEMATIC FEATURED MOVIE CAROUSEL -->
+    <section class="cinema-hero" id="featured-movie"
+             aria-roledescription="carousel"
+             aria-label="Featured movies">
 
+        <div class="cinema-hero-backdrop" id="featured-backdrop"></div>
+        <div class="cinema-hero-shade"></div>
 
-        <div class="nav-actions">
-
-            <button
-                class="icon-btn"
-                id="search-toggle"
-                type="button"
-                aria-label="Open search"
-            >⌕</button>
-
-            
-
-        </div>
-
-    </header>
-
-    <main>
-
-        <!-- HERO SECTION -->
-        <section class="hero">
-
-            <div class="hero-backdrop"></div>
-
-            <div class="hero-content">
-
-                <div class="eyebrow">
-                    <span class="live-dot"></span>
-                    YOUR NEXT MOVIE NIGHT STARTS HERE
-                </div>
-
-                <h1>
-                    Stories that<br>
-                    stay with <span>you.</span>
-                </h1>
-
-                <p class="hero-description">
-                    From unforgettable classics to the latest releases,
-                    discover the movies worth your time.
-                </p>
-
-                <div class="hero-buttons">
-                    <a href="#trending" class="primary-btn">
-                        Explore Movies <span>→</span>
-                    </a>
-
-                    <a href="#popular" class="secondary-btn">
-                        Browse Collection
-                    </a>
-                </div>
-
-                <div class="hero-note">
-                    <span class="note-line"></span>
-                    A WORLD OF CINEMA, ALL IN ONE PLACE
-                </div>
-
-            </div>
-
-            <div class="hero-index">
-                <span>01</span>
-                <span class="index-line"></span>
-                <span>03</span>
-            </div>
-
-        </section>
-
-        <!-- TRENDING MOVIES -->
-        <section class="movie-section" id="trending">
-
-            <div class="section-heading">
-                <div>
-                    <p class="section-kicker">HANDPICKED FOR YOU</p>
-                    <h2>Trending <span>now.</span></h2>
-                </div>
-
-                <a href="#popular" class="view-all">
-                    Explore collection <span>↗</span>
-                </a>
-            </div>
-
-            <!-- Industry filters -->
-            <div class="filter-row">
-                <div class="filter-pills" id="industry-filters">
-                    <button class="filter-pill selected" data-language="all" type="button">All Movies</button>
-                    <button class="filter-pill" data-language="en" type="button">Hollywood</button>
-                    <button class="filter-pill" data-language="ml" type="button">Mollywood</button>
-                    <button class="filter-pill" data-language="te" type="button">Tollywood</button>
-                    <button class="filter-pill" data-language="hi" type="button">Bollywood</button>
-                </div>
-
-                <span class="results-label">EXPLORE BY INDUSTRY</span>
-            </div>
-
-            <!-- Genre filters -->
-            <div class="filter-row">
-                <div class="filter-pills" id="genre-filters">
-                    <button class="filter-pill selected" data-genre-id="all" type="button">All Genres</button>
-                </div>
-
-                <span class="results-label">FILTER BY GENRE</span>
-            </div>
-
-            <span class="results-label">LIVE MOVIE COLLECTION</span>
-
-            <p id="movie-status" class="demo-note" role="status">
-                Loading movies from TMDB...
+        <div class="cinema-hero-content" id="featured-content">
+            <p class="cinema-eyebrow">
+                <span class="cinema-live-dot"></span>
+                YOUR NEXT FAVOURITE FILM
             </p>
 
-            <div class="movie-grid" id="movie-grid"></div>
+            <p class="cinema-feature-label" id="featured-label">
+                FEATURED TODAY
+            </p>
 
-        </section>
+            <h1 id="featured-title">Discover your next favourite.</h1>
 
-        <!-- COLLECTION BANNER -->
-        <section class="collection-banner" id="popular">
+            <div class="cinema-feature-meta" id="featured-meta">
+                Explore stories worth remembering.
+            </div>
 
+            <p class="cinema-feature-description" id="featured-description">
+                Discover trending films, explore new stories, and build your own collection.
+            </p>
+
+            <div class="cinema-hero-buttons">
+                <a href="#popular" id="featured-details"
+                   class="cinema-primary-btn">
+                    <span>▶</span> View Details
+                </a>
+
+                <button type="button" id="featured-list"
+                        class="cinema-secondary-btn" disabled>
+                    ＋ My List
+                </button>
+            </div>
+
+            <p id="featured-status" class="cinema-feature-status"
+               role="status">Loading featured movies...</p>
+        </div>
+
+        <!-- PREVIOUS / NEXT CONTROLS -->
+        <button type="button" class="hero-arrow hero-arrow-prev"
+                id="featured-prev" aria-label="Previous featured movie">
+            &#10094;
+        </button>
+
+        <button type="button" class="hero-arrow hero-arrow-next"
+                id="featured-next" aria-label="Next featured movie">
+            &#10095;
+        </button>
+
+        <!-- FIVE SLIDE INDICATORS -->
+        <div class="hero-indicators" id="featured-indicators"
+             aria-label="Choose featured movie">
+        </div>
+
+        <div class="cinema-hero-bottom">
+            <span>ABRAHAM'S VAULT ORIGINAL DISCOVERY</span>
+            <span id="featured-counter">01 / 05</span>
+        </div>
+    </section>
+
+
+    <!-- TRENDING CAROUSEL -->
+    <section class="cinema-row-section" id="trending">
+        <div class="cinema-row-heading">
             <div>
-                <p class="section-kicker">YOUR PERSONAL CINEMA</p>
-
-                <h2>
-                    One more film.<br>
-                    <span>One more memory.</span>
-                </h2>
-
-                <p>
-                    Build a collection of films you love and find your next favourite.
-                </p>
+                <p class="section-kicker">WHAT EVERYONE IS WATCHING</p>
+                <h2>Trending <span>now</span></h2>
             </div>
+            <span class="cinema-row-caption">POPULAR THIS WEEK</span>
+        </div>
 
-            <a href="#trending" class="primary-btn">
-                Discover your next film <span>→</span>
-            </a>
+        <div class="cinema-horizontal-row" id="trending-row">
+            <p class="cinema-row-message">Loading trending movies...</p>
+        </div>
+    </section>
 
-        </section>
-
-        <!-- WATCHLIST -->
-        <section class="watchlist-section" id="watchlist">
-
-            <div class="section-heading">
-                <div>
-                    <p class="section-kicker">SAVED FOR LATER</p>
-                    <h2>My <span>watchlist.</span></h2>
-                </div>
+    <!-- POPULAR CAROUSEL -->
+    <section class="cinema-row-section" id="popular">
+        <div class="cinema-row-heading">
+            <div>
+                <p class="section-kicker">MORE STORIES TO DISCOVER</p>
+                <h2>Popular <span>movies</span></h2>
             </div>
+            <span class="cinema-row-caption">FAN FAVOURITES</span>
+        </div>
 
-            <div id="watchlist-items" class="watchlist-items">
-                <p class="empty-watchlist">
-                    Your watchlist is waiting for its first film.
-                    Tap + on any movie to save it.
-                </p>
+        <div class="cinema-horizontal-row" id="popular-row">
+            <p class="cinema-row-message">Loading popular movies...</p>
+        </div>
+    </section>
+
+    <!-- EXISTING COLLECTION AND FILTERS -->
+    <section class="movie-section" id="movie-collection">
+        <div class="section-heading">
+            <div>
+                <p class="section-kicker">FIND YOUR NEXT FAVOURITE</p>
+                <h2>Explore the <span>collection.</span></h2>
             </div>
+        </div>
 
-        </section>
+        <div class="filter-row">
+            <div class="filter-pills" id="industry-filters">
+                <button class="filter-pill selected" data-language="all" type="button">All Movies</button>
+                <button class="filter-pill" data-language="en" type="button">Hollywood</button>
+                <button class="filter-pill" data-language="ml" type="button">Mollywood</button>
+                <button class="filter-pill" data-language="te" type="button">Tollywood</button>
+                <button class="filter-pill" data-language="hi" type="button">Bollywood</button>
+            </div>
+            <span class="results-label">EXPLORE BY INDUSTRY</span>
+        </div>
 
-    </main>
+        <div class="filter-row">
+            <div class="filter-pills" id="genre-filters">
+                <button class="filter-pill selected" data-genre-id="all" type="button">All Genres</button>
+            </div>
+            <span class="results-label">FILTER BY GENRE</span>
+        </div>
 
-    <!-- FOOTER -->
-    <footer class="footer">
+        <p id="movie-status" class="demo-note" role="status">
+            Loading movies from TMDB...
+        </p>
 
-        <p>Made for people who love a good story.</p>
+        <div class="movie-grid" id="movie-grid"></div>
+    </section>
 
-        <span>© 2026 Abraham's Vault · Discover cinema</span>
+    <!-- EXISTING WATCHLIST -->
+    <section class="watchlist-section" id="watchlist">
+        <div class="section-heading">
+            <div>
+                <p class="section-kicker">SAVED FOR LATER</p>
+                <h2>My <span>watchlist.</span></h2>
+            </div>
+            <a href="my-list.html" class="view-all">View My List ↗</a>
+        </div>
 
-    </footer>
+        <div id="watchlist-items" class="watchlist-items">
+            <p class="empty-watchlist">
+                Your watchlist is waiting for its first film.
+                Tap + on any movie to save it.
+            </p>
+        </div>
+    </section>
 
-    <!-- Existing movie functionality -->
-     <script src="top5.js"></script>
-    <script src="script.js"></script>
+    <!-- PERSONAL CINEMA BANNER -->
+    <section class="collection-banner">
+        <div>
+            <p class="section-kicker">YOUR PERSONAL CINEMA</p>
+            <h2>One more film.<br><span>One more memory.</span></h2>
+            <p>Discover films, keep track of what you watch, and record your thoughts in My Journal.</p>
+        </div>
+        <a href="watched.html" class="primary-btn">
+            Explore your watched log <span>→</span>
+        </a>
+    </section>
+</main>
 
-    <!-- Login status, username and logout -->
-    <script src="navbar.js"></script>
+<footer class="footer">
+    <p>Made for people who love a good story.</p>
+    <span>© 2026 Abraham's Vault · Discover cinema</span>
+</footer>
 
+<script src="top5.js"></script>
+<script src="script.js"></script>
+<script src="navbar.js"></script>
 </body>
 </html>
