@@ -1,0 +1,160 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Users | Abraham's Vault</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .find-users-page {
+            max-width: 850px;
+            margin: 45px auto;
+            padding: 20px;
+            color: white;
+        }
+
+        .find-users-page h1 {
+            margin-bottom: 10px;
+        }
+
+        .find-users-intro {
+            color: #bdbdbd;
+            margin-bottom: 25px;
+        }
+
+        .user-search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        #usernameSearch {
+            flex: 1;
+            min-width: 0;
+            padding: 13px 15px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background: #191919;
+            color: white;
+            font-size: 16px;
+        }
+
+        #searchUsersButton {
+            padding: 12px 20px;
+            border: 0;
+            border-radius: 8px;
+            background: #e50914;
+            color: white;
+            cursor: pointer;
+        }
+
+        #searchUsersButton:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        #userSearchResults {
+            display: grid;
+            gap: 12px;
+        }
+
+        .user-result {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 17px;
+            border: 1px solid #333;
+            border-radius: 10px;
+            background: #171717;
+        }
+
+        .user-result-info {
+            min-width: 0;
+        }
+
+        .user-result-name {
+            color: white;
+            font-size: 17px;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+            text-decoration: none;
+        }
+
+        .user-result-name:hover {
+            color: #ff525b;
+        }
+
+        .user-result-label {
+            color: #aaa;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .view-profile-button {
+            flex-shrink: 0;
+            padding: 9px 13px;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 7px;
+            text-decoration: none;
+        }
+
+        .view-profile-button:hover {
+            background: #333;
+        }
+
+        .search-message {
+            padding: 22px 5px;
+            color: #bbb;
+        }
+
+        @media (max-width: 480px) {
+            .user-result {
+                padding: 13px;
+            }
+
+            .view-profile-button {
+                padding: 8px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar"></div>
+
+    <main class="find-users-page">
+        <h1>Find Users</h1>
+        <p class="find-users-intro">
+            Discover movie lovers and explore their profiles on Abraham's Vault.
+        </p>
+
+        <form class="user-search-form" id="userSearchForm">
+            <input
+                type="search"
+                id="usernameSearch"
+                placeholder="Search by username..."
+                minlength="2"
+                maxlength="50"
+                autocomplete="off"
+                aria-label="Search usernames"
+                required
+            >
+            <button type="submit" id="searchUsersButton">
+                Search
+            </button>
+        </form>
+
+        <section id="userSearchResults" aria-live="polite">
+            <p class="search-message">
+                Enter at least two characters to find users.
+            </p>
+        </section>
+    </main>
+
+    <script src="navbar.js"></script>
+    <script src="find-users.js"></script>
+</body>
+</html>
