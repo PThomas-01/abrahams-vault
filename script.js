@@ -840,10 +840,14 @@ function createExtraCategorySections() {
         const textGroup = document.createElement("div");
 
         const title = document.createElement("h2");
-        const words = category.title.split(" ");
-title.innerHTML = words
-    .slice(0, -1).join(" ") + ' <span>' + words.at(-1) + '</span>';
+const words = category.title.split(" ");
+const lastWord = document.createElement("span");
 
+title.textContent = words.slice(0, -1).join(" ") + " ";
+lastWord.textContent = words.at(-1);
+lastWord.style.color = "#ffb547";
+
+title.appendChild(lastWord);
         const subtitle = document.createElement("p");
         subtitle.textContent = category.subtitle;
 
