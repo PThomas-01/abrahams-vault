@@ -2585,3 +2585,147 @@ html[data-theme="light"] .extra-category-section .cinema-card-meta {
     line-height: 1;
     text-decoration: none;
 }
+.profile-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    margin-left: 8px;
+    border-radius: 6px;
+    background: #b91c1c;
+    color: #fff !important;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.profile-nav-btn:hover {
+    background: #dc2626;
+}
+
+/* Clean navbar authentication links */
+#auth-links {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    margin-left: 10px;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+}
+
+#auth-links a {
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s ease, background 0.2s ease;
+}
+
+/* Log In — subtle and clean */
+#auth-links a[href="login.html"] {
+    color: #e5e5e5;
+}
+
+#auth-links a[href="login.html"]:hover {
+    color: #ffffff;
+}
+
+/* Sign Up — cinematic red button */
+#auth-links a[href="signup.html"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    border-radius: 6px;
+    background: #b91c1c;
+    color: #ffffff;
+    border: 1px solid #dc2626;
+}
+
+#auth-links a[href="signup.html"]:hover {
+    background: #dc2626;
+}
+
+/* Hide the slash separator if present */
+#auth-links .auth-separator {
+    display: none;
+}
+
+/* Clean logged-in navbar layout */
+#user-links {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin-left: 10px;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+}
+
+/* Username greeting */
+#welcome-user {
+    color: #e5e5e5;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Profile — matching the Sign Up button */
+#user-links .profile-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    margin-left: 0;
+    border: 1px solid #dc2626;
+    border-radius: 6px;
+    background: #b91c1c;
+    color: #ffffff !important;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+#user-links .profile-nav-btn:hover {
+    background: #dc2626;
+}
+
+/* Log Out — understated grey button */
+#user-links .logout-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 14px;
+    border: 1px solid #404040;
+    border-radius: 6px;
+    background: #1a1a1a;
+    color: #d4d4d4;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease,
+                color 0.2s ease;
+}
+
+
+/* Log Out — soft grey, matching the cinematic theme */
+#user-links .logout-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 14px;
+    border: 1px solid #525252;
+    border-radius: 6px;
+    background: #404040;
+    color: #f5f5f5;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+#user-links .logout-btn:hover {
+    background: #525252;
+    border-color: #737373;
+    color: #ffffff;
+}
