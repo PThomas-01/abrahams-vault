@@ -335,12 +335,14 @@ h2,
     letter-spacing: 1.5px;
 }
 
-.#movie-grid {
+
+#movie-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 22px;
     width: 100%;
 }
+
 
 #movie-grid .movie-card {
     min-width: 0;
@@ -1752,7 +1754,9 @@ header.navbar > a.logo,
     font-size: 15px;
     line-height: 1.8;
     display: -webkit-box;
+    line-clamp: 3;
     -webkit-line-clamp: 3;
+    
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -2526,4 +2530,13 @@ html[data-theme="light"] .extra-category-section .cinema-card-meta {
 }
 .extra-category-heading h2 span {
     color: #ffb547 !important;
+}
+#auth-links {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.auth-separator {
+    color: #929096;
 }
