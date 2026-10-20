@@ -269,7 +269,9 @@ app.post(
 // TMDB API PROXY
 // =========================
 
+
 const allowedFixedPaths = new Set([
+    // Movie discovery
     "/search/movie",
     "/discover/movie",
     "/genre/movie/list",
@@ -278,7 +280,23 @@ const allowedFixedPaths = new Set([
     "/movie/now_playing",
     "/movie/upcoming",
     "/trending/movie/day",
-    "/trending/movie/week"
+    "/trending/movie/week",
+
+    // TV discovery
+    "/search/tv",
+    "/discover/tv",
+    "/genre/tv/list",
+    "/tv/popular",
+    "/tv/top_rated",
+    "/tv/on_the_air",
+    "/tv/airing_today",
+    "/trending/tv/day",
+    "/trending/tv/week",
+
+    // Combined movie and TV search/trending
+    "/search/multi",
+    "/trending/all/day",
+    "/trending/all/week"
 ]);
 
 const allowedQueryKeys = new Set([
@@ -292,13 +310,36 @@ const allowedQueryKeys = new Set([
     "primary_release_year",
     "primary_release_date.gte",
     "primary_release_date.lte",
+    "first_air_date_year",
+    "first_air_date.gte",
+    "first_air_date.lte",
     "vote_count.gte",
     "with_release_type",
+    "with_networks",
+    "with_companies",
+    "with_watch_providers",
+    "watch_region",
     "include_adult",
     "include_video",
     "region",
-    "language"
+    "language",
+    "air_date.gte",
+    "air_date.lte",
+    "timezone",
+    "screened_theatrically",
+    "certification",
+    "certification_country",
+    "vote_average.gte",
+    "vote_average.lte",
+    "with_runtime.gte",
+    "with_runtime.lte",
+    "without_genres",
+    "without_keywords",
+    "with_keywords",
+    "with_status",
+    "with_type"
 ]);
+
 
 function isAllowedTmdbPath(path) {
     if (allowedFixedPaths.has(path)) {
@@ -308,9 +349,13 @@ function isAllowedTmdbPath(path) {
     return (
         /^\/movie\/\d+$/.test(path) ||
         /^\/movie\/\d+\/videos$/.test(path) ||
-        /^\/movie\/\d+\/credits$/.test(path)
+        /^\/movie\/\d+\/credits$/.test(path) ||
+        /^\/tv\/\d+$/.test(path) ||
+        /^\/tv\/\d+\/videos$/.test(path) ||
+        /^\/tv\/\d+\/credits$/.test(path)
     );
 }
+
 
 app.get("/api/tmdb", async (req, res) => {
     try {
@@ -361,9 +406,13 @@ app.get("/api/tmdb", async (req, res) => {
                     });
                 }
 
-                if (!/^\/movie\/\d+$/.test(path)) {
+                const isMovieDetails = /^\/movie\/\d+$/.test(path);
+                const isTvDetails = /^\/tv\/\d+$/.test(path);
+
+                if (!isMovieDetails && !isTvDetails) {
                     return res.status(400).json({
-                        error: "TMDB append option is not allowed for this endpoint"
+                        error:
+                            "TMDB append option is not allowed for this endpoint"
                     });
                 }
 
@@ -393,14 +442,15 @@ app.get("/api/tmdb", async (req, res) => {
         console.error("TMDB error:", error.message);
 
         res.status(500).json({
-            error: "Unable to retrieve movie data"
+            error: "Unable to retrieve movie or TV data"
         });
     }
 });
 
-// =========================
-// WATCHLIST
-// =========================
+
+ // =========================
+ // WATCHLIST
+ // =========================
 
 app.get(
     "/api/watchlist/:userId",
@@ -414,6 +464,7 @@ app.get(
                     id,
                     user_id AS userId,
                     tmdb_movie_id AS movieId,
+                    media_type AS mediaType,
                     movie_title AS title,
                     poster_path AS posterPath,
                     added_at AS addedAt
@@ -426,7 +477,6 @@ app.get(
             res.json(rows);
         } catch (error) {
             console.error("Load watchlist error:", error.message);
-
             res.status(500).json({
                 error: "Failed to load watchlist"
             });
@@ -442,62 +492,74 @@ app.post(
             if (!checkUserAccess(req, res)) return;
 
             const userId = req.user.id;
-
             const movieId = Number(
                 req.body.movieId ??
                 req.body.tmdb_movie_id ??
                 req.body.id
             );
 
-            const title =
-                req.body.title ?? req.body.movie_title;
+            const mediaType =
+                req.body.mediaType ?? req.body.media_type ?? "movie";
 
+            const title = req.body.title ?? req.body.movie_title;
             const posterPath =
-                req.body.posterPath ??
-                req.body.poster_path ??
-                null;
+                req.body.posterPath ?? req.body.poster_path ?? null;
 
             if (
                 !Number.isInteger(movieId) ||
                 movieId <= 0 ||
+                !["movie", "tv"].includes(mediaType) ||
                 typeof title !== "string" ||
-                !title.trim()
+                !title.trim() ||
+                title.trim().length > 255 ||
+                (posterPath !== null &&
+                    (typeof posterPath !== "string" ||
+                     posterPath.length > 255))
             ) {
                 return res.status(400).json({
-                    error: "A valid movie ID and title are required"
+                    error: "Valid movie or TV-show details are required"
                 });
             }
 
             const [existing] = await pool.execute(
                 `SELECT id FROM watchlist
-                 WHERE user_id = ? AND tmdb_movie_id = ?`,
-                [userId, movieId]
+                 WHERE user_id = ?
+                   AND media_type = ?
+                   AND tmdb_movie_id = ?`,
+                [userId, mediaType, movieId]
             );
 
             if (existing.length > 0) {
                 return res.status(409).json({
-                    error: "This movie is already in My List"
+                    error: "This item is already in My List"
                 });
             }
 
             await pool.execute(
                 `INSERT INTO watchlist
-                    (user_id, tmdb_movie_id, movie_title, poster_path)
-                 VALUES (?, ?, ?, ?)`,
-                [userId, movieId, title.trim(), posterPath]
+                    (user_id, tmdb_movie_id, media_type,
+                     movie_title, poster_path)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [userId, movieId, mediaType, title.trim(), posterPath]
             );
 
             res.status(201).json({
-                message: "Movie added to My List",
+                message: "Item added to My List",
                 movieId,
+                mediaType,
                 title: title.trim(),
                 posterPath
             });
         } catch (error) {
-            console.error("Add watchlist error:", error.message);
+            if (error.code === "ER_DUP_ENTRY") {
+                return res.status(409).json({
+                    error: "This item is already in My List"
+                });
+            }
 
+            console.error("Add watchlist error:", error.message);
             res.status(500).json({
-                error: "Failed to add movie"
+                error: "Failed to add item to My List"
             });
         }
     }
@@ -511,41 +573,46 @@ app.delete(
             if (!checkUserAccess(req, res)) return;
 
             const movieId = Number(req.params.movieId);
+            const mediaType = req.query.mediaType ?? "movie";
 
-            if (!Number.isInteger(movieId) || movieId <= 0) {
+            if (
+                !Number.isInteger(movieId) ||
+                movieId <= 0 ||
+                !["movie", "tv"].includes(mediaType)
+            ) {
                 return res.status(400).json({
-                    error: "Invalid movie ID"
+                    error: "Invalid item ID or media type"
                 });
             }
 
             const [result] = await pool.execute(
                 `DELETE FROM watchlist
-                 WHERE user_id = ? AND tmdb_movie_id = ?`,
-                [req.user.id, movieId]
+                 WHERE user_id = ?
+                   AND tmdb_movie_id = ?
+                   AND media_type = ?`,
+                [req.user.id, movieId, mediaType]
             );
 
             if (result.affectedRows === 0) {
                 return res.status(404).json({
-                    error: "Movie not found in My List"
+                    error: "Item not found in My List"
                 });
             }
 
-            res.json({
-                message: "Movie removed from My List"
-            });
+            res.json({ message: "Item removed from My List" });
         } catch (error) {
             console.error("Remove watchlist error:", error.message);
-
             res.status(500).json({
-                error: "Failed to remove movie"
+                error: "Failed to remove item from My List"
             });
         }
     }
 );
 
- // =========================
- // WATCHED MOVIES LOG
- // =========================
+
+// =========================
+// WATCHED LOG
+// =========================
 
 app.get(
     "/api/watched/:userId",
@@ -559,6 +626,7 @@ app.get(
                     id,
                     user_id AS userId,
                     tmdb_movie_id AS movieId,
+                    media_type AS mediaType,
                     movie_title AS title,
                     poster_path AS posterPath,
                     watched_at AS watchedAt
@@ -571,9 +639,8 @@ app.get(
             res.json(rows);
         } catch (error) {
             console.error("Load watched log error:", error.message);
-
             res.status(500).json({
-                error: "Failed to load watched movies"
+                error: "Failed to load watched log"
             });
         }
     }
@@ -587,64 +654,60 @@ app.post(
             if (!checkUserAccess(req, res)) return;
 
             const userId = req.user.id;
-
             const movieId = Number(
                 req.body.movieId ??
                 req.body.tmdb_movie_id ??
                 req.body.id
             );
 
-            const title =
-                req.body.title ?? req.body.movie_title;
+            const mediaType =
+                req.body.mediaType ?? req.body.media_type ?? "movie";
 
+            const title = req.body.title ?? req.body.movie_title;
             const posterPath =
-                req.body.posterPath ??
-                req.body.poster_path ??
-                null;
+                req.body.posterPath ?? req.body.poster_path ?? null;
 
             if (
                 !Number.isInteger(movieId) ||
                 movieId <= 0 ||
+                !["movie", "tv"].includes(mediaType) ||
                 typeof title !== "string" ||
                 !title.trim() ||
                 title.trim().length > 255 ||
-                (
-                    posterPath !== null &&
-                    (
-                        typeof posterPath !== "string" ||
-                        posterPath.length > 255
-                    )
-                )
+                (posterPath !== null &&
+                    (typeof posterPath !== "string" ||
+                     posterPath.length > 255))
             ) {
                 return res.status(400).json({
-                    error: "Valid movie details are required"
+                    error: "Valid movie or TV-show details are required"
                 });
             }
 
             await pool.execute(
                 `INSERT INTO watched_movies
-                    (user_id, tmdb_movie_id, movie_title, poster_path)
-                 VALUES (?, ?, ?, ?)`,
-                [userId, movieId, title.trim(), posterPath]
+                    (user_id, tmdb_movie_id, media_type,
+                     movie_title, poster_path)
+                 VALUES (?, ?, ?, ?, ?)`,
+                [userId, movieId, mediaType, title.trim(), posterPath]
             );
 
             res.status(201).json({
-                message: "Movie added to your watched log",
+                message: "Item added to your watched log",
                 movieId,
+                mediaType,
                 title: title.trim(),
                 posterPath
             });
         } catch (error) {
             if (error.code === "ER_DUP_ENTRY") {
                 return res.status(409).json({
-                    error: "This movie is already in your watched log"
+                    error: "This item is already in your watched log"
                 });
             }
 
-            console.error("Add watched movie error:", error.message);
-
+            console.error("Add watched item error:", error.message);
             res.status(500).json({
-                error: "Failed to add movie to watched log"
+                error: "Failed to add item to watched log"
             });
         }
     }
@@ -658,33 +721,39 @@ app.delete(
             if (!checkUserAccess(req, res)) return;
 
             const movieId = Number(req.params.movieId);
+            const mediaType = req.query.mediaType ?? "movie";
 
-            if (!Number.isInteger(movieId) || movieId <= 0) {
+            if (
+                !Number.isInteger(movieId) ||
+                movieId <= 0 ||
+                !["movie", "tv"].includes(mediaType)
+            ) {
                 return res.status(400).json({
-                    error: "Invalid movie ID"
+                    error: "Invalid item ID or media type"
                 });
             }
 
             const [result] = await pool.execute(
                 `DELETE FROM watched_movies
-                 WHERE user_id = ? AND tmdb_movie_id = ?`,
-                [req.user.id, movieId]
+                 WHERE user_id = ?
+                   AND tmdb_movie_id = ?
+                   AND media_type = ?`,
+                [req.user.id, movieId, mediaType]
             );
 
             if (result.affectedRows === 0) {
                 return res.status(404).json({
-                    error: "Movie not found in your watched log"
+                    error: "Item not found in watched log"
                 });
             }
 
             res.json({
-                message: "Movie removed from your watched log"
+                message: "Item removed from watched log"
             });
         } catch (error) {
-            console.error("Remove watched movie error:", error.message);
-
+            console.error("Remove watched item error:", error.message);
             res.status(500).json({
-                error: "Failed to remove movie from watched log"
+                error: "Failed to remove item from watched log"
             });
         }
     }
@@ -696,148 +765,159 @@ app.delete(
  // =========================
 
  // Get all journal entries belonging to the logged-in user
- app.get(
-     "/api/journal/:userId",
-     authenticateToken,
-     async (req, res) => {
-         try {
-             if (!checkUserAccess(req, res)) return;
+app.get(
+    "/api/journal/:userId",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            if (!checkUserAccess(req, res)) return;
 
-             const [entries] = await pool.execute(
-                 `SELECT
-                     id,
-                     tmdb_movie_id AS movieId,
-                     movie_title AS title,
-                     poster_path AS posterPath,
-                     journal_text AS journalText,
-                     created_at AS createdAt,
-                     updated_at AS updatedAt
-                  FROM movie_journal
-                  WHERE user_id = ?
-                  ORDER BY updated_at DESC`,
-                 [req.user.id]
-             );
+            const [entries] = await pool.execute(
+                `SELECT
+                    id,
+                    tmdb_movie_id AS movieId,
+                    media_type AS mediaType,
+                    movie_title AS title,
+                    poster_path AS posterPath,
+                    journal_text AS journalText,
+                    created_at AS createdAt,
+                    updated_at AS updatedAt
+                 FROM movie_journal
+                 WHERE user_id = ?
+                 ORDER BY updated_at DESC`,
+                [req.user.id]
+            );
 
-             res.json(entries);
-         } catch (error) {
-             console.error("Load journal error:", error.message);
-
-             res.status(500).json({
-                 error: "Failed to load journal entries"
-             });
-         }
-     }
- );
-
-
- // Create a journal entry or update an existing one
- app.post(
-     "/api/journal/:userId",
-     authenticateToken,
-     async (req, res) => {
-         try {
-             if (!checkUserAccess(req, res)) return;
-
-             const { movieId, title, posterPath, journalText } = req.body;
-
-             const validMovieId = Number(movieId);
-
-             if (
-                 !Number.isSafeInteger(validMovieId) ||
-                 validMovieId <= 0 ||
-                 typeof title !== "string" ||
-                 !title.trim() ||
-                 title.trim().length > 255 ||
-                 typeof journalText !== "string" ||
-                 !journalText.trim() ||
-                 journalText.length > 10000 ||
-                 (
-                     posterPath != null &&
-                     (
-                         typeof posterPath !== "string" ||
-                         posterPath.length > 255
-                     )
-                 )
-             ) {
-                 return res.status(400).json({
-                     error: "Provide valid movie details and a journal entry of up to 10,000 characters"
-                 });
-             }
-
-             await pool.execute(
-                 `INSERT INTO movie_journal
-                     (user_id, tmdb_movie_id, movie_title,
-                      poster_path, journal_text)
-                  VALUES (?, ?, ?, ?, ?)
-                  ON DUPLICATE KEY UPDATE
-                     movie_title = VALUES(movie_title),
-                     poster_path = VALUES(poster_path),
-                     journal_text = VALUES(journal_text)`,
-                 [
-                     req.user.id,
-                     validMovieId,
-                     title.trim(),
-                     posterPath || null,
-                     journalText.trim()
-                 ]
-             );
-
-             res.json({
-                 message: "Journal entry saved successfully"
-             });
-         } catch (error) {
-             console.error("Save journal error:", error.message);
-
-             res.status(500).json({
-                 error: "Failed to save journal entry"
-             });
-         }
-     }
- );
+            res.json(entries);
+        } catch (error) {
+            console.error("Load journal error:", error.message);
+            res.status(500).json({
+                error: "Failed to load journal entries"
+            });
+        }
+    }
+);
 
 
- // Delete a journal entry
- app.delete(
-     "/api/journal/:userId/:movieId",
-     authenticateToken,
-     async (req, res) => {
-         try {
-             if (!checkUserAccess(req, res)) return;
+// Create a journal entry or update an existing one
+app.post(
+    "/api/journal/:userId",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            if (!checkUserAccess(req, res)) return;
 
-             const movieId = Number(req.params.movieId);
+            const { movieId, title, posterPath, journalText } = req.body;
 
-             if (!Number.isSafeInteger(movieId) || movieId <= 0) {
-                 return res.status(400).json({
-                     error: "Invalid movie ID"
-                 });
-             }
+            const validMovieId = Number(movieId);
+            const mediaType =
+                req.body.mediaType ?? req.body.media_type ?? "movie";
 
-             const [result] = await pool.execute(
-                 `DELETE FROM movie_journal
-                  WHERE user_id = ? AND tmdb_movie_id = ?`,
-                 [req.user.id, movieId]
-             );
+            if (
+                !Number.isSafeInteger(validMovieId) ||
+                validMovieId <= 0 ||
+                !["movie", "tv"].includes(mediaType) ||
+                typeof title !== "string" ||
+                !title.trim() ||
+                title.trim().length > 255 ||
+                typeof journalText !== "string" ||
+                !journalText.trim() ||
+                journalText.length > 10000 ||
+                (
+                    posterPath != null &&
+                    (
+                        typeof posterPath !== "string" ||
+                        posterPath.length > 255
+                    )
+                )
+            ) {
+                return res.status(400).json({
+                    error: "Provide valid movie or TV-show details and a journal entry of up to 10,000 characters"
+                });
+            }
 
-             if (result.affectedRows === 0) {
-                 return res.status(404).json({
-                     error: "Journal entry not found"
-                 });
-             }
+            await pool.execute(
+                `INSERT INTO movie_journal
+                    (user_id, tmdb_movie_id, media_type,
+                     movie_title, poster_path, journal_text)
+                 VALUES (?, ?, ?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE
+                    movie_title = VALUES(movie_title),
+                    poster_path = VALUES(poster_path),
+                    journal_text = VALUES(journal_text)`,
+                [
+                    req.user.id,
+                    validMovieId,
+                    mediaType,
+                    title.trim(),
+                    posterPath || null,
+                    journalText.trim()
+                ]
+            );
 
-             res.json({
-                 message: "Journal entry deleted successfully"
-             });
-         } catch (error) {
-             console.error("Delete journal error:", error.message);
+            res.json({
+                message: "Journal entry saved successfully",
+                movieId: validMovieId,
+                mediaType
+            });
+        } catch (error) {
+            console.error("Save journal error:", error.message);
+            res.status(500).json({
+                error: "Failed to save journal entry"
+            });
+        }
+    }
+);
 
-             res.status(500).json({
-                 error: "Failed to delete journal entry"
-             });
-         }
-     }
- );
 
+// Delete a journal entry
+app.delete(
+    "/api/journal/:userId/:movieId",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            if (!checkUserAccess(req, res)) return;
 
+            const movieId = Number(req.params.movieId);
+            const mediaType = req.query.mediaType ?? "movie";
+
+            if (
+                !Number.isSafeInteger(movieId) ||
+                movieId <= 0 ||
+                !["movie", "tv"].includes(mediaType)
+            ) {
+                return res.status(400).json({
+                    error: "Invalid item ID or media type"
+                });
+            }
+
+            const [result] = await pool.execute(
+                `DELETE FROM movie_journal
+                 WHERE user_id = ?
+                   AND tmdb_movie_id = ?
+                   AND media_type = ?`,
+                [req.user.id, movieId, mediaType]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    error: "Journal entry not found"
+                });
+            }
+
+            res.json({
+                message: "Journal entry deleted successfully"
+            });
+        } catch (error) {
+            console.error("Delete journal error:", error.message);
+            res.status(500).json({
+                error: "Failed to delete journal entry"
+            });
+        }
+    }
+);
+
+ 
  // =========================
  // USER TOP 5 MOVIES
  // =========================
@@ -987,17 +1067,22 @@ app.put(
 );
 
 
-// =========================
-// MOVIE RATINGS
-// =========================
+ // =========================
+ // MOVIE AND TV RATINGS
+ // =========================
 
 app.get("/api/ratings/:movieId", async (req, res) => {
     try {
         const movieId = Number(req.params.movieId);
+        const mediaType = req.query.mediaType ?? "movie";
 
-        if (!Number.isInteger(movieId) || movieId <= 0) {
+        if (
+            !Number.isSafeInteger(movieId) ||
+            movieId <= 0 ||
+            !["movie", "tv"].includes(mediaType)
+        ) {
             return res.status(400).json({
-                error: "Invalid movie ID"
+                error: "Invalid item ID or media type"
             });
         }
 
@@ -1005,8 +1090,9 @@ app.get("/api/ratings/:movieId", async (req, res) => {
             `SELECT AVG(rating) AS averageRating,
                     COUNT(*) AS totalRatings
              FROM movie_ratings
-             WHERE tmdb_movie_id = ?`,
-            [movieId]
+             WHERE tmdb_movie_id = ?
+               AND media_type = ?`,
+            [movieId, mediaType]
         );
 
         res.json({
@@ -1015,12 +1101,12 @@ app.get("/api/ratings/:movieId", async (req, res) => {
         });
     } catch (error) {
         console.error("Get ratings error:", error.message);
-
         res.status(500).json({
             error: "Failed to load ratings"
         });
     }
 });
+
 
 app.get(
     "/api/ratings/:movieId/mine",
@@ -1028,18 +1114,25 @@ app.get(
     async (req, res) => {
         try {
             const movieId = Number(req.params.movieId);
+            const mediaType = req.query.mediaType ?? "movie";
 
-            if (!Number.isInteger(movieId) || movieId <= 0) {
+            if (
+                !Number.isSafeInteger(movieId) ||
+                movieId <= 0 ||
+                !["movie", "tv"].includes(mediaType)
+            ) {
                 return res.status(400).json({
-                    error: "Invalid movie ID"
+                    error: "Invalid item ID or media type"
                 });
             }
 
             const [rows] = await pool.execute(
                 `SELECT rating
                  FROM movie_ratings
-                 WHERE user_id = ? AND tmdb_movie_id = ?`,
-                [req.user.id, movieId]
+                 WHERE user_id = ?
+                   AND tmdb_movie_id = ?
+                   AND media_type = ?`,
+                [req.user.id, movieId, mediaType]
             );
 
             res.json({
@@ -1049,13 +1142,13 @@ app.get(
             });
         } catch (error) {
             console.error("Get personal rating error:", error.message);
-
             res.status(500).json({
                 error: "Failed to load your rating"
             });
         }
     }
 );
+
 
 app.post("/api/ratings", authenticateToken, async (req, res) => {
     try {
@@ -1064,52 +1157,62 @@ app.post("/api/ratings", authenticateToken, async (req, res) => {
         );
 
         const rating = Number(req.body.rating);
+        const mediaType =
+            req.body.mediaType ?? req.body.media_type ?? "movie";
 
         if (
-            !Number.isInteger(movieId) ||
+            !Number.isSafeInteger(movieId) ||
             movieId <= 0 ||
-            !Number.isFinite(rating) ||
+            !["movie", "tv"].includes(mediaType) ||
+            !Number.isInteger(rating) ||
             rating < 1 ||
-            rating > 10
+            rating > 5
         ) {
             return res.status(400).json({
-                error: "Movie ID and a rating from 1 to 10 are required"
+                error: "Valid item details and a whole-number rating from 1 to 5 are required"
             });
         }
 
         await pool.execute(
             `INSERT INTO movie_ratings
-                (user_id, tmdb_movie_id, rating)
-             VALUES (?, ?, ?)
-             ON DUPLICATE KEY UPDATE rating = VALUES(rating)`,
-            [req.user.id, movieId, rating]
+                (user_id, tmdb_movie_id, media_type, rating)
+             VALUES (?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                rating = VALUES(rating)`,
+            [req.user.id, movieId, mediaType, rating]
         );
 
         res.json({
             message: "Rating saved",
             movieId,
+            mediaType,
             rating
         });
     } catch (error) {
         console.error("Save rating error:", error.message);
-
         res.status(500).json({
             error: "Failed to save rating"
         });
     }
 });
 
+
 // =========================
-// COMMUNITY REVIEWS
+// MOVIE AND TV COMMUNITY REVIEWS
 // =========================
 
 app.get("/api/reviews/:movieId", async (req, res) => {
     try {
         const movieId = Number(req.params.movieId);
+        const mediaType = req.query.mediaType ?? "movie";
 
-        if (!Number.isInteger(movieId) || movieId <= 0) {
+        if (
+            !Number.isSafeInteger(movieId) ||
+            movieId <= 0 ||
+            !["movie", "tv"].includes(mediaType)
+        ) {
             return res.status(400).json({
-                error: "Invalid movie ID"
+                error: "Invalid item ID or media type"
             });
         }
 
@@ -1118,6 +1221,7 @@ app.get("/api/reviews/:movieId", async (req, res) => {
                 r.id,
                 r.user_id AS userId,
                 r.tmdb_movie_id AS movieId,
+                r.media_type AS mediaType,
                 r.review_text AS reviewText,
                 r.created_at AS createdAt,
                 r.updated_at AS updatedAt,
@@ -1125,19 +1229,20 @@ app.get("/api/reviews/:movieId", async (req, res) => {
              FROM movie_reviews r
              JOIN users u ON u.id = r.user_id
              WHERE r.tmdb_movie_id = ?
+               AND r.media_type = ?
              ORDER BY r.updated_at DESC`,
-            [movieId]
+            [movieId, mediaType]
         );
 
         res.json(reviews);
     } catch (error) {
         console.error("Load reviews error:", error.message);
-
         res.status(500).json({
             error: "Failed to load reviews"
         });
     }
 });
+
 
 app.post("/api/reviews", authenticateToken, async (req, res) => {
     try {
@@ -1148,38 +1253,45 @@ app.post("/api/reviews", authenticateToken, async (req, res) => {
         const reviewText =
             req.body.reviewText ?? req.body.review_text;
 
+        const mediaType =
+            req.body.mediaType ?? req.body.media_type ?? "movie";
+
         if (
-            !Number.isInteger(movieId) ||
+            !Number.isSafeInteger(movieId) ||
             movieId <= 0 ||
+            !["movie", "tv"].includes(mediaType) ||
             typeof reviewText !== "string" ||
-            !reviewText.trim()
+            !reviewText.trim() ||
+            reviewText.trim().length > 10000
         ) {
             return res.status(400).json({
-                error: "Movie ID and review text are required"
+                error: "Valid item details and review text of up to 10,000 characters are required"
             });
         }
 
         await pool.execute(
             `INSERT INTO movie_reviews
-                (user_id, tmdb_movie_id, review_text)
-             VALUES (?, ?, ?)
+                (user_id, tmdb_movie_id, media_type, review_text)
+             VALUES (?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                 review_text = VALUES(review_text),
                 updated_at = CURRENT_TIMESTAMP`,
-            [req.user.id, movieId, reviewText.trim()]
+            [req.user.id, movieId, mediaType, reviewText.trim()]
         );
 
         res.json({
-            message: "Review saved successfully"
+            message: "Review saved successfully",
+            movieId,
+            mediaType
         });
     } catch (error) {
         console.error("Save review error:", error.message);
-
         res.status(500).json({
             error: "Failed to save review"
         });
     }
 });
+
 
 app.delete(
     "/api/reviews/:reviewId",
@@ -1188,7 +1300,10 @@ app.delete(
         try {
             const reviewId = Number(req.params.reviewId);
 
-            if (!Number.isInteger(reviewId) || reviewId <= 0) {
+            if (
+                !Number.isSafeInteger(reviewId) ||
+                reviewId <= 0
+            ) {
                 return res.status(400).json({
                     error: "Invalid review ID"
                 });
@@ -1211,7 +1326,6 @@ app.delete(
             });
         } catch (error) {
             console.error("Delete review error:", error.message);
-
             res.status(500).json({
                 error: "Failed to delete review"
             });

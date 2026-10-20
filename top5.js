@@ -1,6 +1,6 @@
 
 (() => {
-    const API = "https://abrahams-vault-backend.onrender.com/api";
+    const API = "http://localhost:3000/api";
     const selected = new Map();
 
     const token = () => sessionStorage.getItem("vaultToken");

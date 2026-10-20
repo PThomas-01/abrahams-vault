@@ -1,11 +1,20 @@
 
-const API_BASE_URL = "https://abrahams-vault-backend.onrender.com/api";
+const API_BASE_URL = window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+    ? "http://localhost:3000/api"
+    : "https://abrahams-vault-backend.onrender.com/api";
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";
 
 const params = new URLSearchParams(window.location.search);
 const rawUrlId = params.get("id");
 const urlMovieId = Number(rawUrlId);
-const savedMovieId = Number(sessionStorage.getItem("vaultSelectedMovieId"));
+
+const requestedMediaType = params.get("type");
+const mediaType = requestedMediaType === "tv" ? "tv" : "movie";
+
+const savedMovieId = Number(
+    sessionStorage.getItem("vaultSelectedMovieId")
+);
 
 const movieId =
     rawUrlId && Number.isSafeInteger(urlMovieId) && urlMovieId > 0
@@ -14,6 +23,7 @@ const movieId =
             ? savedMovieId
             : NaN;
 
+const itemTypeLabel = mediaType === "tv" ? "series" : "movie";
 const detailsContainer = document.getElementById("movie-details");
 const statusElement = document.getElementById("details-status");
 
@@ -62,7 +72,9 @@ async function readResponse(response) {
 
     if (!response.ok) {
         throw new Error(
-            data.error || data.message || `Request failed (${response.status}).`
+            data.error ||
+            data.message ||
+            `Request failed (${response.status}).`
         );
     }
 
@@ -71,7 +83,9 @@ async function readResponse(response) {
 
 async function tmdbRequest(endpoint) {
     const url = new URL(endpoint, window.location.origin);
-    const proxyParams = new URLSearchParams({ path: url.pathname });
+    const proxyParams = new URLSearchParams({
+        path: url.pathname
+    });
 
     url.searchParams.forEach((value, key) => {
         proxyParams.set(key, value);
@@ -106,6 +120,10 @@ function escapeHTML(value = "") {
     })[character]);
 }
 
+function mediaTypeQuery() {
+    return `mediaType=${encodeURIComponent(mediaType)}`;
+}
+
 function formatDate(dateString) {
     if (!dateString) return "Date unavailable";
 
@@ -134,25 +152,42 @@ function formatRuntime(minutes) {
 }
 
 // =====================================
-// LOAD MOVIE DETAILS, CAST AND CREW
+// LOAD MOVIE OR TV DETAILS
 // =====================================
 
 async function loadMovieDetails() {
     if (!Number.isSafeInteger(movieId) || movieId <= 0) {
         statusElement.textContent =
-            "Invalid movie link. Return to the homepage and select a movie again.";
+            "Invalid link. Return to the homepage and select a title again.";
         return;
     }
 
     try {
         statusElement.style.display = "block";
-        statusElement.textContent = "Loading movie details...";
+        statusElement.textContent =
+            `Loading ${mediaType === "tv" ? "series" : "movie"} details...`;
 
-        const [movie, videos, credits] = await Promise.all([
-            tmdbRequest(`/movie/${movieId}?language=en-US`),
-            tmdbRequest(`/movie/${movieId}/videos?language=en-US`),
-            tmdbRequest(`/movie/${movieId}/credits?language=en-US`)
+        const tmdbType = mediaType === "tv" ? "tv" : "movie";
+
+        const [item, videos, credits] = await Promise.all([
+            tmdbRequest(`/${tmdbType}/${movieId}?language=en-US`),
+            tmdbRequest(`/${tmdbType}/${movieId}/videos?language=en-US`),
+            tmdbRequest(`/${tmdbType}/${movieId}/credits?language=en-US`)
         ]);
+
+        // Normalize TV data so existing features can use movie.title.
+        const movie = mediaType === "tv"
+            ? {
+                ...item,
+                title: item.name,
+                release_date: item.first_air_date,
+                runtime: item.episode_run_time?.[0] || 0,
+                director: (item.created_by || [])
+                    .map(person => person.name)
+                    .filter(Boolean)
+                    .join(", ")
+            }
+            : item;
 
         currentMovie = movie;
         window.currentMovie = movie;
@@ -180,7 +215,10 @@ async function loadMovieDetails() {
 
         const cast = (credits.cast || []).slice(0, 12);
         const crew = credits.crew || [];
-        const director = crew.find(person => person.job === "Director");
+
+        const director = mediaType === "tv"
+            ? (movie.director ? { name: movie.director } : null)
+            : crew.find(person => person.job === "Director");
 
         const castMarkup = cast.length
             ? cast.map(person => {
@@ -193,21 +231,31 @@ async function loadMovieDetails() {
                         <div class="cast-photo">
                             ${
                                 profile
-                                    ? `<img src="${profile}" alt="${escapeHTML(person.name)}" loading="lazy">`
+                                    ? `<img src="${profile}"
+                                           alt="${escapeHTML(person.name)}"
+                                           loading="lazy">`
                                     : `<div class="cast-photo-placeholder">?</div>`
                             }
                         </div>
-
                         <div class="cast-info">
                             <h3>${escapeHTML(person.name || "Unknown")}</h3>
-                            <p>${escapeHTML(person.character || "Role unavailable")}</p>
+                            <p>${escapeHTML(
+                                person.character || "Role unavailable"
+                            )}</p>
                         </div>
                     </article>
                 `;
             }).join("")
-            : `<p class="cast-unavailable">Cast information is unavailable for this movie.</p>`;
+            : `<p class="cast-unavailable">
+                   Cast information is unavailable for this ${itemTypeLabel}.
+               </p>`;
 
-      detailsContainer.innerHTML = `
+        const year = (movie.release_date || "").slice(0, 4);
+        const runtimeText = mediaType === "tv" && movie.runtime
+            ? `${movie.runtime} min/episode`
+            : formatRuntime(movie.runtime);
+
+        detailsContainer.innerHTML = `
             <section class="details-backdrop"
                 style="${backdrop
                     ? `background-image: linear-gradient(to top, #0b0b0d 4%, rgba(11,11,13,.72) 58%, rgba(11,11,13,.2)), url('${backdrop}')`
@@ -215,42 +263,51 @@ async function loadMovieDetails() {
             </section>
 
             <section class="details-content">
-
                 <div class="details-poster">
                     ${
                         poster
-                            ? `<img src="${poster}" alt="${escapeHTML(movie.title)} poster">`
-                            : `<div class="rating-no-poster">No poster available</div>`
+                            ? `<img src="${poster}"
+                                   alt="${escapeHTML(movie.title)} poster">`
+                            : `<div class="rating-no-poster">
+                                   No poster available
+                               </div>`
                     }
                 </div>
 
                 <div class="details-info">
-                    <h1>${escapeHTML(movie.title || "Untitled movie")}</h1>
+                    <h1>${escapeHTML(
+                        movie.title ||
+                        (mediaType === "tv" ? "Untitled TV Show" : "Untitled movie")
+                    )}</h1>
 
                     ${movie.tagline
-                        ? `<p class="details-tagline">${escapeHTML(movie.tagline)}</p>`
+                        ? `<p class="details-tagline">
+                               ${escapeHTML(movie.tagline)}
+                           </p>`
                         : ""}
 
                     <div class="details-meta">
-                        <span>TMDB ★ ${
-                            movie.vote_average
-                                ? Number(movie.vote_average).toFixed(1)
-                                : "N/A"
-                        }</span>
+                        <span>
+                            TMDB ★ ${
+                                movie.vote_average
+                                    ? Number(movie.vote_average).toFixed(1)
+                                    : "N/A"
+                            }
+                        </span>
 
                         <span>
                             ${Number(movie.vote_count || 0).toLocaleString()}
                             TMDB votes
                         </span>
 
-                        <span>
-                            ${escapeHTML(
-                                (movie.release_date || "").slice(0, 4) ||
-                                "Year unknown"
-                            )}
-                        </span>
+                        <span>${escapeHTML(year || "Year unknown")}</span>
 
-                        <span>${escapeHTML(formatRuntime(movie.runtime))}</span>
+                        <span>${escapeHTML(runtimeText)}</span>
+
+                        ${mediaType === "tv" && movie.number_of_seasons
+                            ? `<span>${Number(movie.number_of_seasons)}
+                                   seasons</span>`
+                            : ""}
                     </div>
 
                     <p class="details-genres">
@@ -259,7 +316,7 @@ async function loadMovieDetails() {
 
                     ${director ? `
                         <p class="details-director">
-                            <strong>Director:</strong>
+                            <strong>${mediaType === "tv" ? "Created by:" : "Director:"}</strong>
                             ${escapeHTML(director.name)}
                         </p>
                     ` : ""}
@@ -269,29 +326,23 @@ async function loadMovieDetails() {
                     <p class="details-overview">
                         ${escapeHTML(
                             movie.overview ||
-                            "No synopsis is available for this movie."
+                            `No synopsis is available for this ${itemTypeLabel}.`
                         )}
                     </p>
 
                     <div class="details-actions">
-                        <button
-                            id="watchlist-button"
-                            class="vault-action-button"
-                            type="button">
+                        <button id="watchlist-button"
+                            class="vault-action-button" type="button">
                             Checking My List...
                         </button>
 
-                        <button
-                            id="watched-button"
-                            class="vault-action-button"
-                            type="button">
+                        <button id="watched-button"
+                            class="vault-action-button" type="button">
                             Checking Watched Status...
                         </button>
 
-                        <button
-                            id="journal-button"
-                            class="vault-action-button"
-                            type="button">
+                        <button id="journal-button"
+                            class="vault-action-button" type="button">
                             Write in My Journal
                         </button>
 
@@ -311,18 +362,19 @@ async function loadMovieDetails() {
                 <section id="cast-section" class="cast-section">
                     <h2>Cast &amp; Crew</h2>
                     <p class="cast-subtitle">
-                        Meet the people behind this movie.
+                        ${mediaType === "tv"
+                            ? "Meet the cast and creators behind this series."
+                            : "Meet the people behind this movie."}
                     </p>
-                    <div class="cast-grid">
-                        ${castMarkup}
-                    </div>
+                    <div class="cast-grid">${castMarkup}</div>
                 </section>
 
                 <section id="movie-journal-section" class="movie-reviews">
                     <div class="reviews-heading">
                         <h2>My Journal</h2>
                         <p class="reviews-subtitle">
-                            Your private thoughts and memories about this movie.
+                            Your private thoughts and memories about this
+                            ${itemTypeLabel}.
                         </p>
                     </div>
 
@@ -342,7 +394,7 @@ async function loadMovieDetails() {
                     <div class="reviews-heading">
                         <h2>Community Reviews</h2>
                         <p class="reviews-subtitle">
-                            Share your thoughts about this movie.
+                            Share your thoughts about this ${itemTypeLabel}.
                         </p>
                     </div>
 
@@ -354,12 +406,11 @@ async function loadMovieDetails() {
 
                     <div id="reviews-list"></div>
                 </section>
-
             </section>
         `;
 
-        // Add the Top 5 button after the movie details HTML exists.
-        if (window.VaultTop5) {
+        // Top 5 remains a movie-only feature.
+        if (mediaType === "movie" && window.VaultTop5) {
             await window.VaultTop5.addDetailsButton(movie);
         }
 
@@ -384,24 +435,25 @@ async function loadMovieDetails() {
             loadJournalEntry()
         ]);
     } catch (error) {
-        console.error("Movie details error:", error);
-
+        console.error("Details loading error:", error);
         statusElement.style.display = "block";
         statusElement.textContent =
-            error.message || "Could not load movie details.";
+            error.message || "Could not load details.";
     }
 }
 
 // =====================================
-// COMMUNITY RATINGS
+// COMMUNITY AND PERSONAL RATINGS
 // =====================================
 
 async function loadCommunityRating() {
     try {
-        const data = await apiRequest(`/ratings/${movieId}`);
+        const data = await apiRequest(
+            `/ratings/${movieId}?${mediaTypeQuery()}`
+        );
 
         communityRating = data.averageRating ?? null;
-        ratingCount = Number(data.ratingCount || 0);
+        ratingCount = Number(data.totalRatings ?? data.ratingCount ?? 0);
 
         renderRatingSection();
     } catch (error) {
@@ -428,7 +480,10 @@ async function loadPersonalRating() {
     }
 
     try {
-        const data = await apiRequest(`/ratings/${movieId}/mine`);
+        const data = await apiRequest(
+            `/ratings/${movieId}/mine?${mediaTypeQuery()}`
+        );
+
         currentUserRating = data.rating ?? null;
     } catch (error) {
         console.error("Personal rating error:", error);
@@ -457,7 +512,7 @@ function renderRatingSection() {
     const personalText = currentUserRating
         ? `Your rating: ${currentUserRating}/5`
         : hasToken
-            ? "You haven't rated this movie yet."
+            ? `You haven't rated this ${itemTypeLabel} yet.`
             : "Log in to submit your rating.";
 
     section.innerHTML = `
@@ -474,21 +529,19 @@ function renderRatingSection() {
         </div>
 
         <div class="personal-rating">
-            <h3>Rate this movie</h3>
+            <h3>Rate this ${itemTypeLabel}</h3>
 
             <div class="rating-star-picker" role="group"
-                 aria-label="Choose a rating from 1 to 5 stars">
+                aria-label="Choose a rating from 1 to 5 stars">
                 ${[1, 2, 3, 4, 5].map(star => `
-                    <button
-                        type="button"
+                    <button type="button"
                         class="rating-star ${
                             Number(currentUserRating) >= star ? "selected" : ""
                         }"
                         data-rating="${star}"
                         aria-label="${star} out of 5 stars"
                         aria-pressed="${Number(currentUserRating) === star}"
-                        ${!hasToken || isSavingRating ? "disabled" : ""}
-                    >★</button>
+                        ${!hasToken || isSavingRating ? "disabled" : ""}>★</button>
                 `).join("")}
             </div>
 
@@ -497,7 +550,7 @@ function renderRatingSection() {
                     ratingNotice ||
                     (hasToken
                         ? personalText
-                        : "Sign in to Abraham's Vault to rate this movie.")
+                        : "Sign in to Abraham's Vault to rate this title.")
                 )}
             </p>
         </div>
@@ -518,7 +571,7 @@ function renderStars(rating) {
 
 async function saveRating(rating) {
     if (!getToken()) {
-        ratingNotice = "Please log in before rating a movie.";
+        ratingNotice = "Please log in before rating this title.";
         renderRatingSection();
         return;
     }
@@ -540,7 +593,7 @@ async function saveRating(rating) {
         await apiRequest("/ratings", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ movieId, rating })
+            body: JSON.stringify({ movieId, rating, mediaType })
         });
 
         currentUserRating = rating;
@@ -557,7 +610,7 @@ async function saveRating(rating) {
 }
 
 // =====================================
-// MYSQL WATCHLIST
+// MY LIST / WATCHLIST
 // =====================================
 
 async function loadWatchlistStatus() {
@@ -572,10 +625,11 @@ async function loadWatchlistStatus() {
 
     try {
         const userId = encodeURIComponent(getUserId());
-        const movies = await apiRequest(`/watchlist/${userId}`);
+        const entries = await apiRequest(`/watchlist/${userId}`);
 
-        isInWatchlist = Array.isArray(movies) && movies.some(movie =>
-            Number(movie.movieId ?? movie.tmdb_movie_id ?? movie.id) === movieId
+        isInWatchlist = Array.isArray(entries) && entries.some(entry =>
+            Number(entry.movieId ?? entry.tmdb_movie_id ?? entry.id) === movieId &&
+            (entry.mediaType ?? entry.media_type ?? "movie") === mediaType
         );
 
         button.textContent = isInWatchlist
@@ -589,24 +643,24 @@ async function loadWatchlistStatus() {
 
 async function toggleWatchlist() {
     const button = document.getElementById("watchlist-button");
-    if (!button) return;
+    if (!button || button.disabled) return;
 
     if (!getToken() || !getUserId()) {
         button.textContent = "Please log in first";
         return;
     }
 
-    if (!currentMovie || button.disabled) return;
+    if (!currentMovie) return;
 
     const userId = encodeURIComponent(getUserId());
-    const movieIdPath = encodeURIComponent(String(movieId));
+    const idPath = encodeURIComponent(String(movieId));
 
     button.disabled = true;
 
     try {
         if (isInWatchlist) {
             await apiRequest(
-                `/watchlist/${userId}/${movieIdPath}`,
+                `/watchlist/${userId}/${idPath}?${mediaTypeQuery()}`,
                 { method: "DELETE" }
             );
 
@@ -617,6 +671,7 @@ async function toggleWatchlist() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     movieId,
+                    mediaType,
                     title: currentMovie.title,
                     posterPath: currentMovie.poster_path || null
                 })
@@ -630,16 +685,15 @@ async function toggleWatchlist() {
             : "Add to My List";
     } catch (error) {
         console.error("Watchlist update error:", error);
-        button.textContent = "My List update failed";
-
         window.alert(`Could not update My List: ${error.message}`);
+        await loadWatchlistStatus();
     } finally {
         button.disabled = false;
     }
 }
 
 // =====================================
-// WATCHED MOVIES LOG
+// WATCHED LOG
 // =====================================
 
 async function loadWatchedStatus() {
@@ -657,10 +711,11 @@ async function loadWatchedStatus() {
 
     try {
         const userId = encodeURIComponent(getUserId());
-        const movies = await apiRequest(`/watched/${userId}`);
+        const entries = await apiRequest(`/watched/${userId}`);
 
-        isWatched = Array.isArray(movies) && movies.some(movie =>
-            Number(movie.movieId ?? movie.tmdb_movie_id ?? movie.id) === movieId
+        isWatched = Array.isArray(entries) && entries.some(entry =>
+            Number(entry.movieId ?? entry.tmdb_movie_id ?? entry.id) === movieId &&
+            (entry.mediaType ?? entry.media_type ?? "movie") === mediaType
         );
 
         button.textContent = isWatched
@@ -686,7 +741,7 @@ async function toggleWatched() {
     if (!currentMovie) return;
 
     const userId = encodeURIComponent(getUserId());
-    const movieIdPath = encodeURIComponent(String(movieId));
+    const idPath = encodeURIComponent(String(movieId));
 
     button.disabled = true;
     button.textContent = isWatched ? "Removing..." : "Adding...";
@@ -694,7 +749,7 @@ async function toggleWatched() {
     try {
         if (isWatched) {
             await apiRequest(
-                `/watched/${userId}/${movieIdPath}`,
+                `/watched/${userId}/${idPath}?${mediaTypeQuery()}`,
                 { method: "DELETE" }
             );
 
@@ -705,6 +760,7 @@ async function toggleWatched() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     movieId,
+                    mediaType,
                     title: currentMovie.title,
                     posterPath: currentMovie.poster_path || null
                 })
@@ -718,9 +774,7 @@ async function toggleWatched() {
             : "Add to Watched Log";
     } catch (error) {
         console.error("Watched Log update error:", error);
-
         window.alert(`Could not update Watched Log: ${error.message}`);
-
         await loadWatchedStatus();
     } finally {
         button.disabled = false;
@@ -728,7 +782,7 @@ async function toggleWatched() {
 }
 
 // =====================================
-// MY PRIVATE MOVIE JOURNAL
+// MY JOURNAL
 // =====================================
 
 async function loadJournalEntry() {
@@ -740,7 +794,6 @@ async function loadJournalEntry() {
     if (!getToken() || !getUserId()) {
         journalEntry = null;
         journalLoaded = false;
-
         button.textContent = "Write in My Journal";
         status.textContent = "Log in to write in your private journal.";
         return;
@@ -752,7 +805,8 @@ async function loadJournalEntry() {
 
         journalEntry = Array.isArray(entries)
             ? entries.find(entry =>
-                Number(entry.movieId ?? entry.tmdb_movie_id) === movieId
+                Number(entry.movieId ?? entry.tmdb_movie_id) === movieId &&
+                (entry.mediaType ?? entry.media_type ?? "movie") === mediaType
             ) || null
             : null;
 
@@ -763,8 +817,8 @@ async function loadJournalEntry() {
             : "Write in My Journal";
 
         status.textContent = journalEntry
-            ? "You have a journal entry for this movie."
-            : "You haven't written about this movie yet.";
+            ? `You have a journal entry for this ${itemTypeLabel}.`
+            : `You haven't written about this ${itemTypeLabel} yet.`;
     } catch (error) {
         console.error("Load journal entry error:", error);
         status.textContent = "Could not load your journal entry.";
@@ -790,20 +844,14 @@ async function openMovieJournal() {
         status.textContent = "Loading your journal entry...";
         await loadJournalEntry();
 
-        if (!journalLoaded) {
-            return;
-        }
+        if (!journalLoaded) return;
     }
 
     journalNotice = "";
     container.hidden = false;
-
     renderMovieJournalForm();
 
-    section.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function renderMovieJournalForm() {
@@ -819,7 +867,7 @@ function renderMovieJournalForm() {
         <form id="movie-journal-form" class="review-form">
             <label for="movie-journal-text">
                 Your private thoughts about ${escapeHTML(
-                    currentMovie?.title || "this movie"
+                    currentMovie?.title || `this ${itemTypeLabel}`
                 )}
             </label>
 
@@ -828,7 +876,7 @@ function renderMovieJournalForm() {
                 name="journalText"
                 rows="7"
                 maxlength="10000"
-                placeholder="What did this movie make you think or feel? Record your memories, favourite moments, or personal reflections..."
+                placeholder="Record your memories, favourite moments, and personal reflections..."
                 required
             >${escapeHTML(savedText)}</textarea>
 
@@ -841,9 +889,7 @@ function renderMovieJournalForm() {
             </p>
 
             <div class="review-form-actions">
-                <button
-                    type="submit"
-                    class="vault-action-button"
+                <button type="submit" class="vault-action-button"
                     ${isSavingJournal ? "disabled" : ""}>
                     ${isSavingJournal
                         ? "Saving..."
@@ -852,9 +898,15 @@ function renderMovieJournalForm() {
                             : "Save to My Journal"}
                 </button>
 
-                <button
-                    type="button"
-                    id="cancel-movie-journal"
+                ${journalEntry ? `
+                    <button type="button" id="delete-journal-entry"
+                        class="review-delete-button"
+                        ${isSavingJournal ? "disabled" : ""}>
+                        Delete Entry
+                    </button>
+                ` : ""}
+
+                <button type="button" id="cancel-movie-journal"
                     class="review-cancel-button"
                     ${isSavingJournal ? "disabled" : ""}>
                     Cancel
@@ -869,10 +921,15 @@ function renderMovieJournalForm() {
     document.getElementById("cancel-movie-journal")
         .addEventListener("click", () => {
             if (isSavingJournal) return;
-
             container.hidden = true;
             journalNotice = "";
         });
+
+    const deleteButton = document.getElementById("delete-journal-entry");
+
+    if (deleteButton) {
+        deleteButton.addEventListener("click", deleteMovieJournalEntry);
+    }
 }
 
 async function saveMovieJournalEntry(event) {
@@ -913,6 +970,7 @@ async function saveMovieJournalEntry(event) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 movieId,
+                mediaType,
                 title: currentMovie.title,
                 posterPath: currentMovie.poster_path || null,
                 journalText
@@ -922,6 +980,7 @@ async function saveMovieJournalEntry(event) {
         journalEntry = {
             ...(journalEntry || {}),
             movieId,
+            mediaType,
             title: currentMovie.title,
             posterPath: currentMovie.poster_path || null,
             journalText
@@ -931,25 +990,62 @@ async function saveMovieJournalEntry(event) {
         journalNotice = "Your journal entry has been saved!";
 
         const status = document.getElementById("movie-journal-status");
-
         if (status) {
             status.textContent = "Your journal entry is saved privately.";
         }
 
         const button = document.getElementById("journal-button");
-
-        if (button) {
-            button.textContent = "Edit My Journal Entry";
-        }
+        if (button) button.textContent = "Edit My Journal Entry";
     } catch (error) {
         console.error("Save journal entry error:", error);
-
-        journalNotice =
-            error.message || "Could not save your journal entry.";
+        journalNotice = error.message || "Could not save your journal entry.";
     } finally {
         isSavingJournal = false;
+        renderMovieJournalForm();
+    }
+}
 
-        // Refresh the form message without losing the saved text.
+async function deleteMovieJournalEntry() {
+    if (!journalEntry || isSavingJournal) return;
+
+    if (!window.confirm("Delete this private journal entry?")) return;
+
+    if (!getToken() || !getUserId()) {
+        journalNotice = "Please log in again.";
+        renderMovieJournalForm();
+        return;
+    }
+
+    isSavingJournal = true;
+    journalNotice = "Deleting your journal entry...";
+    renderMovieJournalForm();
+
+    try {
+        const userId = encodeURIComponent(getUserId());
+        const idPath = encodeURIComponent(String(movieId));
+
+        await apiRequest(
+            `/journal/${userId}/${idPath}?${mediaTypeQuery()}`,
+            { method: "DELETE" }
+        );
+
+        journalEntry = null;
+        journalLoaded = true;
+        journalNotice = "Your journal entry has been deleted.";
+
+        const button = document.getElementById("journal-button");
+        if (button) button.textContent = "Write in My Journal";
+
+        const status = document.getElementById("movie-journal-status");
+        if (status) {
+            status.textContent =
+                `You haven't written about this ${itemTypeLabel} yet.`;
+        }
+    } catch (error) {
+        console.error("Delete journal entry error:", error);
+        journalNotice = error.message || "Could not delete your journal entry.";
+    } finally {
+        isSavingJournal = false;
         renderMovieJournalForm();
     }
 }
@@ -968,7 +1064,10 @@ async function loadReviews() {
     list.innerHTML = "";
 
     try {
-        const data = await apiRequest(`/reviews/${movieId}`);
+        const data = await apiRequest(
+            `/reviews/${movieId}?${mediaTypeQuery()}`
+        );
+
         reviews = Array.isArray(data) ? data : [];
 
         status.textContent = reviews.length
@@ -979,10 +1078,7 @@ async function loadReviews() {
         renderReviews();
     } catch (error) {
         console.error("Load reviews error:", error);
-
-        status.textContent =
-            "Could not load reviews. Please try refreshing.";
-
+        status.textContent = "Could not load reviews. Please try refreshing.";
         renderReviewForm();
     }
 }
@@ -1001,7 +1097,7 @@ function renderReviewForm() {
     if (!getToken()) {
         container.innerHTML = `
             <div class="review-login-prompt">
-                <p>Please log in to write a review for this movie.</p>
+                <p>Please log in to write a review for this ${itemTypeLabel}.</p>
                 <a class="vault-action-button" href="login.html">Log In</a>
             </div>
         `;
@@ -1028,7 +1124,7 @@ function renderReviewForm() {
                 rows="5"
                 minlength="10"
                 maxlength="3000"
-                placeholder="What did you think of this movie?"
+                placeholder="What did you think of this ${itemTypeLabel}?"
                 required
             >${escapeHTML(initialText)}</textarea>
 
@@ -1037,7 +1133,7 @@ function renderReviewForm() {
             </p>
 
             <p class="review-form-message" id="review-form-message"
-               aria-live="polite">${escapeHTML(reviewNotice)}</p>
+                aria-live="polite">${escapeHTML(reviewNotice)}</p>
 
             <div class="review-form-actions">
                 <button type="submit" class="vault-action-button"
@@ -1048,7 +1144,9 @@ function renderReviewForm() {
 
                 ${editingReview ? `
                     <button type="button" id="cancel-review-edit"
-                        class="review-cancel-button">Cancel</button>
+                        class="review-cancel-button">
+                        Cancel
+                    </button>
                 ` : ""}
             </div>
         </form>
@@ -1140,7 +1238,6 @@ function renderReviews() {
         button.addEventListener("click", () => {
             editingReview = true;
             reviewNotice = "";
-
             renderReviewForm();
 
             const textarea = document.getElementById("review-text");
@@ -1174,7 +1271,7 @@ async function submitReview(event) {
     if (isSavingReview) return;
 
     const textarea = document.getElementById("review-text");
-    const reviewText = textarea ? textarea.value.trim() : "";
+    const reviewText = textarea?.value.trim() || "";
 
     if (reviewText.length < 10 || reviewText.length > 3000) {
         const message = document.getElementById("review-form-message");
@@ -1183,7 +1280,6 @@ async function submitReview(event) {
             message.textContent =
                 "Your review must be between 10 and 3000 characters.";
         }
-
         return;
     }
 
@@ -1195,16 +1291,18 @@ async function submitReview(event) {
         await apiRequest("/reviews", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ movieId, reviewText })
+            body: JSON.stringify({
+                movieId,
+                mediaType,
+                reviewText
+            })
         });
 
         editingReview = false;
         reviewNotice = "Your review has been saved!";
-
         await loadReviews();
     } catch (error) {
         console.error("Save review error:", error);
-
         reviewNotice = error.message || "Could not save your review.";
     } finally {
         isSavingReview = false;
@@ -1235,7 +1333,6 @@ async function deleteReview(reviewId) {
         renderReviewForm();
     } catch (error) {
         console.error("Delete review error:", error);
-
         reviewNotice = error.message || "Could not delete your review.";
         renderReviewForm();
     }

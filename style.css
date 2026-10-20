@@ -335,11 +335,49 @@ h2,
     letter-spacing: 1.5px;
 }
 
-.movie-grid {
+.#movie-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 22px;
+    width: 100%;
 }
+
+#movie-grid .movie-card {
+    min-width: 0;
+    width: 100%;
+}
+
+#movie-grid .poster {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+#movie-grid .poster-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#movie-grid .poster-overlay h3 {
+    font-size: 15px;
+}
+
+@media (max-width: 900px) {
+    #movie-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+}
+
+@media (max-width: 560px) {
+    #movie-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+}
+
 
 .movie-card {
     min-width: 0;
@@ -808,6 +846,31 @@ h2,
 #movie-status {
     margin: 16px 0;
     line-height: 1.5;
+}
+/* Abraham's Vault genre button styling */
+.filter-pills button {
+    background: #181818;
+    color: #f5f5f5;
+    border: 1px solid #333;
+    border-radius: 20px;
+    padding: 9px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-pills button:hover {
+    background: #292929;
+    border-color: #e50914;
+    color: #fff;
+}
+
+.filter-pills button.selected {
+    background: #e50914;
+    border-color: #e50914;
+    color: #fff;
 }
 
 /* Expanded genre filters */
@@ -2215,3 +2278,211 @@ html[data-theme="light"] .hero-arrow:hover {
     background: #ffb547;
     color: #111;
 }
+/* =========================
+   ADDITIONAL HOME CATEGORIES
+========================= */
+
+#extra-categories {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.extra-category-section {
+    padding: 26px 0;
+    margin: 0 0 12px;
+    border-bottom: 1px solid var(--line);
+}
+
+.extra-category-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 20px;
+}
+
+.extra-category-heading h2 {
+    margin: 0;
+    color: var(--text);
+    font-family: "Outfit", sans-serif;
+    font-size: clamp(21px, 2.2vw, 29px);
+    font-weight: 700;
+    letter-spacing: -0.4px;
+}
+
+.extra-category-heading p {
+    margin: 7px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.extra-category-link {
+    flex-shrink: 0;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 700;
+    transition: opacity 0.2s ease;
+}
+
+.extra-category-link:hover {
+    opacity: 0.75;
+}
+
+.extra-category-section .cinema-horizontal-row {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 3px 2px 15px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) transparent;
+}
+
+.extra-category-section .cinema-movie-card {
+    flex: 0 0 165px;
+    min-width: 0;
+    scroll-snap-align: start;
+}
+
+.extra-category-section .cinema-poster-link {
+    display: block;
+    overflow: hidden;
+    border-radius: 10px;
+    background: var(--surface);
+}
+
+.extra-category-section .cinema-poster {
+    display: block;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.extra-category-section .cinema-movie-card:hover .cinema-poster {
+    transform: scale(1.045);
+}
+
+.extra-category-section .cinema-card-info {
+    padding-top: 10px;
+}
+
+.extra-category-section .cinema-card-title {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+    text-decoration: none;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.extra-category-section .cinema-card-meta {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.extra-category-type {
+    display: inline-block;
+    margin-top: 8px;
+    color: var(--accent);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.extra-category-section .cinema-row-message {
+    padding: 12px 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+html[data-theme="light"] .extra-category-heading h2,
+html[data-theme="light"] .extra-category-section .cinema-card-title {
+    color: var(--text);
+}
+
+@media (max-width: 600px) {
+    .extra-category-section {
+        padding: 20px 0;
+    }
+
+    .extra-category-heading {
+        align-items: flex-start;
+        margin-bottom: 14px;
+    }
+
+    .extra-category-heading p {
+        max-width: 260px;
+        font-size: 12px;
+    }
+
+    .extra-category-section .cinema-horizontal-row {
+        gap: 12px;
+    }
+
+    .extra-category-section .cinema-movie-card {
+        flex-basis: 135px;
+    }
+}
+
+#movie-grid,
+#movies-grid,
+.movie-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 20px !important;
+    width: 100% !important;
+    align-items: start;
+}
+
+#movie-grid .movie-card,
+#movies-grid .movie-card,
+.movie-grid .movie-card {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+#movie-grid .poster,
+#movies-grid .poster,
+.movie-grid .poster {
+    position: relative;
+    width: 100% !important;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+}
+
+#movie-grid .poster-image,
+#movies-grid .poster-image,
+.movie-grid .poster-image {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+}
+
+@media (max-width: 900px) {
+    #movie-grid,
+    #movies-grid,
+    .movie-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 560px) {
+    #movie-grid,
+    #movies-grid,
+    .movie-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+
