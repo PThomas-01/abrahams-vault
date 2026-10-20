@@ -2729,3 +2729,9 @@ html[data-theme="light"] .extra-category-section .cinema-card-meta {
     border-color: #737373;
     color: #ffffff;
 }
+
+/* Remove Log Out from the navbar only */
+header.navbar #logout-btn,
+header.navbar .logout-btn {
+    display: none !important;
+}
