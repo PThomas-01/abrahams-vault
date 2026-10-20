@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up | Abraham's Vault</title>
 
-    <style>
+
    
 <style>
     * {
@@ -69,18 +69,40 @@
         color: #f0f0f2;
     }
 
-    input {
-        width: 100%;
-        padding: 14px;
-        border: 1px solid #303036;
-        border-radius: 9px;
-        background: #0e0e10;
-        color: #fff;
-        font-size: 15px;
-        font-family: inherit;
-        outline: none;
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
+
+.form-group {
+    width: 100%;
+    min-width: 0;
+    margin-bottom: 19px;
+}
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+.signup-container input {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 14px;
+    border: 1px solid #303036;
+    border-radius: 9px;
+    background: #0e0e10;
+    color: #fff;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.signup-container .password-wrapper input {
+    padding-right: 65px;
+}
+
 
     input::placeholder {
         color: #777783;
