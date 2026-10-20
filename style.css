@@ -2278,51 +2278,65 @@ html[data-theme="light"] .hero-arrow:hover {
     background: #ffb547;
     color: #111;
 }
-/* =========================
+
+/* =========================================
    ADDITIONAL HOME CATEGORIES
-========================= */
+   Match Trending Movies & Popular Movies
+========================================= */
 
 #extra-categories {
     width: 100%;
-    margin: 0 auto;
+    margin: 0;
+    padding: 0;
+    background: #09090b;
+    color: #f4f1eb;
 }
 
+/* Match the existing cinematic movie rows */
 .extra-category-section {
-    padding: 26px 0;
-    margin: 0 0 12px;
-    border-bottom: 1px solid var(--line);
+    padding: 35px 0 12px 7%;
+    margin: 0;
+    border: 0;
+    border-bottom: none;
+    background: #09090b;
+    color: #f4f1eb;
+    scroll-margin-top: 90px;
 }
 
+/* Match the existing row heading layout */
 .extra-category-heading {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: end;
     gap: 18px;
-    margin-bottom: 20px;
+    padding-right: 7%;
+    margin-bottom: 21px;
 }
 
 .extra-category-heading h2 {
     margin: 0;
-    color: var(--text);
+    color: #f4f1eb;
     font-family: "Outfit", sans-serif;
-    font-size: clamp(21px, 2.2vw, 29px);
+    font-size: clamp(24px, 3vw, 34px);
     font-weight: 700;
-    letter-spacing: -0.4px;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
 }
 
 .extra-category-heading p {
     margin: 7px 0 0;
-    color: var(--muted);
+    color: #92929b;
     font-size: 13px;
     line-height: 1.5;
 }
 
 .extra-category-link {
     flex-shrink: 0;
-    color: var(--accent);
+    padding-bottom: 5px;
+    color: #ffb547;
+    font-size: 12px;
+    font-weight: 600;
     text-decoration: none;
-    font-size: 13px;
-    font-weight: 700;
     transition: opacity 0.2s ease;
 }
 
@@ -2330,36 +2344,63 @@ html[data-theme="light"] .hero-arrow:hover {
     opacity: 0.75;
 }
 
+/* Consistent cinematic horizontal scrolling */
 .extra-category-section .cinema-horizontal-row {
     display: flex;
-    gap: 16px;
+    gap: 17px;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 3px 2px 15px;
+    padding: 3px 7% 23px 0;
     scroll-snap-type: x mandatory;
     scrollbar-width: thin;
-    scrollbar-color: var(--accent) transparent;
+    scrollbar-color: #444 #141417;
 }
 
+.extra-category-section .cinema-horizontal-row::-webkit-scrollbar {
+    height: 5px;
+}
+
+.extra-category-section .cinema-horizontal-row::-webkit-scrollbar-track {
+    background: #141417;
+}
+
+.extra-category-section .cinema-horizontal-row::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 10px;
+}
+
+/* Match Trending and Popular movie cards */
 .extra-category-section .cinema-movie-card {
-    flex: 0 0 165px;
+    flex: 0 0 175px;
+    width: 175px;
     min-width: 0;
+    overflow: hidden;
     scroll-snap-align: start;
+    border: 1px solid #242429;
+    border-radius: 8px;
+    background: #111114;
+    transition: transform 0.22s ease, border-color 0.22s ease;
+}
+
+.extra-category-section .cinema-movie-card:hover {
+    transform: translateY(-4px);
+    border-color: #55555d;
 }
 
 .extra-category-section .cinema-poster-link {
     display: block;
+    width: 100%;
+    aspect-ratio: 2 / 3;
     overflow: hidden;
-    border-radius: 10px;
-    background: var(--surface);
+    background: #202025;
 }
 
 .extra-category-section .cinema-poster {
     display: block;
     width: 100%;
-    aspect-ratio: 2 / 3;
+    height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.35s ease;
 }
 
 .extra-category-section .cinema-movie-card:hover .cinema-poster {
@@ -2367,56 +2408,85 @@ html[data-theme="light"] .hero-arrow:hover {
 }
 
 .extra-category-section .cinema-card-info {
-    padding-top: 10px;
+    padding: 12px;
 }
 
 .extra-category-section .cinema-card-title {
-    display: -webkit-box;
+    display: block;
     overflow: hidden;
-    color: var(--text);
-    font-size: 14px;
-    font-weight: 600;
+    color: #f5f5f6;
+    font-size: 13px;
+    font-weight: 700;
     line-height: 1.45;
     text-decoration: none;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.extra-category-section .cinema-card-title:hover {
+    color: #ffb547;
 }
 
 .extra-category-section .cinema-card-meta {
     display: block;
     margin-top: 6px;
-    color: var(--muted);
-    font-size: 12px;
+    color: #a7a7af;
+    font-size: 11px;
 }
 
-.extra-category-type {
+.extra-category-section .extra-category-type {
     display: inline-block;
     margin-top: 8px;
-    color: var(--accent);
+    color: #ffb547;
     font-size: 9px;
     font-weight: 800;
     letter-spacing: 1px;
 }
 
 .extra-category-section .cinema-row-message {
-    padding: 12px 0;
-    color: var(--muted);
+    padding: 15px 0;
+    color: #b5b5bd;
     font-size: 14px;
+}
+
+/* Preserve the cinematic look in light mode too */
+html[data-theme="light"] #extra-categories,
+html[data-theme="light"] .extra-category-section {
+    background: #09090b;
+    color: #f4f1eb;
 }
 
 html[data-theme="light"] .extra-category-heading h2,
 html[data-theme="light"] .extra-category-section .cinema-card-title {
-    color: var(--text);
+    color: #f5f5f6;
 }
 
-@media (max-width: 600px) {
+html[data-theme="light"] .extra-category-heading p,
+html[data-theme="light"] .extra-category-section .cinema-card-meta {
+    color: #a7a7af;
+}
+
+/* Responsive layout */
+@media (min-width: 1500px) {
+    .extra-category-section .cinema-movie-card {
+        flex-basis: 195px;
+        width: 195px;
+    }
+}
+
+@media (max-width: 700px) {
     .extra-category-section {
-        padding: 20px 0;
+        padding: 28px 0 12px 5%;
     }
 
     .extra-category-heading {
-        align-items: flex-start;
-        margin-bottom: 14px;
+        align-items: flex-end;
+        padding-right: 5%;
+        margin-bottom: 21px;
+    }
+
+    .extra-category-heading h2 {
+        font-size: clamp(22px, 5vw, 29px);
     }
 
     .extra-category-heading p {
@@ -2424,65 +2494,36 @@ html[data-theme="light"] .extra-category-section .cinema-card-title {
         font-size: 12px;
     }
 
+    .extra-category-link {
+        font-size: 11px;
+    }
+
     .extra-category-section .cinema-horizontal-row {
         gap: 12px;
+        padding-right: 5%;
+    }
+
+    .extra-category-section .cinema-movie-card {
+        flex-basis: 145px;
+        width: 145px;
+    }
+}
+
+@media (max-width: 420px) {
+    .extra-category-heading {
+        align-items: flex-start;
     }
 
     .extra-category-section .cinema-movie-card {
         flex-basis: 135px;
+        width: 135px;
     }
 }
 
-#movie-grid,
-#movies-grid,
-.movie-grid {
-    display: grid !important;
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-    gap: 20px !important;
-    width: 100% !important;
-    align-items: start;
+/* Highlight the second part of additional category headings */
+.extra-category-heading h2 span {
+    color: #ffb547;
 }
-
-#movie-grid .movie-card,
-#movies-grid .movie-card,
-.movie-grid .movie-card {
-    display: block !important;
-    width: 100% !important;
-    min-width: 0 !important;
+.extra-category-heading h2 span {
+    color: #ffb547 !important;
 }
-
-#movie-grid .poster,
-#movies-grid .poster,
-.movie-grid .poster {
-    position: relative;
-    width: 100% !important;
-    aspect-ratio: 2 / 3;
-    overflow: hidden;
-}
-
-#movie-grid .poster-image,
-#movies-grid .poster-image,
-.movie-grid .poster-image {
-    display: block;
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover;
-}
-
-@media (max-width: 900px) {
-    #movie-grid,
-    #movies-grid,
-    .movie-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    }
-}
-
-@media (max-width: 560px) {
-    #movie-grid,
-    #movies-grid,
-    .movie-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
-}
-
-

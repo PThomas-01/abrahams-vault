@@ -840,7 +840,9 @@ function createExtraCategorySections() {
         const textGroup = document.createElement("div");
 
         const title = document.createElement("h2");
-        title.textContent = category.title;
+        const words = category.title.split(" ");
+title.innerHTML = words
+    .slice(0, -1).join(" ") + ' <span>' + words.at(-1) + '</span>';
 
         const subtitle = document.createElement("p");
         subtitle.textContent = category.subtitle;
