@@ -2628,21 +2628,27 @@ html[data-theme="light"] .extra-category-section .cinema-card-meta {
     color: #ffffff;
 }
 
-/* Sign Up — cinematic red button */
+
+/* Sign Up — golden-yellow cinematic button */
 #auth-links a[href="signup.html"] {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 9px 16px;
     border-radius: 6px;
-    background: #b91c1c;
-    color: #ffffff;
-    border: 1px solid #dc2626;
+    background: #ffb844;
+    color: #15110a;
+    border: 1px solid #ffb844;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 #auth-links a[href="signup.html"]:hover {
-    background: #dc2626;
+    background: #ffc45f;
+    border-color: #ffc45f;
 }
+
 
 /* Hide the slash separator if present */
 #auth-links .auth-separator {
