@@ -1594,6 +1594,42 @@ app.get("/api/users/search", async (req, res) => {
     }
 });
 
+app.get("/api/users/:id", async (req, res) => {
+    try {
+        const userId = Number(req.params.id);
+
+        if (!Number.isInteger(userId) || userId <= 0) {
+            return res.status(400).json({
+                error: "Invalid user ID"
+            });
+        }
+
+        const [users] = await pool.execute(
+            `SELECT id, username
+             FROM users
+             WHERE id = ?
+             LIMIT 1`,
+            [userId]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({
+                error: "User not found"
+            });
+        }
+
+        res.set("Cache-Control", "no-store");
+        return res.status(200).json(users[0]);
+    } catch (error) {
+        console.error("Get User Profile API error:", error);
+
+        return res.status(500).json({
+            error: "Unable to load user profile"
+        });
+    }
+});
+
+
 
 /* Update username */
 app.patch(
