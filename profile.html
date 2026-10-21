@@ -874,21 +874,25 @@
         }
 
         try {
-            const [userResponse, moviesResponse] = await Promise.all([
-                fetch(`${API_BASE}/users/${encodeURIComponent(profileUserId)}`),
-                fetch(`${API_BASE}/top-movies/${encodeURIComponent(profileUserId)}`)
-            ]);
+          const [userResponse, moviesResponse] = await Promise.all([
+    fetch(`${API_BASE}/users/${encodeURIComponent(profileUserId)}`),
+    fetch(`${API_BASE}/top-movies/${encodeURIComponent(profileUserId)}`)
+]);
 
-            let username = `User ${profileUserId}`;
+let username = `User ${profileUserId}`;
 
-            if (userResponse.ok) {
-                const userData = await userResponse.json();
-                username =
-                    userData.username ||
-                    userData.user?.username ||
-                    username;
-            }
+if (userResponse.ok) {
+    const userData = await userResponse.json();
 
+    console.log("Profile user API response:", userData);
+
+    username =
+        userData.username ||
+        userData.user?.username ||
+        userData.user?.[0]?.username ||
+        userData[0]?.username ||
+        username;
+}
             const storedUsername = sessionStorage.getItem("vaultUsername");
 
             if (
