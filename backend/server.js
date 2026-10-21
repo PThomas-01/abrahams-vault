@@ -1572,7 +1572,7 @@ app.get("/api/users/search", async (req, res) => {
         }
 
         const [users] = await pool.execute(
-            `SELECT id, username
+            `SELECT id, username, avatar_id AS avatarId
              FROM users
              WHERE username LIKE ?
              ORDER BY username ASC
@@ -1583,29 +1583,30 @@ app.get("/api/users/search", async (req, res) => {
         res.set("Cache-Control", "no-store");
         return res.status(200).json(users);
     } catch (error) {
-        console.error("Find Users API error:", error);
-
+        console.error("Find users error:", error.message);
         return res.status(500).json({
-            error: "Unable to search users",
-            details: process.env.NODE_ENV === "production"
-                ? undefined
-                : error.message
+            error: "Unable to search users"
         });
     }
 });
+
+
+// =========================
+// PUBLIC USER PROFILE
+// =========================
 
 app.get("/api/users/:id", async (req, res) => {
     try {
         const userId = Number(req.params.id);
 
-        if (!Number.isInteger(userId) || userId <= 0) {
+        if (!Number.isSafeInteger(userId) || userId <= 0) {
             return res.status(400).json({
                 error: "Invalid user ID"
             });
         }
 
         const [users] = await pool.execute(
-            `SELECT id, username
+            `SELECT id, username, avatar_id AS avatarId
              FROM users
              WHERE id = ?
              LIMIT 1`,
@@ -1621,8 +1622,7 @@ app.get("/api/users/:id", async (req, res) => {
         res.set("Cache-Control", "no-store");
         return res.status(200).json(users[0]);
     } catch (error) {
-        console.error("Get User Profile API error:", error);
-
+        console.error("Get user profile error:", error.message);
         return res.status(500).json({
             error: "Unable to load user profile"
         });
@@ -1630,9 +1630,70 @@ app.get("/api/users/:id", async (req, res) => {
 });
 
 
- // =========================
- // PUBLIC USER JOURNAL
- // =========================
+// =========================
+// SAVE PROFILE AVATAR
+// =========================
+
+const ALLOWED_AVATARS = [
+    "cat", "dog", "fox", "bear", "panda", "rabbit",
+    "tiger", "lion", "wolf", "frog", "koala", "raccoon"
+];
+
+app.patch(
+    "/api/users/:id/avatar",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const userId = Number(req.params.id);
+            const avatarId = String(req.body.avatarId || "");
+
+            if (!Number.isSafeInteger(userId) || userId <= 0) {
+                return res.status(400).json({
+                    error: "Invalid user ID"
+                });
+            }
+
+            if (req.user.id !== userId) {
+                return res.status(403).json({
+                    error: "You can only change your own avatar"
+                });
+            }
+
+            if (!ALLOWED_AVATARS.includes(avatarId)) {
+                return res.status(400).json({
+                    error: "Invalid avatar selection"
+                });
+            }
+
+            const [result] = await pool.execute(
+                "UPDATE users SET avatar_id = ? WHERE id = ?",
+                [avatarId, userId]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    error: "User not found"
+                });
+            }
+
+            return res.json({
+                success: true,
+                avatarId
+            });
+        } catch (error) {
+            console.error("Save avatar error:", error.message);
+            return res.status(500).json({
+                error: "Unable to save avatar"
+            });
+        }
+    }
+);
+
+
+// =========================
+// PUBLIC USER JOURNAL
+// Supports numeric user IDs and usernames.
+// =========================
 
 app.get("/api/users/:id/journal", async (req, res) => {
     try {
@@ -1644,16 +1705,15 @@ app.get("/api/users/:id/journal", async (req, res) => {
             });
         }
 
-        // Support both numeric IDs and usernames.
-        const isNumericId = /^\d+$/.test(identifier);
-
-        const [users] = isNumericId
+        const [users] = /^\d+$/.test(identifier)
             ? await pool.execute(
                 "SELECT id FROM users WHERE id = ? LIMIT 1",
                 [Number(identifier)]
             )
             : await pool.execute(
-                "SELECT id FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1",
+                `SELECT id FROM users
+                 WHERE LOWER(username) = LOWER(?)
+                 LIMIT 1`,
                 [identifier]
             );
 
@@ -1663,9 +1723,6 @@ app.get("/api/users/:id/journal", async (req, res) => {
             });
         }
 
-        const userId = users[0].id;
-
-        // Publicly display journal entries, but provide no write access.
         const [entries] = await pool.execute(
             `SELECT
                 tmdb_movie_id AS movieId,
@@ -1678,14 +1735,13 @@ app.get("/api/users/:id/journal", async (req, res) => {
              FROM movie_journal
              WHERE user_id = ?
              ORDER BY updated_at DESC`,
-            [userId]
+            [users[0].id]
         );
 
         res.set("Cache-Control", "no-store");
         return res.status(200).json(entries);
     } catch (error) {
-        console.error("Public user journal error:", error);
-
+        console.error("Public user journal error:", error.message);
         return res.status(500).json({
             error: "Unable to load this user's journal"
         });
@@ -1693,20 +1749,22 @@ app.get("/api/users/:id/journal", async (req, res) => {
 });
 
 
-/* Update username */
+// =========================
+// UPDATE USERNAME
+// =========================
+
 app.patch(
     "/api/account/:userId/username",
     authenticateToken,
     async (req, res) => {
         try {
-            const requestedUserId = Number(req.params.userId);
-            const authenticatedUserId = Number(req.user.id);
+            const userId = Number(req.params.userId);
             const username = String(req.body.username || "").trim();
 
             if (
-                !Number.isSafeInteger(requestedUserId) ||
-                requestedUserId <= 0 ||
-                requestedUserId !== authenticatedUserId
+                !Number.isSafeInteger(userId) ||
+                userId <= 0 ||
+                userId !== req.user.id
             ) {
                 return res.status(403).json({
                     error: "You can only update your own username."
@@ -1720,8 +1778,9 @@ app.patch(
             }
 
             const [existing] = await pool.execute(
-                "SELECT id FROM users WHERE username = ? AND id <> ?",
-                [username, authenticatedUserId]
+                `SELECT id FROM users
+                 WHERE username = ? AND id <> ?`,
+                [username, userId]
             );
 
             if (existing.length > 0) {
@@ -1732,7 +1791,7 @@ app.patch(
 
             await pool.execute(
                 "UPDATE users SET username = ? WHERE id = ?",
-                [username, authenticatedUserId]
+                [username, userId]
             );
 
             return res.json({
@@ -1740,7 +1799,7 @@ app.patch(
                 username
             });
         } catch (error) {
-            console.error("Username update error:", error);
+            console.error("Username update error:", error.message);
 
             if (error.code === "ER_DUP_ENTRY") {
                 return res.status(409).json({
@@ -1755,55 +1814,81 @@ app.patch(
     }
 );
 
- // =========================
- // START SERVER
- // =========================
 
- async function startServer() {
-     try {
-         if (!process.env.JWT_SECRET) {
-             throw new Error("JWT_SECRET is missing");
-         }
+// =========================
+// START SERVER
+// =========================
 
-         if (
-             process.env.NODE_ENV === "production" &&
-             !process.env.DB_SSL_CA
-         ) {
-             throw new Error("DB_SSL_CA is required in production");
-         }
+async function startServer() {
+    try {
+        if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET is missing");
+        }
 
-         // Test the database connection
-         await pool.query("SELECT 1");
+        if (
+            process.env.NODE_ENV === "production" &&
+            !process.env.DB_SSL_CA
+        ) {
+            throw new Error("DB_SSL_CA is required in production");
+        }
 
-         // Create the journal table if it doesn't exist
-         await pool.query(`
-             CREATE TABLE IF NOT EXISTS movie_journal (
-                 id INT AUTO_INCREMENT PRIMARY KEY,
-                 user_id INT NOT NULL,
-                 tmdb_movie_id INT NOT NULL,
-                 movie_title VARCHAR(255) NOT NULL,
-                 poster_path VARCHAR(255),
-                 journal_text TEXT NOT NULL,
-                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                     ON UPDATE CURRENT_TIMESTAMP,
-                 UNIQUE KEY unique_user_movie
-                     (user_id, tmdb_movie_id)
-             )
-         `);
+        await pool.query("SELECT 1");
 
-        
-         // Start accepting requests
-         app.listen(PORT, "0.0.0.0", () => {
-             console.log(
-                 `Abraham's Vault backend listening on port ${PORT}`
-             );
-         });
+        // Create the journal table if it does not exist.
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS movie_journal (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                tmdb_movie_id INT NOT NULL,
+                media_type VARCHAR(10) NOT NULL DEFAULT 'movie',
+                movie_title VARCHAR(255) NOT NULL,
+                poster_path VARCHAR(255),
+                journal_text TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    ON UPDATE CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_user_movie
+                    (user_id, tmdb_movie_id)
+            )
+        `);
 
-     } catch (error) {
-         console.error("Server startup failed:", error.message);
-         process.exit(1);
-     }
- }
+        // Add media_type to existing journal tables if needed.
+        const [journalMediaColumn] = await pool.execute(
+            "SHOW COLUMNS FROM movie_journal LIKE 'media_type'"
+        );
 
- startServer();
+        if (journalMediaColumn.length === 0) {
+            await pool.execute(`
+                ALTER TABLE movie_journal
+                ADD COLUMN media_type VARCHAR(10)
+                NOT NULL DEFAULT 'movie'
+                AFTER tmdb_movie_id
+            `);
+        }
+
+        // Add avatar_id to existing user tables if needed.
+        const [avatarColumn] = await pool.execute(
+            "SHOW COLUMNS FROM users LIKE 'avatar_id'"
+        );
+
+        if (avatarColumn.length === 0) {
+            await pool.execute(`
+                ALTER TABLE users
+                ADD COLUMN avatar_id VARCHAR(20)
+                NOT NULL DEFAULT 'cat'
+            `);
+        }
+
+        app.listen(PORT, "0.0.0.0", () => {
+            console.log(
+                `Abraham's Vault backend listening on port ${PORT}`
+            );
+        });
+    } catch (error) {
+        console.error("Server startup failed:", error.message);
+        process.exit(1);
+    }
+}
+
+startServer();
+

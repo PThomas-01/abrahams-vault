@@ -487,6 +487,155 @@
                 font-size: 14px;
             }
         }
+
+
+/* Compact avatar dropdown */
+
+.avatar-picker-section {
+    position: relative;
+    margin: 0 0 35px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    width: 100%;
+    flex-basis: 100%;
+}
+
+.avatar-picker-section[hidden] {
+    display: none !important;
+}
+
+.avatar-dropdown-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #404040;
+    border-radius: 9px;
+    background: #242424;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.avatar-dropdown-toggle:hover {
+    border-color: #a33;
+    background: #2c2c2c;
+}
+
+.avatar-dropdown-arrow {
+    transition: transform 0.2s;
+}
+
+.avatar-dropdown-toggle[aria-expanded="true"] .avatar-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.avatar-dropdown-panel {
+    margin-top: 10px;
+    padding: 14px;
+    border: 1px solid #383838;
+    border-radius: 10px;
+    background: #141414;
+}
+
+.avatar-dropdown-panel[hidden] {
+    display: none !important;
+}
+
+.avatar-picker-section h2 {
+    margin: 0 0 6px;
+    font-size: 17px;
+}
+
+.avatar-picker-section p {
+    color: #aaa;
+    font-size: 13px;
+}
+
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 44px);
+    justify-content: start;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.avatar-option {
+    width: 44px;
+    height: 44px;
+    aspect-ratio: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border: 2px solid #383838;
+    border-radius: 50%;
+    background: #242424;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.avatar-option img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+@media (max-width: 500px) {
+    .avatar-grid {
+        grid-template-columns: repeat(6, 36px);
+        gap: 6px;
+    }
+
+    .avatar-option {
+        width: 36px;
+        height: 36px;
+        padding: 4px;
+    }
+}
+.avatar-option img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.avatar-option:hover {
+    border-color: #a33;
+}
+
+.avatar-option.selected {
+    border-color: #ff3434;
+    background: #3a2020;
+    box-shadow: 0 0 8px #a00;
+}
+
+#avatarStatus {
+    min-height: 20px;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+@media (max-width: 500px) {
+    .avatar-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .avatar-option {
+        padding: 4px;
+    }
+}
+
+
     </style>
 </head>
 
@@ -523,7 +672,37 @@
             <a href="settings.html" class="profile-button" id="settingsButton">
                 ⚙️ Settings
             </a>
-        </section>
+
+
+<section class="avatar-picker-section" id="avatarPickerSection" hidden>
+    <button
+        type="button"
+        class="avatar-dropdown-toggle"
+        id="avatarDropdownToggle"
+        aria-expanded="false"
+        aria-controls="avatarDropdownPanel"
+    >
+        <span>🎭 Change Profile Avatar</span>
+        <span class="avatar-dropdown-arrow">▼</span>
+    </button>
+
+    <div class="avatar-dropdown-panel" id="avatarDropdownPanel" hidden>
+        <h2>Choose Your Avatar</h2>
+        <p>Select an avatar, then save your choice.</p>
+
+        <div class="avatar-grid" id="avatarGrid"></div>
+
+        <p id="avatarStatus" role="status"></p>
+
+        <button type="button"
+                class="profile-button"
+                id="saveAvatarButton">
+            Save Avatar
+        </button>
+    </div>
+</section>
+
+
 
         <!-- Followers / Following popup -->
         <div class="follow-modal" id="followModal" hidden>
@@ -676,6 +855,137 @@
         let selectedMovies = [];
         let currentFollowListType = "followers";
 
+const avatarPickerSection = $("avatarPickerSection");
+const avatarGrid = $("avatarGrid");
+const avatarStatus = $("avatarStatus");
+const saveAvatarButton = $("saveAvatarButton");
+const avatarDropdownToggle = $("avatarDropdownToggle");
+const avatarDropdownPanel = $("avatarDropdownPanel");
+
+avatarDropdownToggle.addEventListener("click", () => {
+    const isOpening = avatarDropdownPanel.hidden;
+
+    avatarDropdownPanel.hidden = !isOpening;
+    avatarDropdownToggle.setAttribute(
+        "aria-expanded",
+        String(isOpening)
+    );
+});
+const avatarIds = [
+    "cat", "dog", "fox", "bear",
+    "panda", "rabbit", "tiger", "lion",
+    "wolf", "frog", "koala", "raccoon"
+];
+
+let selectedAvatar = "cat";
+let savedAvatar = "cat";
+
+function avatarImageUrl(avatarId) {
+    const emojiCodes = {
+        cat: "1f431",
+        dog: "1f436",
+        fox: "1f98a",
+        bear: "1f43b",
+        panda: "1f43c",
+        rabbit: "1f430",
+        tiger: "1f42f",
+        lion: "1f981",
+        wolf: "1f43a",
+        frog: "1f438",
+        koala: "1f428",
+        raccoon: "1f99d"
+    };
+
+    return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/${emojiCodes[avatarId]}.svg`;
+}
+
+function displayAvatar(element, avatarId) {
+    element.replaceChildren();
+
+    const image = document.createElement("img");
+    image.src = avatarImageUrl(avatarId);
+    image.alt = "Profile avatar";
+    image.onerror = () => {
+        element.textContent = "?";
+    };
+
+    element.appendChild(image);
+}
+
+function renderAvatarOptions() {
+    avatarGrid.replaceChildren();
+
+    avatarIds.forEach(avatarId => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "avatar-option";
+        button.setAttribute("aria-label", "Select avatar");
+
+        if (avatarId === selectedAvatar) {
+            button.classList.add("selected");
+            button.setAttribute("aria-pressed", "true");
+        } else {
+            button.setAttribute("aria-pressed", "false");
+        }
+
+        const image = document.createElement("img");
+        image.src = avatarImageUrl(avatarId);
+        image.alt = "";
+        image.loading = "lazy";
+
+        button.appendChild(image);
+
+        button.addEventListener("click", () => {
+            selectedAvatar = avatarId;
+            renderAvatarOptions();
+            displayAvatar(avatarElement, selectedAvatar);
+            avatarStatus.textContent = "";
+        });
+
+        avatarGrid.appendChild(button);
+    });
+}
+
+async function saveAvatar() {
+    if (!isOwner || !authToken || !loggedInUserId) return;
+
+    saveAvatarButton.disabled = true;
+    avatarStatus.textContent = "Saving avatar...";
+
+    try {
+        const response = await fetch(
+            `${API_BASE}/users/${encodeURIComponent(loggedInUserId)}/avatar`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ avatarId: selectedAvatar })
+            }
+        );
+
+        const data = await readJson(response);
+
+        if (!response.ok) {
+            throw new Error(data.error || "Unable to save avatar.");
+        }
+
+        savedAvatar = selectedAvatar;
+displayAvatar(avatarElement, savedAvatar);
+avatarStatus.textContent = "Avatar saved successfully!";
+
+avatarDropdownPanel.hidden = true;
+avatarDropdownToggle.setAttribute("aria-expanded", "false");
+        avatarStatus.textContent = error.message;
+    } finally {
+        saveAvatarButton.disabled = false;
+    }
+}
+
+saveAvatarButton.addEventListener("click", saveAvatar);
+
+
         // ---------------- GENERAL HELPERS ----------------
 
         function posterUrl(path, size = "w342") {
@@ -766,8 +1076,20 @@
                 }
 
                 usernameElement.textContent = username;
-                avatarElement.textContent =
-                    username.trim().charAt(0).toUpperCase() || "?";
+                
+savedAvatar = avatarIds.includes(userData.avatarId)
+    ? userData.avatarId
+    : "cat";
+
+selectedAvatar = savedAvatar;
+displayAvatar(avatarElement, savedAvatar);
+
+avatarPickerSection.hidden = !(isOwner && authToken);
+
+if (isOwner && authToken) {
+    renderAvatarOptions();
+}
+
 
                 if (!userResponse.ok && !moviesResponse.ok) {
                     throw new Error("Could not load the profile.");
