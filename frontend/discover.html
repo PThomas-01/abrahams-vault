@@ -1,0 +1,154 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Abraham's Vault | Discover</title>
+    <meta name="description" content="Explore movies, K-Dramas, anime, TV series, and animation studios at Abraham's Vault.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="navbar">
+    <a href="index.html" class="logo" aria-label="Abraham's Vault Home">
+        <img src="assets/abrahams-vault-logo.png" alt="" aria-hidden="true">
+        <span class="logo-text">ABRAHAM'S <span>VAULT</span><i>.</i></span>
+    </a>
+
+    <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="discover.html" class="active">Discover</a>
+        <a href="top100.html">Top 100 Movies</a>
+        <a href="my-list.html">My Watchlist</a>
+        <a href="watched.html">Watched Log</a>
+        <a href="journal.html">My Journal</a>
+        <a href="find-users.html">Find Users</a>
+
+        <!-- Logged out -->
+        <span id="auth-links">
+            <a href="login.html">Log In</a>
+            <span class="auth-separator"> / </span>
+            <a href="signup.html">Sign Up</a>
+        </span>
+
+        <!-- Logged in -->
+        <span id="user-links" style="display:none;">
+            <span id="welcome-user"></span>
+            <a href="profile.html" id="profile-link"
+               class="profile-nav-btn" style="display:none;">Profile</a>
+        </span>
+    </nav>
+
+    <div class="nav-actions">
+        <button class="icon-btn" id="search-toggle" type="button"
+                aria-label="Open search">⌕</button>
+    </div>
+</header>
+
+<main>
+    <section class="movie-section" id="movie-collection">
+
+        <div class="section-heading">
+            <div>
+                <p class="section-kicker">YOUR PERSONAL CINEMA</p>
+                <h1>Discover the <span>collection.</span></h1>
+                <p>Explore movies, series, anime, and animation from around the world.</p>
+            </div>
+        </div>
+
+        <!-- Industry filters -->
+        <div class="filter-row">
+            <div class="filter-pills" id="industry-filters">
+                <button class="filter-pill selected"
+                        data-language="all" type="button">All Movies</button>
+
+                <button class="filter-pill"
+                        data-language="en" type="button">Hollywood</button>
+
+                <button class="filter-pill"
+                        data-language="ml" type="button">Mollywood</button>
+
+                <button class="filter-pill"
+                        data-language="te" type="button">Tollywood</button>
+
+                <button class="filter-pill"
+                        data-language="hi" type="button">Bollywood</button>
+
+                <button class="filter-pill"
+                        data-language="kdramas" type="button">K-Dramas</button>
+
+                <button class="filter-pill"
+                        data-language="anime" type="button">Anime</button>
+
+                <button class="filter-pill"
+                        data-language="web-series" type="button">Web Series</button>
+
+                <button class="filter-pill"
+                        data-language="fantasy-series" type="button">Fantasy &amp; Epic Series</button>
+
+                <button class="filter-pill"
+                        data-language="disney-animation" type="button">Disney Animation Studios</button>
+
+                <button class="filter-pill"
+                        data-language="pixar-animation" type="button">Pixar Animation Studios</button>
+
+                <button class="filter-pill"
+                        data-language="dreamworks-animation" type="button">DreamWorks Animation</button>
+            </div>
+
+            <span class="results-label">EXPLORE BY INDUSTRY</span>
+        </div>
+
+        <!-- Genre filters -->
+        <div class="filter-row">
+            <div class="filter-pills" id="genre-filters">
+                <button class="filter-pill selected"
+                        data-genre-id="all" type="button">All Genres</button>
+            </div>
+
+            <span class="results-label">FILTER BY GENRE</span>
+        </div>
+
+        <!-- Movie loading status -->
+        <p id="movie-status" class="demo-note" role="status">
+            Loading movies from TMDB...
+        </p>
+
+        <!-- Movies are rendered here by script.js -->
+        <div class="movie-grid" id="movie-grid"></div>
+
+    </section>
+
+    <section class="collection-banner">
+        <div>
+            <p class="section-kicker">YOUR PERSONAL CINEMA</p>
+            <h2>One more film.<br><span>One more memory.</span></h2>
+            <p>Discover films, track what you watch, and record your thoughts in My Journal.</p>
+        </div>
+
+        <a href="watched.html" class="primary-btn">
+            Explore your watched log <span>→</span>
+        </a>
+    </section>
+</main>
+
+<footer class="footer">
+    <p>Made for people who love a good story.</p>
+    <span>© 2026 Abraham's Vault · Discover cinema</span>
+</footer>
+
+<script src="top5.js"></script>
+<script src="script.js"></script>
+<script src="navbar.js"></script>
+
+</body>
+</html>
+```
