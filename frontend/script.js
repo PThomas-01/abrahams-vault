@@ -855,7 +855,7 @@ title.appendChild(lastWord);
 
         const viewAll = document.createElement("a");
         viewAll.href =
-            `discover.html?category=${encodeURIComponent(category.id)}`;
+    `/frontend/discover.html?category=${encodeURIComponent(category.id)}`;
         viewAll.className = "extra-category-link";
         viewAll.textContent = "Explore";
 
