@@ -4,250 +4,719 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b0b0d">
     <title>Sign Up | Abraham's Vault</title>
 
-
-   
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 30px 20px;
-        font-family: Arial, sans-serif;
-        background:
-            radial-gradient(ellipse at top, #21190f 0%, #100e0c 42%, #080808 80%);
-        color: #fff;
-    }
-
-    .signup-container {
-        width: 100%;
-        max-width: 460px;
-        padding: 35px 32px;
-        background: #151517;
-        border: 1px solid #2b2b30;
-        border-radius: 19px;
-        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
-    }
-
-    .logo {
-        text-align: center;
-        font-size: 30px;
-        font-weight: 800;
-        letter-spacing: 0.3px;
-        margin-bottom: 9px;
-    }
-
-    .logo span {
-        color: #ffb844;
-    }
-
-    .subtitle {
-        text-align: center;
-        color: #a5a5ad;
-        font-size: 14px;
-        line-height: 1.6;
-        margin-bottom: 28px;
-    }
-
-    .form-group {
-        margin-bottom: 19px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 9px;
-        font-size: 14px;
-        font-weight: 600;
-        color: #f0f0f2;
-    }
-
-
-.form-group {
-    width: 100%;
-    min-width: 0;
-    margin-bottom: 19px;
-}
-
-.password-wrapper {
-    position: relative;
-    width: 100%;
-    min-width: 0;
-}
-
-.signup-container input {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-    box-sizing: border-box;
-    padding: 14px;
-    border: 1px solid #303036;
-    border-radius: 9px;
-    background: #0e0e10;
-    color: #fff;
-    font-size: 15px;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.signup-container .password-wrapper input {
-    padding-right: 65px;
-}
-
-
-    input::placeholder {
-        color: #777783;
-    }
-
-    input:focus {
-        border-color: #ffb844;
-        box-shadow: 0 0 0 3px rgba(255, 184, 68, 0.10);
-    }
-
-    .password-wrapper {
-        position: relative;
-    }
-
-    .password-wrapper input {
-        padding-right: 65px;
-    }
-
-    .toggle-password {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 700;
-        padding: 6px;
-        color: #ffb844;
-    }
-
-    .toggle-password:hover {
-        color: #ffd080;
-    }
-
-    .toggle-password:focus-visible {
-        outline: 2px solid #ffb844;
-        border-radius: 4px;
-    }
-
-    .signup-button {
-        width: 100%;
-        padding: 15px;
-        margin-top: 2px;
-        border: none;
-        border-radius: 9px;
-        background: #ffb844;
-        color: #15110a;
-        font-size: 16px;
-        font-weight: 800;
-        font-family: inherit;
-        cursor: pointer;
-        transition: background 0.2s, transform 0.2s;
-    }
-
-    .signup-button:hover {
-        background: #ffc45f;
-        transform: translateY(-1px);
-    }
-
-    .signup-button:disabled {
-        opacity: 0.65;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .message {
-        display: none;
-        margin-top: 16px;
-        padding: 12px;
-        border-radius: 8px;
-        font-size: 14px;
-        line-height: 1.5;
-        overflow-wrap: anywhere;
-    }
-
-    .message.success {
-        display: block;
-        color: #9ce6ad;
-        background: #142219;
-        border: 1px solid #315a3b;
-    }
-
-    .message.error {
-        display: block;
-        color: #ffaaaa;
-        background: #281515;
-        border: 1px solid #653333;
-    }
-
-    .login-link {
-        margin-top: 24px;
-        text-align: center;
-        color: #a5a5ad;
-        font-size: 14px;
-        line-height: 1.7;
-    }
-
-    a {
-        color: #ffb844;
-        text-decoration: none;
-        transition: color 0.2s;
-    }
-
-    a:hover {
-        color: #ffd080;
-        text-decoration: underline;
-    }
-
-    .back-link {
-        display: block;
-        margin-top: 18px;
-        text-align: center;
-        color: #a5a5ad;
-        font-size: 13px;
-    }
-
-    .back-link:hover {
-        color: #ffb844;
-    }
-
-    @media (max-width: 480px) {
-        body {
-            padding: 20px 14px;
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
+        :root {
+            --gold: #ffb547;
+            --background: #0b0b0d;
+            --card: #151518;
+            --text: #ffffff;
+            --muted: #a5a5ad;
+            --border: #303036;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(
+                    ellipse at top,
+                    #292015 0%,
+                    #100e0c 42%,
+                    #080808 80%
+                );
+            color: var(--text);
+        }
+
+        /* ===== SIGNUP FORM ===== */
+
         .signup-container {
-            padding: 28px 20px;
+            width: 100%;
+            max-width: 460px;
+            min-width: 0;
+            padding: 35px 32px;
+            background: var(--card);
+            border: 1px solid #2b2b30;
+            border-radius: 19px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
         }
 
         .logo {
-            font-size: 25px;
+            text-align: center;
+            font-size: 30px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            margin-bottom: 9px;
         }
-    }
-</style>
 
+        .logo span {
+            color: var(--gold);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            width: 100%;
+            min-width: 0;
+            margin-bottom: 19px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 9px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #f0f0f2;
+        }
+
+        .signup-container input {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: #0e0e10;
+            color: var(--text);
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .signup-container input::placeholder {
+            color: #777783;
+        }
+
+        .signup-container input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(255, 184, 68, 0.10);
+        }
+
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .signup-container .password-wrapper input {
+            padding-right: 65px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 6px;
+            color: var(--gold);
+        }
+
+        .toggle-password:hover {
+            color: #ffd080;
+        }
+
+        .toggle-password:focus-visible {
+            outline: 2px solid var(--gold);
+            border-radius: 4px;
+        }
+
+        .signup-button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 2px;
+            border: none;
+            border-radius: 9px;
+            background: var(--gold);
+            color: #15110a;
+            font-size: 16px;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .signup-button:hover {
+            background: #ffc45f;
+            transform: translateY(-1px);
+        }
+
+        .signup-button:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            display: none;
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .message.success {
+            display: block;
+            color: #9ce6ad;
+            background: #142219;
+            border: 1px solid #315a3b;
+        }
+
+        .message.error {
+            display: block;
+            color: #ffaaaa;
+            background: #281515;
+            border: 1px solid #653333;
+        }
+
+        .login-link {
+            margin-top: 24px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .signup-container a {
+            color: var(--gold);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .signup-container a:hover {
+            color: #ffd080;
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 18px;
+            text-align: center;
+            color: var(--muted) !important;
+            font-size: 13px;
+        }
+
+        .back-link:hover {
+            color: var(--gold) !important;
+        }
+
+        /* ===== CINEMATIC INTRO OVERLAY ===== */
+
+        #vault-intro {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            isolation: isolate;
+            background:
+                radial-gradient(
+                    ellipse at 50% 43%,
+                    rgba(117, 70, 18, 0.32) 0%,
+                    rgba(50, 30, 12, 0.2) 24%,
+                    transparent 53%
+                ),
+                radial-gradient(
+                    ellipse at center,
+                    #17120c 0%,
+                    #090909 57%,
+                    #020202 100%
+                );
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 1s ease, visibility 1s ease;
+        }
+
+        #vault-intro.intro-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .intro-content {
+            position: relative;
+            z-index: 3;
+            width: 100%;
+            padding: 24px;
+            text-align: center;
+            animation: intro-arrive 1.4s cubic-bezier(.2, .7, .2, 1) both;
+        }
+
+        .intro-light {
+            position: absolute;
+            z-index: 0;
+            top: -55%;
+            left: 50%;
+            width: 20%;
+            height: 160%;
+            pointer-events: none;
+            transform-origin: top center;
+            filter: blur(30px);
+            opacity: 0;
+            background: linear-gradient(
+                180deg,
+                transparent 0%,
+                rgba(255, 190, 83, .04) 25%,
+                rgba(255, 190, 83, .22) 48%,
+                rgba(255, 217, 143, .08) 70%,
+                transparent 100%
+            );
+            animation: beam-reveal 2.5s ease-out forwards;
+        }
+
+        .intro-light-one {
+            transform: rotate(-32deg);
+            animation-delay: .1s;
+        }
+
+        .intro-light-two {
+            width: 13%;
+            transform: rotate(28deg);
+            animation-delay: .35s;
+            background: linear-gradient(
+                180deg,
+                transparent,
+                rgba(255, 220, 155, .15),
+                transparent
+            );
+        }
+
+        .intro-light-three {
+            width: 9%;
+            transform: rotate(4deg);
+            filter: blur(17px);
+            animation-delay: .55s;
+        }
+
+        .intro-particles {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .intro-particle {
+            position: absolute;
+            bottom: -15px;
+            width: var(--particle-size, 3px);
+            height: var(--particle-size, 3px);
+            border-radius: 50%;
+            background: #ffcf79;
+            box-shadow:
+                0 0 6px #ffb547,
+                0 0 15px rgba(255, 181, 71, .7);
+            opacity: 0;
+            animation:
+                particle-rise var(--particle-duration, 5s)
+                var(--particle-delay, 0s) linear infinite;
+        }
+
+        .vault-emblem {
+            position: relative;
+            width: 112px;
+            height: 112px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: radial-gradient(
+                circle,
+                rgba(255, 194, 91, .22) 0%,
+                rgba(255, 181, 71, .06) 48%,
+                transparent 72%
+            );
+            box-shadow:
+                0 0 35px rgba(255, 181, 71, .15),
+                0 0 90px rgba(255, 181, 71, .1);
+            animation: emblem-pulse 3s ease-in-out infinite;
+        }
+
+        .emblem-ring {
+            position: absolute;
+            border: 1px solid rgba(255, 198, 105, .75);
+            border-radius: 50%;
+        }
+
+        .emblem-ring-outer {
+            inset: 0;
+            border-right-color: rgba(255, 181, 71, .12);
+            border-bottom-color: rgba(255, 181, 71, .35);
+            box-shadow: 0 0 14px rgba(255, 181, 71, .13);
+            animation: ring-rotate 12s linear infinite;
+        }
+
+        .emblem-ring-inner {
+            inset: 10px;
+            border-style: dashed;
+            border-color: rgba(255, 220, 155, .55);
+            animation: ring-rotate 22s linear infinite reverse;
+        }
+
+        .emblem-core {
+            color: #ffe2a4;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 37px;
+            font-weight: bold;
+            letter-spacing: -3px;
+            text-shadow:
+                0 0 8px rgba(255, 200, 110, .95),
+                0 0 24px rgba(255, 181, 71, .6),
+                0 2px 2px #6c4317;
+        }
+
+        .emblem-glint {
+            position: absolute;
+            top: 8px;
+            right: 14px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #fff4d6;
+            box-shadow: 0 0 12px 4px rgba(255, 211, 132, .8);
+        }
+
+        .intro-overline {
+            margin-bottom: 15px;
+            color: #d6aa67;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 7px;
+            animation: text-reveal 1.1s .4s both;
+        }
+
+        .intro-title {
+            color: #fff0ca;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(35px, 7vw, 76px);
+            font-weight: 500;
+            line-height: 1.13;
+            letter-spacing: clamp(3px, 1vw, 10px);
+            text-shadow:
+                0 2px 0 #9b6c30,
+                0 4px 0 #533715,
+                0 7px 24px rgba(0, 0, 0, .9),
+                0 0 32px rgba(255, 181, 71, .25);
+            animation: title-reveal 1.5s .25s both;
+        }
+
+        .intro-title span {
+            display: block;
+            margin-top: 8px;
+            color: #ffca70;
+            letter-spacing: clamp(10px, 2.4vw, 23px);
+            text-indent: clamp(10px, 2.4vw, 23px);
+            background: linear-gradient(
+                180deg,
+                #fff2c9 0%,
+                #ffda8a 30%,
+                #d58b2c 65%,
+                #ffe7ad 100%
+            );
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(255, 181, 71, .24));
+        }
+
+        .intro-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            max-width: 300px;
+            margin: 27px auto 20px;
+            color: #ffd58a;
+            animation: text-reveal 1s .9s both;
+        }
+
+        .intro-divider span {
+            width: 95px;
+            height: 1px;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                #bd873d,
+                #ffe0a0
+            );
+        }
+
+        .intro-divider span:last-child {
+            transform: rotate(180deg);
+        }
+
+        .intro-divider i {
+            font-size: 15px;
+            font-style: normal;
+            text-shadow: 0 0 15px #ffb547;
+        }
+
+        .intro-tagline {
+            color: #e8d2aa;
+            font-size: clamp(9px, 1.8vw, 12px);
+            font-weight: 500;
+            letter-spacing: clamp(3px, .8vw, 6px);
+            animation: text-reveal 1.2s 1.05s both;
+        }
+
+        .intro-bottom {
+            position: absolute;
+            right: 12px;
+            bottom: 26px;
+            left: 12px;
+            z-index: 3;
+            color: rgba(226, 190, 129, .5);
+            text-align: center;
+            font-size: 8px;
+            letter-spacing: 3px;
+            animation: text-reveal 1.3s 1.3s both;
+        }
+
+        /* ===== ANIMATION KEYFRAMES ===== */
+
+        @keyframes intro-arrive {
+            from {
+                opacity: 0;
+                transform: scale(1.09);
+                filter: blur(8px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes title-reveal {
+            from {
+                opacity: 0;
+                transform: translateY(22px) scale(.94);
+                filter: blur(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes text-reveal {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes beam-reveal {
+            0% {
+                opacity: 0;
+            }
+            35% {
+                opacity: 1;
+            }
+            100% {
+                opacity: .65;
+            }
+        }
+
+        @keyframes particle-rise {
+            0% {
+                opacity: 0;
+                transform: translate3d(0, 0, 0) scale(.5);
+            }
+            15% {
+                opacity: .9;
+            }
+            80% {
+                opacity: .6;
+            }
+            100% {
+                opacity: 0;
+                transform:
+                    translate3d(var(--particle-drift, 35px), -110vh, 0)
+                    scale(1.2);
+            }
+        }
+
+        @keyframes emblem-pulse {
+            0%, 100% {
+                box-shadow:
+                    0 0 35px rgba(255, 181, 71, .15),
+                    0 0 90px rgba(255, 181, 71, .1);
+            }
+            50% {
+                box-shadow:
+                    0 0 50px rgba(255, 181, 71, .3),
+                    0 0 115px rgba(255, 181, 71, .17);
+            }
+        }
+
+        @keyframes ring-rotate {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== REPLAY INTRO BUTTON ===== */
+
+        .replay-intro {
+            display: block;
+            margin: 12px auto 0;
+            padding: 8px 12px;
+            border: 1px solid transparent;
+            border-radius: 20px;
+            background: transparent;
+            color: #c99b55;
+            font-size: 12px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition:
+                color .25s ease,
+                border-color .25s ease,
+                background .25s ease;
+        }
+
+        .replay-intro:hover {
+            color: #ffcf79;
+            border-color: rgba(255, 181, 71, .3);
+            background: rgba(255, 181, 71, .06);
+        }
+
+        .replay-intro:focus-visible {
+            outline: 2px solid #ffb547;
+            outline-offset: 3px;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 20px 14px;
+            }
+
+            .signup-container {
+                padding: 28px 20px;
+            }
+
+            .logo {
+                font-size: 25px;
+            }
+
+            .vault-emblem {
+                width: 88px;
+                height: 88px;
+                margin-bottom: 25px;
+            }
+
+            .emblem-core {
+                font-size: 30px;
+            }
+
+            .intro-overline {
+                letter-spacing: 4px;
+            }
+
+            .intro-title {
+                letter-spacing: 3px;
+            }
+
+            .intro-title span {
+                letter-spacing: 9px;
+                text-indent: 9px;
+            }
+
+            .intro-bottom {
+                letter-spacing: 2px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #vault-intro *,
+            #vault-intro {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
     </style>
 </head>
 
 <body>
 
+    <!-- ===== CINEMATIC INTRO ===== -->
+    <div id="vault-intro" aria-hidden="true">
+        <div class="intro-light intro-light-one"></div>
+        <div class="intro-light intro-light-two"></div>
+        <div class="intro-light intro-light-three"></div>
+
+        <div class="intro-particles" id="intro-particles"></div>
+
+        <div class="intro-content">
+            <div class="vault-emblem">
+                <div class="emblem-ring emblem-ring-outer"></div>
+                <div class="emblem-ring emblem-ring-inner"></div>
+                <div class="emblem-core">AV</div>
+                <div class="emblem-glint"></div>
+            </div>
+
+            <div class="intro-overline">A WORLD OF CINEMA</div>
+
+            <h1 class="intro-title">
+                ABRAHAM'S
+                <span>VAULT</span>
+            </h1>
+
+            <div class="intro-divider">
+                <span></span>
+                <i>✦</i>
+                <span></span>
+            </div>
+
+            <p class="intro-tagline">EVERY STORY LEAVES A MARK</p>
+        </div>
+
+        <div class="intro-bottom">
+            <span>DISCOVER · EXPERIENCE · REMEMBER</span>
+        </div>
+    </div>
+
+    <!-- ===== SIGNUP FORM ===== -->
     <main class="signup-container">
         <div class="logo">ABRAHAM'S <span>VAULT</span></div>
-        <p class="subtitle">Create your account and enter your vault.</p>
+
+        <p class="subtitle">
+            Create your account and enter your vault.
+        </p>
 
         <form id="signupForm">
             <div class="form-group">
@@ -279,6 +748,7 @@
 
             <div class="form-group">
                 <label for="password">Password</label>
+
                 <div class="password-wrapper">
                     <input
                         type="password"
@@ -290,6 +760,7 @@
                         autocomplete="new-password"
                         required
                     >
+
                     <button
                         type="button"
                         class="toggle-password"
@@ -302,6 +773,7 @@
 
             <div class="form-group">
                 <label for="confirmPassword">Confirm password</label>
+
                 <div class="password-wrapper">
                     <input
                         type="password"
@@ -313,6 +785,7 @@
                         autocomplete="new-password"
                         required
                     >
+
                     <button
                         type="button"
                         class="toggle-password"
@@ -323,7 +796,11 @@
                 </div>
             </div>
 
-            <button type="submit" class="signup-button" id="signupButton">
+            <button
+                type="submit"
+                class="signup-button"
+                id="signupButton"
+            >
                 Create Account
             </button>
 
@@ -343,16 +820,28 @@
         <a class="back-link" href="index.html">
             ← Back to Abraham's Vault
         </a>
+
+        <button
+            type="button"
+            id="replay-intro"
+            class="replay-intro"
+        >
+            ↻ Replay Intro
+        </button>
     </main>
 
     <script>
-        const API_URL = "https://abrahams-vault-backend.onrender.com/api/auth/register";
+        /* ===== SIGNUP CONFIGURATION ===== */
+
+        const API_URL =
+            "https://abrahams-vault-backend.onrender.com/api/auth/register";
 
         const signupForm = document.getElementById("signupForm");
         const signupButton = document.getElementById("signupButton");
         const message = document.getElementById("message");
 
-        // Show or hide either password field.
+        /* ===== PASSWORD VISIBILITY ===== */
+
         document.querySelectorAll(".toggle-password").forEach(button => {
             button.addEventListener("click", () => {
                 const input = document.getElementById(button.dataset.target);
@@ -360,7 +849,12 @@
 
                 input.type = showPassword ? "text" : "password";
                 button.textContent = showPassword ? "🙈" : "👁️";
-                button.setAttribute("aria-pressed", String(showPassword));
+
+                button.setAttribute(
+                    "aria-pressed",
+                    String(showPassword)
+                );
+
                 button.setAttribute(
                     "aria-label",
                     showPassword ? "Hide password" : "Show password"
@@ -368,17 +862,27 @@
             });
         });
 
+        /* ===== STATUS MESSAGES ===== */
+
         function showMessage(text, type) {
             message.textContent = text;
             message.className = "message " + type;
         }
 
+        /* ===== REGISTRATION ===== */
+
         signupForm.addEventListener("submit", async event => {
             event.preventDefault();
 
-            const username = document.getElementById("username").value.trim();
-            const email = document.getElementById("email").value.trim();
-            const password = document.getElementById("password").value;
+            const username =
+                document.getElementById("username").value.trim();
+
+            const email =
+                document.getElementById("email").value.trim();
+
+            const password =
+                document.getElementById("password").value;
+
             const confirmPassword =
                 document.getElementById("confirmPassword").value;
 
@@ -420,15 +924,18 @@
                     })
                 });
 
-                const data = await response.json();
+                const data = await response.json().catch(() => ({}));
 
                 if (!response.ok) {
                     throw new Error(
-                        data.message || "Unable to create your account."
+                        data.message ||
+                        data.error ||
+                        "Unable to create your account."
                     );
                 }
 
                 showMessage(
+                    data.message ||
                     "Account created successfully! You can now log in.",
                     "success"
                 );
@@ -438,6 +945,7 @@
                 document.querySelectorAll(".toggle-password").forEach(button => {
                     button.textContent = "👁️";
                     button.setAttribute("aria-pressed", "false");
+
                     button.setAttribute(
                         "aria-label",
                         button.dataset.target === "password"
@@ -446,14 +954,16 @@
                     );
                 });
 
-                setTimeout(() => {
+                window.setTimeout(() => {
                     window.location.href = "login.html";
                 }, 1500);
 
             } catch (error) {
+                console.error("Signup error:", error);
+
                 showMessage(
                     error.message === "Failed to fetch"
-                        ? "Cannot connect to the server. Make sure your backend is running."
+                        ? "Cannot connect to the server. Please check your internet connection and try again."
                         : error.message,
                     "error"
                 );
@@ -462,8 +972,109 @@
                 signupButton.textContent = "Create Account";
             }
         });
+
+        /* ===== CINEMATIC INTRO CONTROLLER ===== */
+
+        (() => {
+            const intro = document.getElementById("vault-intro");
+            const particleContainer =
+                document.getElementById("intro-particles");
+            const replayButton =
+                document.getElementById("replay-intro");
+
+            if (!intro || !particleContainer) return;
+
+            // Separate key lets signup play once even if login already played.
+            const sessionKey = "vaultSignupIntroPlayed";
+
+            let introTimer;
+            let fadeTimer;
+            let isPlaying = false;
+
+            function playIntro() {
+                if (isPlaying) return;
+
+                isPlaying = true;
+
+                window.clearTimeout(introTimer);
+                window.clearTimeout(fadeTimer);
+
+                intro.classList.remove("intro-hidden");
+                intro.style.display = "flex";
+
+                particleContainer.replaceChildren();
+
+                const particleCount =
+                    window.innerWidth < 600 ? 32 : 55;
+
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement("span");
+
+                    particle.className = "intro-particle";
+
+                    particle.style.left =
+                        `${Math.random() * 100}%`;
+
+                    particle.style.setProperty(
+                        "--particle-size",
+                        `${1.5 + Math.random() * 3}px`
+                    );
+
+                    particle.style.setProperty(
+                        "--particle-duration",
+                        `${4 + Math.random() * 5}s`
+                    );
+
+                    particle.style.setProperty(
+                        "--particle-delay",
+                        `${Math.random() * 4}s`
+                    );
+
+                    particle.style.setProperty(
+                        "--particle-drift",
+                        `${Math.random() * 100 - 50}px`
+                    );
+
+                    particleContainer.appendChild(particle);
+                }
+
+                // Restart entrance animations when replayed.
+                intro.querySelectorAll("*").forEach(element => {
+                    element.style.animation = "none";
+                    void element.offsetWidth;
+                    element.style.removeProperty("animation");
+                });
+
+                intro.style.animation = "none";
+                void intro.offsetWidth;
+                intro.style.removeProperty("animation");
+
+                // Keep the same 4.2-second intro timing as login.
+                introTimer = window.setTimeout(() => {
+                    intro.classList.add("intro-hidden");
+
+                    fadeTimer = window.setTimeout(() => {
+                        intro.style.display = "none";
+                        isPlaying = false;
+                    }, 1100);
+                }, 4200);
+            }
+
+            // Automatically play once per signup tab session.
+            if (sessionStorage.getItem(sessionKey) !== "true") {
+                sessionStorage.setItem(sessionKey, "true");
+                playIntro();
+            } else {
+                intro.classList.add("intro-hidden");
+                intro.style.display = "none";
+            }
+
+            // Allow the user to replay the intro at any time.
+            replayButton?.addEventListener("click", () => {
+                playIntro();
+            });
+        })();
     </script>
 
 </body>
 </html>
-
