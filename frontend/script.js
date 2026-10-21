@@ -1746,11 +1746,11 @@ function setupMovieSearch() {
                 .toLowerCase();
 
             if (currentPageName !== "discover.html") {
-                closeSearchPanel();
-                window.location.href =
-                    `discover.html?q=${encodeURIComponent(query)}`;
-                return;
-            }
+    closeSearchPanel();
+    window.location.href =
+        `/frontend/discover.html?q=${encodeURIComponent(query)}`;
+    return;
+}
 
             selectedGenreId = null;
             selectedLanguage = "all";
