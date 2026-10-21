@@ -1630,6 +1630,68 @@ app.get("/api/users/:id", async (req, res) => {
 });
 
 
+ // =========================
+ // PUBLIC USER JOURNAL
+ // =========================
+
+app.get("/api/users/:id/journal", async (req, res) => {
+    try {
+        const identifier = String(req.params.id || "").trim();
+
+        if (!identifier) {
+            return res.status(400).json({
+                error: "A user ID or username is required"
+            });
+        }
+
+        // Support both numeric IDs and usernames.
+        const isNumericId = /^\d+$/.test(identifier);
+
+        const [users] = isNumericId
+            ? await pool.execute(
+                "SELECT id FROM users WHERE id = ? LIMIT 1",
+                [Number(identifier)]
+            )
+            : await pool.execute(
+                "SELECT id FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1",
+                [identifier]
+            );
+
+        if (users.length === 0) {
+            return res.status(404).json({
+                error: "User not found"
+            });
+        }
+
+        const userId = users[0].id;
+
+        // Publicly display journal entries, but provide no write access.
+        const [entries] = await pool.execute(
+            `SELECT
+                tmdb_movie_id AS movieId,
+                media_type AS mediaType,
+                movie_title AS title,
+                poster_path AS posterPath,
+                journal_text AS journalText,
+                created_at AS createdAt,
+                updated_at AS updatedAt
+             FROM movie_journal
+             WHERE user_id = ?
+             ORDER BY updated_at DESC`,
+            [userId]
+        );
+
+        res.set("Cache-Control", "no-store");
+        return res.status(200).json(entries);
+    } catch (error) {
+        console.error("Public user journal error:", error);
+
+        return res.status(500).json({
+            error: "Unable to load this user's journal"
+        });
+    }
+});
+
 
 /* Update username */
 app.patch(
