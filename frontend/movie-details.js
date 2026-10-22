@@ -346,17 +346,39 @@ async function loadMovieDetails() {
                             Write in My Journal
                         </button>
 
-                        ${
-                            trailer
-                                ? `<a class="vault-action-button trailer-button"
-                                      href="https://www.youtube.com/watch?v=${encodeURIComponent(trailer.key)}"
-                                      target="_blank"
-                                      rel="noopener noreferrer">
-                                      Watch Trailer
-                                   </a>`
-                                : ""
-                        }
+                       ${
+    trailer
+        ? `<button id="watch-trailer-button"
+              class="vault-action-button trailer-button"
+              type="button">
+              ▶ Watch Trailer
+           </button>`
+        : ""
+}
                     </div>
+                  ${trailer ? `
+    <section id="trailer-player-section" hidden>
+        <div class="trailer-player-header">
+            <h2>Watch Trailer</h2>
+            <button id="close-trailer-button" type="button"
+                class="vault-action-button">
+                ✕ Close Trailer
+            </button>
+        </div>
+
+        <div class="trailer-video-wrapper">
+            <iframe
+                id="trailer-iframe"
+                title="${escapeHTML(movie.title || "Movie")} trailer"
+                src=""
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowfullscreen
+                loading="lazy"
+                referrerpolicy="strict-origin-when-cross-origin">
+            </iframe>
+        </div>
+    </section>
+` : ""}  
                 </div>
 
                 <section id="cast-section" class="cast-section">
@@ -425,6 +447,33 @@ async function loadMovieDetails() {
 
         document.getElementById("journal-button")
             .addEventListener("click", openMovieJournal);
+        const trailerButton = document.getElementById("watch-trailer-button");
+const trailerSection = document.getElementById("trailer-player-section");
+const trailerIframe = document.getElementById("trailer-iframe");
+const closeTrailerButton = document.getElementById("close-trailer-button");
+
+if (trailerButton && trailerSection && trailerIframe) {
+    trailerButton.addEventListener("click", () => {
+        trailerSection.hidden = false;
+
+        if (!trailerIframe.src || trailerIframe.src === window.location.href) {
+            trailerIframe.src =
+                `https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&rel=0`;
+        }
+
+        trailerSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    });
+}
+
+if (closeTrailerButton && trailerSection && trailerIframe) {
+    closeTrailerButton.addEventListener("click", () => {
+        trailerIframe.src = "";
+        trailerSection.hidden = true;
+    });
+}   
 
         await Promise.allSettled([
             loadCommunityRating(),
