@@ -1,30 +1,33 @@
-
-<header class="navbar">
+ <header class="navbar">
     <a href="index.html" class="logo" aria-label="Abraham's Vault Home">
-        <img src="assets/abrahams-vault-logo.png" alt="">
+        <img src="assets/abrahams-vault-logo.png" alt="" aria-hidden="true">
         <span class="logo-text">ABRAHAM'S <span>VAULT</span><i>.</i></span>
     </a>
 
     <nav class="nav-links" aria-label="Main navigation">
-    <a href="index.html">Home</a>
-    <a href="top100.html">Top 100 Movies</a>
-    <a href="my-list.html">My Watchlist</a>
-    <a href="watched.html">Watched Log</a>
-    <a href="journal.html">My Journal</a>
-    <a href="find-users.html">Find Users</a>
+        <a href="index.html">Home</a>
+        <a href="discover.html">Discover</a>
+        <a href="top100.html">Top 100 Movies</a>
+        <a href="my-list.html">My Watchlist</a>
+        <a href="watched.html">Watched Log</a>
+        <a href="journal.html">My Journal</a>
+        <a href="find-users.html">Find Users</a>
 
-    <span id="auth-links">
-        <a href="login.html">Log In</a>
-        <span class="auth-separator"> / </span>
-        <a href="signup.html">Sign Up</a>
-    </span>
+        <span id="auth-links">
+            <a href="login.html">Log In</a>
+            <span class="auth-separator"> / </span>
+            <a href="signup.html">Sign Up</a>
+        </span>
 
-    <span id="user-links" style="display:none">
-        <span id="welcome-user"></span>
-        <a href="profile.html" id="profile-link"
-           class="profile-nav-btn" style="display:none">Profile</a>
-       
-    </span>
-</nav>
+        <span id="user-links" style="display:none;">
+            <span id="welcome-user"></span>
+            <a href="profile.html" id="profile-link"
+               class="profile-nav-btn" style="display:none;">Profile</a>
+        </span>
+    </nav>
+
+    <div class="nav-actions">
+        <button class="icon-btn" id="search-toggle" type="button"
+                aria-label="Open search">⌕</button>
     </div>
 </header>

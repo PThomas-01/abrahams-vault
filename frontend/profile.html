@@ -1,1838 +1,1296 @@
-
+﻿
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile | Abraham's Vault</title>
-    <link rel="stylesheet" href="style.css">
-
-    <style>
-        .profile-page {
-            max-width: 1100px;
-            margin: 35px auto;
-            padding: 24px;
-            color: #f5f5f5;
-        }
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            gap: 22px;
-            padding: 26px;
-            background: #1b1b1b;
-            border: 1px solid #303030;
-            border-radius: 16px;
-            margin-bottom: 35px;
-            flex-wrap: wrap;
-        }
-
-        .profile-avatar {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: #343434;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-
-        .profile-info {
-            flex: 1;
-            min-width: 180px;
-        }
-
-        .profile-info h1 {
-            margin: 0 0 10px;
-            font-size: 29px;
-            overflow-wrap: anywhere;
-        }
-
-        .profile-info p {
-            color: #bdbdbd;
-            margin: 0;
-        }
-
-        .profile-stats {
-            display: flex;
-            gap: 24px;
-            margin-top: 15px;
-        }
-
-        .profile-stat {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            padding: 0;
-            border: 0;
-            background: transparent;
-            color: #bdbdbd;
-            cursor: pointer;
-            text-align: left;
-        }
-
-        .profile-stat strong {
-            color: #fff;
-            font-size: 18px;
-        }
-
-        .profile-stat:hover span {
-            color: #f0c15a;
-        }
-
-        #followProfileStatus {
-            margin-top: 9px;
-            font-size: 13px;
-            color: #bdbdbd;
-        }
-
-        .profile-section {
-            margin-bottom: 42px;
-        }
-
-        .profile-toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 18px;
-        }
-
-        .profile-toolbar h2 {
-            margin: 0;
-            font-size: 24px;
-        }
-
-        .profile-button {
-            display: inline-block;
-            padding: 10px 15px;
-            border: 1px solid #505050;
-            border-radius: 7px;
-            background: #252525;
-            color: #f5f5f5;
-            cursor: pointer;
-            text-decoration: none;
-            font: inherit;
-            font-size: 14px;
-            transition: background 0.2s, border-color 0.2s;
-        }
-
-        .profile-button:hover {
-            background: #383838;
-            border-color: #777;
-        }
-
-        .profile-button:disabled {
-            opacity: 0.55;
-            cursor: not-allowed;
-        }
-
-        .profile-button[hidden] {
-            display: none !important;
-        }
-
-        .top-movies {
-            display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 18px;
-        }
-
-        .top-movie {
-            min-width: 0;
-            overflow: hidden;
-            border-radius: 12px;
-            background: #1b1b1b;
-            border: 1px solid #303030;
-        }
-
-        .top-movie img {
-            display: block;
-            width: 100%;
-            aspect-ratio: 2 / 3;
-            object-fit: cover;
-            background: #292929;
-        }
-
-        .movie-info {
-            padding: 12px;
-        }
-
-        .movie-rank {
-            color: #f0c15a;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .movie-info h3 {
-            margin: 8px 0 0;
-            font-size: 14px;
-            overflow-wrap: anywhere;
-        }
-
-        .profile-message {
-            grid-column: 1 / -1;
-            padding: 24px;
-            border-radius: 12px;
-            background: #1b1b1b;
-            border: 1px solid #303030;
-            color: #bdbdbd;
-            text-align: center;
-            line-height: 1.7;
-        }
-
-        .profile-error {
-            color: #ff9999;
-        }
-
-        .top5-editor {
-            margin-top: 20px;
-            padding: 20px;
-            border: 1px solid #444;
-            border-radius: 12px;
-            background: #181818;
-        }
-
-        .top5-editor[hidden] {
-            display: none !important;
-        }
-
-        .top5-editor h3 {
-            margin-top: 0;
-        }
-
-        .top5-search-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin: 14px 0;
-        }
-
-        .top5-search-input {
-            flex: 1;
-            min-width: 180px;
-            padding: 11px;
-            border: 1px solid #555;
-            border-radius: 7px;
-            background: #101010;
-            color: #fff;
-            font: inherit;
-        }
-
-        .top5-results {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin: 16px 0;
-        }
-
-        .top5-result {
-            padding: 12px;
-            border: 1px solid #444;
-            border-radius: 9px;
-            background: #222;
-            min-width: 0;
-        }
-
-        .top5-result img {
-            display: block;
-            width: 100%;
-            aspect-ratio: 2 / 3;
-            object-fit: cover;
-            border-radius: 5px;
-            background: #333;
-        }
-
-        .top5-result p {
-            overflow-wrap: anywhere;
-        }
-
-        .top5-selected {
-            display: flex;
-            flex-direction: column;
-            gap: 9px;
-            margin: 12px 0;
-        }
-
-        .top5-selected-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            flex-wrap: wrap;
-            padding: 10px;
-            border-radius: 7px;
-            background: #252525;
-        }
-
-        .top5-status {
-            min-height: 20px;
-            color: #d1d1d1;
-            overflow-wrap: anywhere;
-        }
-
-        .top5-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 15px;
-        }
-
-        /* Journal */
-
-        .journal-profile-list {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
-        }
-
-        .journal-profile-card {
-            display: flex;
-            gap: 18px;
-            padding: 18px;
-            border-radius: 12px;
-            background: #1b1b1b;
-            border: 1px solid #303030;
-            min-width: 0;
-        }
-
-        .journal-profile-poster {
-            width: 105px;
-            min-width: 105px;
-            aspect-ratio: 2 / 3;
-            object-fit: cover;
-            border-radius: 8px;
-            background: #292929;
-        }
-
-        .journal-profile-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .journal-profile-content h3 {
-            margin: 0 0 8px;
-            font-size: 19px;
-            overflow-wrap: anywhere;
-        }
-
-        .journal-profile-date {
-            margin: 0 0 12px;
-            color: #aaa;
-            font-size: 13px;
-        }
-
-        .journal-profile-text {
-            margin: 0;
-            color: #dedede;
-            line-height: 1.75;
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-        }
-
-        /* Followers / following modal */
-
-        .follow-modal[hidden] {
-            display: none !important;
-        }
-
-        .follow-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            background: rgba(0, 0, 0, 0.78);
-        }
-
-        .follow-modal-panel {
-            width: 100%;
-            max-width: 430px;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            border: 1px solid #444;
-            border-radius: 14px;
-            background: #1b1b1b;
-            color: #fff;
-        }
-
-        .follow-modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            border-bottom: 1px solid #383838;
-        }
-
-        .follow-modal-header h2 {
-            margin: 0;
-            font-size: 19px;
-        }
-
-        .follow-modal-close {
-            border: 0;
-            background: transparent;
-            color: #fff;
-            font-size: 26px;
-            cursor: pointer;
-        }
-
-        .follow-list {
-            overflow-y: auto;
-            padding: 8px 16px;
-        }
-
-        .follow-list-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid #333;
-        }
-
-        .follow-list-user {
-            min-width: 0;
-            overflow-wrap: anywhere;
-            border: 0;
-            background: transparent;
-            color: #fff;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: left;
-        }
-
-        .follow-list-user:hover {
-            text-decoration: underline;
-        }
-
-        .follow-list-action {
-            flex-shrink: 0;
-            padding: 7px 12px;
-            border: 1px solid #555;
-            border-radius: 7px;
-            background: #292929;
-            color: #fff;
-            cursor: pointer;
-        }
-
-        .follow-list-message {
-            padding: 24px 10px;
-            color: #bdbdbd;
-            text-align: center;
-        }
-
-        .vault-back-btn {
-            margin-bottom: 20px;
-            padding: 9px 14px;
-            border: 1px solid #444;
-            border-radius: 7px;
-            background: #202020;
-            color: #fff;
-            cursor: pointer;
-        }
-
-        @media (max-width: 700px) {
-            .profile-page {
-                margin: 20px auto;
-                padding: 14px;
-            }
-
-            .profile-header {
-                padding: 18px;
-                gap: 14px;
-            }
-
-            .profile-avatar {
-                width: 68px;
-                height: 68px;
-                font-size: 27px;
-            }
-
-            .profile-info h1 {
-                font-size: 23px;
-            }
-
-            .profile-toolbar h2 {
-                font-size: 20px;
-            }
-
-            .top-movies {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 12px;
-            }
-
-            .journal-profile-card {
-                padding: 12px;
-                gap: 12px;
-            }
-
-            .journal-profile-poster {
-                width: 82px;
-                min-width: 82px;
-            }
-
-            .journal-profile-content h3 {
-                font-size: 16px;
-            }
-
-            .journal-profile-text {
-                font-size: 14px;
-            }
-        }
-
-
-/* Compact avatar dropdown */
-
-.avatar-picker-section {
-    position: relative;
-    margin: 0 0 35px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    width: 100%;
-    flex-basis: 100%;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Profile | Abraham's Vault</title>
+<link rel="stylesheet" href="style.css">
+<style>
+:root{
+  --vault-bg:#090909;--vault-surface:#121212;--vault-card:#171717;
+  --vault-card-hover:#211c12;--vault-border:#302d27;--vault-gold:#d4af62;
+  --vault-gold-light:#f0d99a;--vault-text:#f5f2eb;--vault-muted:#a8a39a;
+  --vault-danger:#e88b82;--vault-radius:16px;
 }
-
-.avatar-picker-section[hidden] {
-    display: none !important;
+*{box-sizing:border-box}
+body{background:var(--vault-bg);color:var(--vault-text)}
+[hidden]{display:none!important}
+.profile-page{width:min(1180px,calc(100% - 32px));margin:28px auto 70px}
+.profile-shell{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;align-items:start}
+.profile-sidebar{position:sticky;top:20px;background:linear-gradient(155deg,#181610,#101010 65%);border:1px solid #403722;border-radius:var(--vault-radius);padding:18px}
+.brand-mark{font-size:12px;letter-spacing:.19em;text-transform:uppercase;color:var(--vault-gold);font-weight:800;margin:0 0 20px}
+.sidebar-links{display:grid;gap:6px}
+.sidebar-links a{color:#c7c2b8;text-decoration:none;border-radius:9px;padding:10px 11px;font-size:13px;border:1px solid transparent}
+.sidebar-links a:hover,.sidebar-links a.active{background:#282113;border-color:#5a4929;color:var(--vault-gold-light)}
+.sidebar-note{margin:20px 0 0;padding-top:14px;border-top:1px solid #34302a;color:#8d887e;font-size:11px;line-height:1.6}
+.profile-main{min-width:0}
+.profile-header,.panel,.journal-profile-card,.top-movie,.vault-id-card{background:var(--vault-card);border:1px solid var(--vault-border);border-radius:var(--vault-radius)}
+.profile-header{display:flex;align-items:center;gap:20px;padding:24px;margin-bottom:26px;flex-wrap:wrap;background:radial-gradient(ellipse at top right,#2b2415 0,transparent 55%),#141414;border-color:#4b3e27}
+.profile-avatar{width:88px;height:88px;flex:0 0 88px;border-radius:23px;background:#24211a;border:1px solid #5a4929;display:grid;place-items:center;overflow:hidden;padding:12px}
+.profile-avatar img{width:100%;height:100%;object-fit:contain}
+.profile-info{flex:1;min-width:180px}
+.profile-info h1{margin:0 0 7px;overflow-wrap:anywhere;font-size:clamp(24px,3vw,34px);letter-spacing:-.035em}
+.profile-info p{color:var(--vault-muted);margin:0;font-size:13px}
+.profile-kicker{color:var(--vault-gold)!important;text-transform:uppercase;letter-spacing:.13em;font-size:10px!important;font-weight:800;margin-bottom:7px!important}
+.profile-stats{display:flex;gap:18px;margin-top:15px}
+.profile-stat{background:none;border:0;color:var(--vault-muted);cursor:pointer;text-align:left;padding:0;font:inherit;font-size:12px}
+.profile-stat strong{display:block;color:#fff;font-size:18px;margin-bottom:2px}
+.profile-header-actions{display:flex;gap:8px;flex-wrap:wrap}
+.profile-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 14px;border:1px solid #4a4437;border-radius:9px;background:#201f1b;color:#f5f2eb;text-decoration:none;cursor:pointer;font:inherit;font-size:12px;font-weight:650;transition:.18s ease}
+.profile-button:hover{border-color:var(--vault-gold);background:#292315;color:var(--vault-gold-light)}
+.profile-button.primary{background:var(--vault-gold);border-color:var(--vault-gold);color:#17130b}
+.profile-button.primary:hover{background:var(--vault-gold-light)}
+.profile-button:disabled{opacity:.5;cursor:not-allowed}
+.profile-section{margin:0 0 30px}
+.profile-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.profile-toolbar h2{margin:0;font-size:clamp(19px,2.5vw,23px);letter-spacing:-.025em}
+.section-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.15em;color:var(--vault-gold);font-weight:800;margin:0 0 5px}
+.profile-message{grid-column:1/-1;padding:22px;background:#141414;border:1px solid var(--vault-border);border-radius:11px;text-align:center;color:var(--vault-muted);font-size:13px}
+.profile-error{color:var(--vault-danger)}
+.vault-id-card{padding:18px;display:flex;gap:14px;align-items:center;margin-bottom:30px;background:linear-gradient(120deg,#1a1710,#121212 75%);border-color:#554629}
+.vault-id-icon{width:45px;height:45px;border-radius:13px;background:#302719;border:1px solid #6a552f;display:grid;place-items:center;color:var(--vault-gold-light);font-size:21px;flex-shrink:0}
+.vault-id-content{min-width:0;flex:1}
+.vault-id-content strong{display:block;font-size:14px;overflow-wrap:anywhere}
+.vault-id-content span{display:block;color:var(--vault-muted);font-size:11px;margin-top:4px}
+.vault-id-badge{font-size:10px!important;color:var(--vault-gold-light)!important;border:1px solid #594829;border-radius:999px;padding:6px 9px;white-space:nowrap}
+.top-movies{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.top-movie{overflow:hidden;cursor:pointer;min-width:0;transition:transform .2s,border-color .2s}
+.top-movie:hover{transform:translateY(-3px);border-color:#7d6638}
+.top-movie img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:#292929}
+.movie-info{padding:10px}
+.movie-rank{color:var(--vault-gold);font-weight:800;font-size:11px;letter-spacing:.08em}
+.movie-info h3{font-size:13px;overflow-wrap:anywhere;margin:6px 0 0;line-height:1.4}
+.top5-editor{margin-top:15px;padding:18px;background:#111;border:1px solid #403722;border-radius:12px}
+.top5-editor h3{margin-top:0}
+.top5-editor p{color:var(--vault-muted);font-size:13px}
+.top5-search-row,.top5-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.top5-search-input{flex:1;min-width:150px;padding:11px 12px;background:#0c0c0c;color:white;border:1px solid #484236;border-radius:8px;font:inherit}
+.top5-search-input:focus,.journal-comment-input:focus{outline:1px solid var(--vault-gold);border-color:var(--vault-gold)}
+.top5-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:12px}
+.top5-result{background:#1a1a1a;border:1px solid #3b372e;border-radius:9px;padding:10px;overflow-wrap:anywhere;display:flex;flex-direction:column;gap:8px}
+.top5-result img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:5px;background:#292929}
+.top5-result p{margin:0;color:#eee}
+.top5-selected{display:grid;gap:8px}
+.top5-selected-row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;background:#1d1c18;border:1px solid #393329;border-radius:8px;padding:10px;font-size:13px}
+.top5-status,#avatarStatus,#followProfileStatus{color:var(--vault-muted);min-height:18px;font-size:12px}
+.journal-profile-list{display:grid;gap:13px}
+.journal-profile-card{display:flex;gap:15px;padding:16px;min-width:0}
+.journal-profile-poster{width:88px;min-width:88px;aspect-ratio:2/3;object-fit:cover;border-radius:7px;background:#292929}
+.journal-profile-content{flex:1;min-width:0}
+.journal-profile-content h3{margin:0 0 7px;overflow-wrap:anywhere;font-size:16px}
+.journal-profile-date{font-size:11px;color:#999;margin:0 0 10px}
+.journal-profile-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;color:#ddd;font-size:13px}
+.journal-social{border-top:1px solid #353535;margin-top:14px;padding-top:10px}
+.journal-social-actions{display:flex;align-items:center;gap:7px}
+.journal-social button{cursor:pointer;color:#eee;background:#252525;border:1px solid #404040;border-radius:7px;padding:7px 9px;font:inherit;font-size:12px}
+.journal-social button:hover{border-color:var(--vault-gold)}
+.journal-social button.journal-like-button,.journal-social button.journal-comments-toggle{background:transparent;border-color:#383838}
+.journal-like-button{color:#e5bd6d!important}
+.journal-like-button.liked{border-color:#8e7138!important;background:#302719!important}
+.journal-comments{display:grid;gap:7px;margin-top:9px}
+.journal-comment{background:#1c1c1c;border:1px solid #303030;border-radius:7px;padding:9px 10px;overflow-wrap:anywhere}
+.journal-comment-header{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.journal-comment-author{font-size:12px;font-weight:bold}
+.journal-comment-date{font-size:10px;color:#999}
+.journal-comment-text{font-size:12px;line-height:1.5;white-space:pre-wrap;margin:0;color:#ddd}
+.journal-comment-form{display:flex;align-items:center;gap:6px;margin-top:9px}
+.journal-comment-input{flex:1;min-width:0;padding:9px;background:#151515;border:1px solid #454545;border-radius:7px;color:white}
+.journal-social button.emoji-toggle{font-size:16px;padding:5px 8px;flex-shrink:0}
+.journal-emoji-picker{display:flex;flex-wrap:wrap;gap:3px;margin-top:7px;padding:7px;background:#191919;border:1px solid #383838;border-radius:8px}
+.journal-social .journal-emoji-picker button{border:0;background:transparent;font-size:18px;padding:3px}
+.journal-view-all{border:0!important;background:transparent!important;color:var(--vault-gold-light)!important;padding:4px 0!important}
+.journal-comment-delete{font-size:10px!important;padding:3px 6px!important;margin-top:5px}
+.journal-social-message{color:#aaa;font-size:12px}
+.follow-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:15px;background:#000c}
+.follow-modal-panel{width:100%;max-width:430px;max-height:80vh;display:flex;flex-direction:column;background:#171717;border:1px solid #554629;border-radius:14px;color:white;overflow:hidden}
+.follow-modal-header{display:flex;justify-content:space-between;align-items:center;padding:14px;border-bottom:1px solid #383838}
+.follow-modal-header h2{margin:0;font-size:18px}
+.follow-modal-close{background:none;border:0;color:white;font-size:25px;cursor:pointer}
+.follow-list{overflow:auto;padding:8px 15px}
+.follow-list-row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #333}
+.follow-list-user{background:none;border:0;color:white;cursor:pointer;overflow-wrap:anywhere;text-align:left}
+.follow-list-action{background:#292929;color:white;border:1px solid #555;border-radius:7px;padding:7px 10px;cursor:pointer}
+.follow-list-message{text-align:center;color:#aaa;padding:20px}
+.avatar-picker-section{flex-basis:100%;width:100%;margin-top:4px}
+.avatar-dropdown-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#17150f;color:var(--vault-gold-light);border:1px solid #62502c;border-radius:9px;cursor:pointer;font:inherit;font-size:12px;font-weight:700}
+.avatar-dropdown-toggle:hover{background:#211b10;border-color:var(--vault-gold)}
+.avatar-dropdown-panel{margin-top:10px;padding:clamp(14px,3vw,25px);background:#0b0b0b;border:1px solid #393329;border-radius:13px}
+.avatar-panel-heading{display:flex;align-items:start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.avatar-panel-heading h3{color:var(--vault-gold-light);font-size:22px;margin:0 0 6px}
+.avatar-panel-heading p{color:var(--vault-muted);font-size:12px;margin:0}
+.avatar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin:15px 0 20px}
+.avatar-option{position:relative;min-width:0;width:100%;aspect-ratio:1;border:1px solid #302d27;border-radius:12px;background:linear-gradient(145deg,#1b1b1b,#101010);cursor:pointer;padding:10px;display:grid;place-items:center;transition:border-color .18s,background .18s,transform .18s}
+.avatar-option img{width:100%;height:100%;object-fit:contain}
+.avatar-option:hover{border-color:#8f743c;background:#211c12;transform:translateY(-2px)}
+.avatar-option.selected{border:2px solid var(--vault-gold);background:#292113;box-shadow:0 0 0 2px #d4af6220}
+.avatar-option.selected:after{content:"✓";position:absolute;right:5px;top:5px;width:18px;height:18px;display:grid;place-items:center;background:var(--vault-gold);color:#111;border-radius:50%;font-size:11px;font-weight:900}
+.avatar-preview{display:flex;align-items:center;gap:13px;padding:14px;background:#15140f;border:1px solid #423722;border-radius:11px;margin:6px 0 12px}
+.avatar-preview-image{width:58px;height:58px;flex:0 0 58px;border-radius:13px;padding:8px;background:#252015;border:1px solid #62502c;display:grid;place-items:center}
+.avatar-preview-image img{width:100%;height:100%;object-fit:contain}
+.avatar-preview-copy{min-width:0;flex:1}
+.avatar-preview-copy strong{display:block;font-size:13px;color:#f5f2eb}
+.avatar-preview-copy span{display:block;color:var(--vault-muted);font-size:11px;margin-top:4px}
+.avatar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.avatar-upload-label{display:inline-flex;align-items:center;justify-content:center;border:1px dashed #6b5934;color:var(--vault-gold-light);background:#18150f;border-radius:9px;padding:10px 14px;font-size:12px;cursor:pointer}
+.avatar-upload-label input{display:none}
+@media(max-width:900px){.profile-shell{grid-template-columns:180px minmax(0,1fr);gap:16px}.avatar-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(max-width:700px){
+.profile-page{width:calc(100% - 22px);margin:14px auto 45px}
+.profile-shell{grid-template-columns:1fr}
+.profile-sidebar{position:static;padding:12px}
+.brand-mark{margin:0 0 10px}
+.sidebar-links{display:flex;overflow-x:auto;padding-bottom:3px}
+.sidebar-links a{white-space:nowrap;padding:8px 10px}
+.sidebar-note{display:none}
+.profile-header{padding:16px;gap:12px}
+.profile-avatar{width:68px;height:68px;flex-basis:68px;border-radius:18px}
+.profile-header-actions{width:100%}
+.top-movies{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.journal-profile-card{padding:11px;gap:10px}
+.journal-profile-poster{width:70px;min-width:70px}
+.avatar-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.avatar-option{padding:7px}
+.vault-id-card{padding:13px}
 }
-
-.avatar-dropdown-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #404040;
-    border-radius: 9px;
-    background: #242424;
-    color: #fff;
-    cursor: pointer;
-    font: inherit;
-    text-align: left;
+@media(max-width:390px){
+.avatar-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.journal-comment-form{gap:4px}
+.journal-comment-input{padding:8px}
+.journal-social button{padding:6px}
+.profile-stats{gap:13px}
 }
-
-.avatar-dropdown-toggle:hover {
-    border-color: #a33;
-    background: #2c2c2c;
-}
-
-.avatar-dropdown-arrow {
-    transition: transform 0.2s;
-}
-
-.avatar-dropdown-toggle[aria-expanded="true"] .avatar-dropdown-arrow {
-    transform: rotate(180deg);
-}
-
-.avatar-dropdown-panel {
-    margin-top: 10px;
-    padding: 14px;
-    border: 1px solid #383838;
-    border-radius: 10px;
-    background: #141414;
-}
-
-.avatar-dropdown-panel[hidden] {
-    display: none !important;
-}
-
-.avatar-picker-section h2 {
-    margin: 0 0 6px;
-    font-size: 17px;
-}
-
-.avatar-picker-section p {
-    color: #aaa;
-    font-size: 13px;
-}
-
-.avatar-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 44px);
-    justify-content: start;
-    gap: 8px;
-    margin: 12px 0;
-}
-
-.avatar-option {
-    width: 44px;
-    height: 44px;
-    aspect-ratio: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 5px;
-    border: 2px solid #383838;
-    border-radius: 50%;
-    background: #242424;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-}
-
-.avatar-option img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-@media (max-width: 500px) {
-    .avatar-grid {
-        grid-template-columns: repeat(6, 36px);
-        gap: 6px;
-    }
-
-    .avatar-option {
-        width: 36px;
-        height: 36px;
-        padding: 4px;
-    }
-}
-.avatar-option img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.avatar-option:hover {
-    border-color: #a33;
-}
-
-.avatar-option.selected {
-    border-color: #ff3434;
-    background: #3a2020;
-    box-shadow: 0 0 8px #a00;
-}
-
-#avatarStatus {
-    min-height: 20px;
-}
-
-.profile-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 50%;
-}
-
-@media (max-width: 500px) {
-    .avatar-grid {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-        gap: 6px;
-    }
-
-    .avatar-option {
-        padding: 4px;
-    }
-}
-
-
-    </style>
+</style>
 </head>
-
 <body>
-    <div id="navbar"></div>
+<div id="navbar"></div>
 
-    <main class="profile-page">
-        <section class="profile-header">
-            <div class="profile-avatar" id="profileAvatar">?</div>
+<main class="profile-page">
+<div class="profile-shell">
+<aside class="profile-sidebar" aria-label="Profile navigation">
+<p class="brand-mark">Abraham's Vault</p>
+<nav class="sidebar-links">
+<a href="index.html">Home</a>
+<a href="discover.html">Discover</a>
+<a href="collection.html">Collection</a>
+<a href="my-list.html">My Watchlist</a>
+<a href="watched.html">Watched Log</a>
+<a href="journal.html">My Journal</a>
+<a href="profile.html" class="active" aria-current="page">My Profile</a>
+<a href="settings.html" id="sidebarSettingsLink" hidden>Settings</a>
+</nav>
+<p class="sidebar-note">Your corner of the Vault.<br>Films, memories, and favourites.</p>
+</aside>
 
-            <div class="profile-info">
-                <h1 id="profileUsername">Loading profile...</h1>
-                <p>Movie lover • Abraham's Vault</p>
-
-                <div class="profile-stats">
-                    <button type="button" class="profile-stat" id="openFollowers">
-                        <strong id="followerCount">0</strong>
-                        <span>Followers</span>
-                    </button>
-
-                    <button type="button" class="profile-stat" id="openFollowing">
-                        <strong id="followingCount">0</strong>
-                        <span>Following</span>
-                    </button>
-                </div>
-
-                <button type="button" class="profile-button" id="followProfileButton" hidden>
-                    Follow
-                </button>
-
-                <p id="followProfileStatus" role="status"></p>
-            </div>
-
-            <a href="settings.html" class="profile-button" id="settingsButton">
-                ⚙️ Settings
-            </a>
-
+<div class="profile-main">
+<section class="profile-header">
+<div class="profile-avatar" id="profileAvatar" aria-label="Profile avatar">?</div>
+<div class="profile-info">
+<p class="profile-kicker">Your Vault profile</p>
+<h1 id="profileUsername">Loading profile...</h1>
+<p>Abraham's Vault Family</p>
+<div class="profile-stats">
+<button type="button" class="profile-stat" id="openFollowers"><strong id="followerCount">0</strong>Followers</button>
+<button type="button" class="profile-stat" id="openFollowing"><strong id="followingCount">0</strong>Following</button>
+</div>
+<p id="followProfileStatus" role="status"></p>
+</div>
+<div class="profile-header-actions">
+<button type="button" class="profile-button" id="followProfileButton" hidden>Follow</button>
+<a href="settings.html" class="profile-button" id="settingsButton" hidden>Settings</a>
+</div>
 
 <section class="avatar-picker-section" id="avatarPickerSection" hidden>
-    <button
-        type="button"
-        class="avatar-dropdown-toggle"
-        id="avatarDropdownToggle"
-        aria-expanded="false"
-        aria-controls="avatarDropdownPanel"
-    >
-        <span>🎭 Change Profile Avatar</span>
-        <span class="avatar-dropdown-arrow">▼</span>
-    </button>
-
-    <div class="avatar-dropdown-panel" id="avatarDropdownPanel" hidden>
-        <h2>Choose Your Avatar</h2>
-        <p>Select an avatar, then save your choice.</p>
-
-        <div class="avatar-grid" id="avatarGrid"></div>
-
-        <p id="avatarStatus" role="status"></p>
-
-        <button type="button"
-                class="profile-button"
-                id="saveAvatarButton">
-            Save Avatar
-        </button>
-    </div>
+<button type="button" class="avatar-dropdown-toggle" id="avatarDropdownToggle" aria-expanded="false" aria-controls="avatarDropdownPanel">
+<span>Change Profile Avatar</span><span aria-hidden="true">⌄</span>
+</button>
+<div class="avatar-dropdown-panel" id="avatarDropdownPanel" hidden>
+<div class="avatar-panel-heading">
+<div><h3>Choose your avatar</h3><p>Pick a look that feels like you. Your saved choice appears across your profile.</p></div>
+<label class="avatar-upload-label">Upload image<input id="avatarUploadInput" type="file" accept="image/png,image/jpeg,image/webp" aria-label="Upload a profile avatar"></label>
+</div>
+<div class="avatar-grid" id="avatarGrid" aria-label="Available avatars"></div>
+<div class="avatar-preview">
+<div class="avatar-preview-image" id="avatarPreviewImage"><span>?</span></div>
+<div class="avatar-preview-copy"><strong id="avatarPreviewName">Classic Cat</strong><span id="avatarPreviewDescription">Selected profile avatar</span></div>
+</div>
+<p id="avatarStatus" role="status" aria-live="polite"></p>
+<div class="avatar-actions">
+<button type="button" class="profile-button primary" id="saveAvatarButton">Save Avatar</button>
+<button type="button" class="profile-button" id="cancelAvatarButton">Cancel</button>
+</div>
+</div>
+</section>
 </section>
 
+<section class="vault-id-card" aria-label="My Vault ID">
+<div class="vault-id-icon" aria-hidden="true">✦</div>
+<div class="vault-id-content"><strong id="vaultIdUsername">My Vault ID</strong><span>Abraham's Vault Family · Joined <span id="accountJoinDate">Date unavailable</span></span></div>
+<span class="vault-id-badge">VAULT MEMBER</span>
+</section>
 
+<section class="profile-section">
+<div class="profile-toolbar"><div><p class="section-eyebrow">Personal collection</p><h2>Top 5 Movies of All Time</h2></div><button type="button" class="profile-button" id="editTop5Button" hidden>Edit Top 5</button></div>
+<div class="top-movies" id="topMovies"><div class="profile-message">Loading Top 5 movies...</div></div>
+<div class="top5-editor" id="top5Editor" hidden>
+<h3>Edit My Top 5</h3><p>Search for movies and select up to five. Their order determines the ranking.</p>
+<div class="top5-search-row"><input type="search" class="top5-search-input" id="movieSearchInput" placeholder="Search for a movie..." aria-label="Search movies"><button type="button" class="profile-button" id="searchMoviesButton">Search</button></div>
+<div class="top5-results" id="movieSearchResults"></div>
+<h4>Your selected movies</h4><div class="top5-selected" id="selectedMovies"></div>
+<p class="top5-status" id="editorStatus" role="status" aria-live="polite"></p>
+<div class="top5-actions"><button type="button" class="profile-button primary" id="saveTop5Button">Save Top 5</button><button type="button" class="profile-button" id="cancelEditButton">Cancel</button></div>
+</div>
+</section>
 
-        <!-- Followers / Following popup -->
-        <div class="follow-modal" id="followModal" hidden>
-            <section class="follow-modal-panel"
-                     role="dialog"
-                     aria-modal="true"
-                     aria-labelledby="followModalTitle">
+<section class="profile-section">
+<div class="profile-toolbar"><div><p class="section-eyebrow">Your movie memories</p><h2>My Journal</h2></div><a href="journal.html" class="profile-button" id="openMyJournal" hidden>Manage My Journal</a></div>
+<div class="journal-profile-list" id="profileJournalEntries" aria-live="polite"><div class="profile-message">Loading journal entries...</div></div>
+</section>
+</div>
+</div>
+</main>
 
-                <div class="follow-modal-header">
-                    <h2 id="followModalTitle">Followers</h2>
-                    <button type="button"
-                            class="follow-modal-close"
-                            id="closeFollowModal"
-                            aria-label="Close">×</button>
-                </div>
+<div class="follow-modal" id="followModal" hidden>
+<section class="follow-modal-panel" role="dialog" aria-modal="true" aria-labelledby="followModalTitle">
+<div class="follow-modal-header"><h2 id="followModalTitle">Followers</h2><button type="button" class="follow-modal-close" id="closeFollowModal" aria-label="Close">×</button></div>
+<div class="follow-list" id="followList"></div>
+</section>
+</div>
 
-                <div class="follow-list" id="followList">
-                    <p class="follow-list-message">Loading...</p>
-                </div>
-            </section>
-        </div>
+<script>
+(() => {
+"use strict";
 
-        <!-- Top 5 Movies -->
-        <section class="profile-section">
-            <div class="profile-toolbar">
-                <h2>🎬 Top 5 Movies of All Time</h2>
+const API_BASE = ["localhost","127.0.0.1"].includes(location.hostname)
+  ? "http://localhost:3000/api"
+  : "https://abrahams-vault-backend.onrender.com/api";
 
-                <button type="button"
-                        class="profile-button"
-                        id="editTop5Button"
-                        hidden>
-                    Edit Top 5
-                </button>
-            </div>
+const params = new URLSearchParams(location.search);
+const loggedInUserId = sessionStorage.getItem("vaultUserId");
+const profileUserId = params.get("id") || loggedInUserId;
+const authToken = sessionStorage.getItem("vaultToken");
 
-            <div class="top-movies" id="topMovies">
-                <div class="profile-message">Loading Top 5 movies...</div>
-            </div>
+const isOwner = Boolean(
+  profileUserId && loggedInUserId &&
+  String(profileUserId) === String(loggedInUserId)
+);
 
-            <div class="top5-editor" id="top5Editor" hidden>
-                <h3>Edit My Top 5</h3>
-                <p>Search for movies and select up to five. Their order determines the ranking.</p>
+const $ = id => document.getElementById(id);
 
-                <div class="top5-search-row">
-                    <input type="search"
-                           class="top5-search-input"
-                           id="movieSearchInput"
-                           placeholder="Search for a movie..."
-                           aria-label="Search for a movie">
+const el = (tag, cls, text) => {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined) node.textContent = text;
+  return node;
+};
 
-                    <button type="button"
-                            class="profile-button"
-                            id="searchMoviesButton">
-                        Search
-                    </button>
-                </div>
+const authHeaders = () =>
+  authToken ? { Authorization: `Bearer ${authToken}` } : {};
 
-                <div class="top5-results" id="movieSearchResults"></div>
-
-                <h4>Your selected movies</h4>
-                <div class="top5-selected" id="selectedMovies"></div>
-
-                <p class="top5-status" id="editorStatus" role="status"></p>
-
-                <div class="top5-actions">
-                    <button type="button" class="profile-button" id="saveTop5Button">
-                        Save Top 5
-                    </button>
-
-                    <button type="button" class="profile-button" id="cancelEditButton">
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Public read-only journal preview -->
-        <section class="profile-section profile-journal">
-            <div class="profile-toolbar">
-                <h2>📖 My Journal</h2>
-
-                <a href="journal.html"
-                   class="profile-button"
-                   id="openMyJournal"
-                   hidden>
-                    Manage My Journal
-                </a>
-            </div>
-
-            <div class="journal-profile-list"
-                 id="profileJournalEntries"
-                 aria-live="polite">
-                <div class="profile-message">Loading journal entries...</div>
-            </div>
-        </section>
-    </main>
-
-    <script src="navbar.js"></script>
-
-    <script>
-    (() => {
-        "use strict";
-
-        const API_BASE =
-            location.hostname === "localhost" ||
-            location.hostname === "127.0.0.1"
-                ? "http://localhost:3000/api"
-                : "https://abrahams-vault-backend.onrender.com/api";
-
-        const profileUserId = new URLSearchParams(location.search).get("id");
-        const loggedInUserId = sessionStorage.getItem("vaultUserId");
-        const authToken = sessionStorage.getItem("vaultToken");
-
-        const isOwner =
-            Boolean(profileUserId) &&
-            Boolean(loggedInUserId) &&
-            String(profileUserId) === String(loggedInUserId);
-
-        const $ = id => document.getElementById(id);
-
-        const usernameElement = $("profileUsername");
-        const avatarElement = $("profileAvatar");
-        const moviesElement = $("topMovies");
-        const journalElement = $("profileJournalEntries");
-        const manageJournalButton = $("openMyJournal");
-
-        const editButton = $("editTop5Button");
-        const editor = $("top5Editor");
-        const searchInput = $("movieSearchInput");
-        const searchButton = $("searchMoviesButton");
-        const resultsElement = $("movieSearchResults");
-        const selectedElement = $("selectedMovies");
-        const statusElement = $("editorStatus");
-        const saveButton = $("saveTop5Button");
-        const cancelButton = $("cancelEditButton");
-
-        const followerCountElement = $("followerCount");
-        const followingCountElement = $("followingCount");
-        const openFollowersButton = $("openFollowers");
-        const openFollowingButton = $("openFollowing");
-        const followButton = $("followProfileButton");
-        const followStatus = $("followProfileStatus");
-
-        const followModal = $("followModal");
-        const followModalTitle = $("followModalTitle");
-        const closeFollowModalButton = $("closeFollowModal");
-        const followListElement = $("followList");
-
-        let savedMovies = [];
-        let selectedMovies = [];
-        let currentFollowListType = "followers";
-
-const avatarPickerSection = $("avatarPickerSection");
-const avatarGrid = $("avatarGrid");
-const avatarStatus = $("avatarStatus");
-const saveAvatarButton = $("saveAvatarButton");
-const avatarDropdownToggle = $("avatarDropdownToggle");
-const avatarDropdownPanel = $("avatarDropdownPanel");
-
-avatarDropdownToggle.addEventListener("click", () => {
-    const isOpening = avatarDropdownPanel.hidden;
-
-    avatarDropdownPanel.hidden = !isOpening;
-    avatarDropdownToggle.setAttribute(
-        "aria-expanded",
-        String(isOpening)
-    );
-});
-const avatarIds = [
-    "cat", "dog", "fox", "bear",
-    "panda", "rabbit", "tiger", "lion",
-    "wolf", "frog", "koala", "raccoon"
-];
-
-let selectedAvatar = "cat";
-let savedAvatar = "cat";
-
-function avatarImageUrl(avatarId) {
-    const emojiCodes = {
-        cat: "1f431",
-        dog: "1f436",
-        fox: "1f98a",
-        bear: "1f43b",
-        panda: "1f43c",
-        rabbit: "1f430",
-        tiger: "1f42f",
-        lion: "1f981",
-        wolf: "1f43a",
-        frog: "1f438",
-        koala: "1f428",
-        raccoon: "1f99d"
-    };
-
-    return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/${emojiCodes[avatarId]}.svg`;
+async function readJson(response) {
+  return response.json().catch(() => ({}));
 }
 
-function displayAvatar(element, avatarId) {
-    element.replaceChildren();
+function posterUrl(path, size = "w342") {
+  if (!path) return "";
+  return path.startsWith("http")
+    ? path
+    : `https://image.tmdb.org/t/p/${size}${path}`;
+}
 
-    const image = document.createElement("img");
-    image.src = avatarImageUrl(avatarId);
-    image.alt = "Profile avatar";
-    image.onerror = () => {
-        element.textContent = "?";
+function formatDate(value) {
+  if (!value) return "Date unavailable";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? "Date unavailable"
+    : date.toLocaleDateString("en-IN", {
+        day: "numeric", month: "short", year: "numeric"
+      });
+}
+
+function message(container, text, error = false) {
+  container.replaceChildren(
+    el("div", "profile-message" + (error ? " profile-error" : ""), text)
+  );
+}
+
+const usernameEl = $("profileUsername");
+const avatarEl = $("profileAvatar");
+const moviesEl = $("topMovies");
+const journalEl = $("profileJournalEntries");
+const editBtn = $("editTop5Button");
+const editor = $("top5Editor");
+const searchInput = $("movieSearchInput");
+const searchBtn = $("searchMoviesButton");
+const resultsEl = $("movieSearchResults");
+const selectedEl = $("selectedMovies");
+const statusEl = $("editorStatus");
+const saveBtn = $("saveTop5Button");
+const cancelBtn = $("cancelEditButton");
+
+let savedMovies = [];
+let selectedMovies = [];
+let currentFollowListType = "followers";
+
+/* Combined avatar catalogue: existing IDs remain unchanged. */
+const avatarData = [
+  {id:"cat",name:"Classic Cat",code:"1f431"},
+  {id:"dog",name:"Friendly Dog",code:"1f436"},
+  {id:"bear",name:"Brown Bear",code:"1f43b"},
+  {id:"tiger",name:"Tiger",code:"1f42f"},
+  {id:"lion",name:"Lion",code:"1f981"},
+  {id:"wolf",name:"Wolf",code:"1f43a"},
+  {id:"koala",name:"Koala",code:"1f428"},
+  {id:"raccoon",name:"Raccoon",code:"1f99d"},
+  {id:"fox",name:"Clever Fox",code:"1f98a"},
+  {id:"panda",name:"Panda",code:"1f43c"},
+  {id:"rabbit",name:"Rabbit",code:"1f430"},
+  {id:"frog",name:"Frog",code:"1f438"},
+  ...Array.from({length:20},(_,i)=>{
+    const number=String(i+1).padStart(2,"0");
+    return {
+      id:`anime-${number}`,
+      name:`Anime Avatar ${i+1}`,
+     image: `assets/anime-avatars/anime-${number}.png`
     };
+  })
+];
 
-    element.appendChild(image);
+const avatarIds = avatarData.map(avatar=>avatar.id);
+let selectedAvatar = "cat";
+let savedAvatar = "cat";
+let uploadedAvatarDataUrl = null;
+
+function avatarUrl(id) {
+  const avatar=avatarData.find(item=>item.id===id);
+  if(!avatar) return "";
+  if(avatar.image) return avatar.image;
+  return `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/${avatar.code}.svg`;
+}
+
+function setAvatarImage(container,id,customImage=null) {
+  container.replaceChildren();
+  if(id==="custom" && customImage) {
+    const image=el("img");
+    image.src=customImage;
+    image.alt="Custom profile avatar";
+    container.append(image);
+    return;
+  }
+  const image=el("img");
+  image.src=avatarUrl(id);
+  image.alt="Profile avatar";
+  image.onerror=()=>{container.replaceChildren(el("span","","?"));};
+  container.append(image);
+}
+
+function displayAvatar(id) {
+  setAvatarImage(avatarEl,id,uploadedAvatarDataUrl);
+}
+
+function updateAvatarPreview() {
+  const avatar=avatarData.find(item=>item.id===selectedAvatar);
+  setAvatarImage($("avatarPreviewImage"),selectedAvatar,uploadedAvatarDataUrl);
+  $("avatarPreviewName").textContent =
+    selectedAvatar==="custom" ? "Custom avatar" : avatar?.name || "Profile avatar";
+  $("avatarPreviewDescription").textContent =
+    selectedAvatar==="custom"
+      ? "Custom image preview"
+      : "Selected profile avatar";
 }
 
 function renderAvatarOptions() {
-    avatarGrid.replaceChildren();
+  const grid=$("avatarGrid");
+  grid.replaceChildren();
 
-    avatarIds.forEach(avatarId => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "avatar-option";
-        button.setAttribute("aria-label", "Select avatar");
+  avatarData.forEach(avatar=>{
+    const button=el("button","avatar-option");
+    button.type="button";
+    button.setAttribute("aria-label",`Select ${avatar.name}`);
+    button.setAttribute("aria-pressed",String(avatar.id===selectedAvatar));
+    if(avatar.id===selectedAvatar) button.classList.add("selected");
 
-        if (avatarId === selectedAvatar) {
-            button.classList.add("selected");
-            button.setAttribute("aria-pressed", "true");
-        } else {
-            button.setAttribute("aria-pressed", "false");
-        }
+    const image=el("img");
+    image.src=avatarUrl(avatar.id);
+    image.alt="";
+    image.loading="lazy";
+    image.onerror=()=>{image.style.visibility="hidden";};
+    button.append(image);
 
-        const image = document.createElement("img");
-        image.src = avatarImageUrl(avatarId);
-        image.alt = "";
-        image.loading = "lazy";
-
-        button.appendChild(image);
-
-        button.addEventListener("click", () => {
-            selectedAvatar = avatarId;
-            renderAvatarOptions();
-            displayAvatar(avatarElement, selectedAvatar);
-            avatarStatus.textContent = "";
-        });
-
-        avatarGrid.appendChild(button);
+    button.addEventListener("click",()=>{
+      selectedAvatar=avatar.id;
+      uploadedAvatarDataUrl=null;
+      $("avatarUploadInput").value="";
+      renderAvatarOptions();
+      updateAvatarPreview();
+      displayAvatar(selectedAvatar);
+      $("avatarStatus").textContent="";
     });
+
+    grid.append(button);
+  });
 }
 
-async function saveAvatar() {
-    if (!isOwner || !authToken || !loggedInUserId) return;
+function openAvatarPicker() {
+  selectedAvatar=savedAvatar;
+  uploadedAvatarDataUrl=null;
+  renderAvatarOptions();
+  updateAvatarPreview();
+  displayAvatar(selectedAvatar);
+  $("avatarStatus").textContent="";
+  $("avatarDropdownPanel").hidden=false;
+  $("avatarDropdownToggle").setAttribute("aria-expanded","true");
+}
 
-    saveAvatarButton.disabled = true;
-    avatarStatus.textContent = "Saving avatar...";
+$("avatarDropdownToggle").addEventListener("click",()=>{
+  const panel=$("avatarDropdownPanel");
+  if(panel.hidden) openAvatarPicker();
+  else {
+    panel.hidden=true;
+    $("avatarDropdownToggle").setAttribute("aria-expanded","false");
+  }
+});
+
+$("cancelAvatarButton").addEventListener("click",()=>{
+  selectedAvatar=savedAvatar;
+  uploadedAvatarDataUrl=null;
+  displayAvatar(savedAvatar);
+  $("avatarDropdownPanel").hidden=true;
+  $("avatarDropdownToggle").setAttribute("aria-expanded","false");
+  $("avatarStatus").textContent="Changes cancelled.";
+});
+
+$("avatarUploadInput").addEventListener("change",event=>{
+  const file=event.target.files?.[0];
+  if(!file) return;
+
+  if(!["image/png","image/jpeg","image/webp"].includes(file.type)) {
+    $("avatarStatus").textContent="Choose a PNG, JPG, or WebP image.";
+    event.target.value="";
+    return;
+  }
+
+  if(file.size>2*1024*1024) {
+    $("avatarStatus").textContent="Choose an image smaller than 2 MB.";
+    event.target.value="";
+    return;
+  }
+
+  const reader=new FileReader();
+  reader.onload=()=>{
+    uploadedAvatarDataUrl=String(reader.result);
+    selectedAvatar="custom";
+    updateAvatarPreview();
+    displayAvatar("custom");
+    $("avatarStatus").textContent=
+      "Custom image preview ready. Choose a built-in avatar to save it to your account.";
+  };
+  reader.onerror=()=>{
+    $("avatarStatus").textContent="Could not read this image.";
+  };
+  reader.readAsDataURL(file);
+});
+
+$("saveAvatarButton").addEventListener("click",async()=>{
+  const button=$("saveAvatarButton");
+  const status=$("avatarStatus");
+
+  if(!isOwner || !authToken) {
+    status.textContent="Log in to save your avatar.";
+    return;
+  }
+
+  if(selectedAvatar==="custom") {
+    status.textContent="Custom uploads require backend image-storage support. Choose a built-in avatar to save.";
+    return;
+  }
+
+  button.disabled=true;
+  status.textContent="Saving avatar...";
+
+  try {
+    const response=await fetch(
+      `${API_BASE}/users/${encodeURIComponent(loggedInUserId)}/avatar`,
+      {
+        method:"PATCH",
+        headers:{"Content-Type":"application/json",...authHeaders()},
+        body:JSON.stringify({avatarId:selectedAvatar})
+      }
+    );
+    const data=await readJson(response);
+    if(!response.ok) throw Error(data.error||"Unable to save avatar.");
+
+    savedAvatar=selectedAvatar;
+    displayAvatar(savedAvatar);
+    status.textContent="Avatar saved successfully!";
+    $("avatarDropdownPanel").hidden=true;
+    $("avatarDropdownToggle").setAttribute("aria-expanded","false");
+  } catch(error) {
+    status.textContent=error.message;
+  } finally {
+    button.disabled=false;
+  }
+});
+
+/* Load profile and Top 5 movies. */
+async function loadProfile() {
+  if(!profileUserId || !/^\d+$/.test(profileUserId) || Number(profileUserId)<=0) {
+    usernameEl.textContent="Profile";
+    message(moviesEl,"No valid user ID. Log in to view your profile, or open another user's profile by ID.",true);
+    return;
+  }
+
+  try {
+    const [userResponse,moviesResponse]=await Promise.all([
+      fetch(`${API_BASE}/users/${encodeURIComponent(profileUserId)}`),
+      fetch(`${API_BASE}/top-movies/${encodeURIComponent(profileUserId)}`)
+    ]);
+
+    const userData=await readJson(userResponse);
+    const moviesData=await readJson(moviesResponse);
+
+    let username=userData.username ||
+      userData.user?.username ||
+      userData.user?.[0]?.username ||
+      userData[0]?.username ||
+      `User ${profileUserId}`;
+
+    if(isOwner && sessionStorage.getItem("vaultUsername") &&
+       username===`User ${profileUserId}`) {
+      username=sessionStorage.getItem("vaultUsername");
+    }
+
+    usernameEl.textContent=username;
+    $("vaultIdUsername").textContent=username;
+    $("accountJoinDate").textContent=formatDate(
+      userData.createdAt || userData.created_at ||
+      userData.joinedAt || userData.joined_at
+    );
+
+    savedAvatar=avatarIds.includes(userData.avatarId) ? userData.avatarId : "cat";
+    selectedAvatar=savedAvatar;
+    displayAvatar(savedAvatar);
+
+    $("avatarPickerSection").hidden=!(isOwner&&authToken);
+    $("settingsButton").hidden=!isOwner;
+    $("sidebarSettingsLink").hidden=!isOwner;
+    $("openMyJournal").hidden=!(isOwner&&authToken);
+
+    if(!moviesResponse.ok) {
+      throw Error(moviesData.error||"Could not load Top 5 movies.");
+    }
+
+    savedMovies=Array.isArray(moviesData) ? moviesData :
+      Array.isArray(moviesData.movies) ? moviesData.movies : [];
+
+    renderTopMovies();
+    editBtn.hidden=!(isOwner&&authToken);
+  } catch(error) {
+    console.error(error);
+    message(moviesEl,"Unable to load Top 5 movies. Please refresh and try again.",true);
+  }
+}
+
+function renderTopMovies() {
+  moviesEl.replaceChildren();
+
+  if(!savedMovies.length) {
+    message(moviesEl,"No Top 5 movies added yet.");
+    return;
+  }
+
+  savedMovies.forEach((movie,index)=>{
+    const card=el("article","top-movie");
+    card.tabIndex=0;
+    card.setAttribute("role","link");
+    card.setAttribute("aria-label",`View details for ${movie.title||"Untitled"}`);
+
+    const openMovie=()=>{
+      const id=Number(movie.movieId);
+      if(Number.isInteger(id)&&id>0) {
+        location.href=`movie-details.html?id=${encodeURIComponent(id)}`;
+      }
+    };
+
+    card.addEventListener("click",openMovie);
+    card.addEventListener("keydown",event=>{
+      if(event.key==="Enter"||event.key===" ") {
+        event.preventDefault();
+        openMovie();
+      }
+    });
+
+    const image=el("img");
+    image.alt=`${movie.title||"Movie"} poster`;
+    image.loading="lazy";
+    if(posterUrl(movie.posterPath)) image.src=posterUrl(movie.posterPath);
+    else image.alt="Poster unavailable";
+    image.onerror=()=>{image.removeAttribute("src");image.alt="Poster unavailable";};
+
+    const info=el("div","movie-info");
+    info.append(
+      el("div","movie-rank",`#${movie.rankPosition||index+1}`),
+      el("h3","",movie.title||"Untitled")
+    );
+    card.append(image,info);
+    moviesEl.append(card);
+  });
+}
+
+function openEditor() {
+  if(!isOwner||!authToken) return;
+
+  selectedMovies=savedMovies.map(movie=>({
+    movieId:Number(movie.movieId),
+    title:movie.title,
+    posterPath:movie.posterPath||null
+  }));
+
+  resultsEl.replaceChildren();
+  searchInput.value="";
+  statusEl.textContent="";
+  renderSelected();
+  editor.hidden=false;
+  editBtn.hidden=true;
+  searchInput.focus();
+}
+
+function closeEditor() {
+  editor.hidden=true;
+  editBtn.hidden=!(isOwner&&authToken);
+  resultsEl.replaceChildren();
+  statusEl.textContent="";
+}
+
+function renderSelected() {
+  selectedEl.replaceChildren();
+
+  if(!selectedMovies.length) {
+    selectedEl.textContent="No movies selected yet.";
+    return;
+  }
+
+  selectedMovies.forEach((movie,index)=>{
+    const row=el("div","top5-selected-row",`#${index+1} — ${movie.title}`);
+    const controls=el("div");
+    controls.style.cssText="display:flex;gap:5px;flex-wrap:wrap";
+
+    const actions=[
+      ["Move up",index===0,()=>{
+        [selectedMovies[index-1],selectedMovies[index]]=
+        [selectedMovies[index],selectedMovies[index-1]];
+        renderSelected();
+      }],
+      ["Move down",index===selectedMovies.length-1,()=>{
+        [selectedMovies[index],selectedMovies[index+1]]=
+        [selectedMovies[index+1],selectedMovies[index]];
+        renderSelected();
+      }],
+      ["Remove",false,()=>{
+        selectedMovies.splice(index,1);
+        renderSelected();
+      }]
+    ];
+
+    actions.forEach(([label,disabled,callback])=>{
+      const button=el("button","profile-button",label);
+      button.type="button";
+      button.disabled=disabled;
+      button.addEventListener("click",callback);
+      controls.append(button);
+    });
+
+    row.append(controls);
+    selectedEl.append(row);
+  });
+}
+
+function renderSearchResults(movies) {
+  resultsEl.replaceChildren();
+
+  if(!movies.length) {
+    resultsEl.textContent="No movies found.";
+    return;
+  }
+
+  movies.forEach(movie=>{
+    const card=el("article","top5-result");
+
+    if(movie.poster_path) {
+      const image=el("img");
+      image.src=posterUrl(movie.poster_path);
+      image.alt=`${movie.title||"Movie"} poster`;
+      image.loading="lazy";
+      card.append(image);
+    }
+
+    card.append(
+      el("p","",movie.title||"Untitled"),
+      el("small","",movie.release_date?.slice(0,4)||"")
+    );
+
+    const button=el("button","profile-button");
+    button.type="button";
+
+    const updateButton=()=>{
+      const exists=selectedMovies.some(item=>Number(item.movieId)===Number(movie.id));
+      button.textContent=exists?"Added":"Add to Top 5";
+      button.disabled=exists||selectedMovies.length>=5;
+    };
+
+    updateButton();
+
+    button.addEventListener("click",()=>{
+      if(selectedMovies.length>=5) {
+        statusEl.textContent="You can select a maximum of five movies.";
+        return;
+      }
+
+      if(selectedMovies.some(item=>Number(item.movieId)===Number(movie.id))) return;
+
+      selectedMovies.push({
+        movieId:Number(movie.id),
+        title:movie.title||"Untitled",
+        posterPath:movie.poster_path||null
+      });
+
+      renderSelected();
+      renderSearchResults(movies);
+      statusEl.textContent=`${movie.title} added to your selection.`;
+    });
+
+    card.append(button);
+    resultsEl.append(card);
+  });
+}
+
+async function searchMovies() {
+  const query=searchInput.value.trim();
+  if(!query) {
+    statusEl.textContent="Enter a movie title first.";
+    return;
+  }
+
+  searchBtn.disabled=true;
+  statusEl.textContent="Searching...";
+
+  try {
+    const queryParams=new URLSearchParams({
+      path:"/search/movie",query,include_adult:"false"
+    });
+    const response=await fetch(`${API_BASE}/tmdb?${queryParams}`);
+    const data=await readJson(response);
+    if(!response.ok) throw Error(data.error||"Movie search failed.");
+
+    const movies=(data.results||[]).slice(0,10);
+    renderSearchResults(movies);
+    statusEl.textContent=movies.length
+      ? "Select a movie to add it to your Top 5."
+      : "No movies found.";
+  } catch(error) {
+    statusEl.textContent=error.message;
+  } finally {
+    searchBtn.disabled=false;
+  }
+}
+
+async function saveTop5() {
+  if(!isOwner||!authToken) {
+    statusEl.textContent="You must be logged in to edit your Top 5.";
+    return;
+  }
+
+  saveBtn.disabled=true;
+  statusEl.textContent="Saving your Top 5...";
+
+  try {
+    const response=await fetch(
+      `${API_BASE}/top-movies/${encodeURIComponent(loggedInUserId)}`,
+      {
+        method:"PUT",
+        headers:{"Content-Type":"application/json",...authHeaders()},
+        body:JSON.stringify({
+          movies:selectedMovies.map(movie=>({
+            movieId:movie.movieId,title:movie.title,posterPath:movie.posterPath
+          }))
+        })
+      }
+    );
+
+    const data=await readJson(response);
+    if(!response.ok) throw Error(data.error||"Could not save Top 5.");
+
+    savedMovies=selectedMovies.map((movie,index)=>({...movie,rankPosition:index+1}));
+    renderTopMovies();
+    closeEditor();
+  } catch(error) {
+    statusEl.textContent=error.message;
+  } finally {
+    saveBtn.disabled=false;
+  }
+}
+
+editBtn.addEventListener("click",openEditor);
+cancelBtn.addEventListener("click",closeEditor);
+searchBtn.addEventListener("click",searchMovies);
+saveBtn.addEventListener("click",saveTop5);
+searchInput.addEventListener("keydown",event=>{
+  if(event.key==="Enter") searchMovies();
+});
+
+/* Emoji picker for journal comments. */
+function makeEmojiPicker(input,container) {
+  const emojis=[
+    "😀","😂","🥹","😍","😎","😭","😡","🤯","🥰","🤔",
+    "👍","👎","👏","🔥","❤️","💯","🤣","🙏","🎬","🍿"
+  ];
+
+  const toggle=el("button","emoji-toggle","😊");
+  toggle.type="button";
+  toggle.title="Add emoji";
+  toggle.setAttribute("aria-label","Add emoji");
+  toggle.setAttribute("aria-expanded","false");
+
+  const picker=el("div","journal-emoji-picker");
+  picker.hidden=true;
+
+  emojis.forEach(emoji=>{
+    const button=el("button","",emoji);
+    button.type="button";
+    button.setAttribute("aria-label",`Insert ${emoji}`);
+    button.addEventListener("click",()=>{
+      const start=input.selectionStart??input.value.length;
+      const end=input.selectionEnd??start;
+      input.setRangeText(emoji,start,end,"end");
+      input.focus();
+      picker.hidden=true;
+      toggle.setAttribute("aria-expanded","false");
+    });
+    picker.append(button);
+  });
+
+  toggle.addEventListener("click",()=>{
+    picker.hidden=!picker.hidden;
+    toggle.setAttribute("aria-expanded",String(!picker.hidden));
+  });
+
+  container.append(toggle);
+  container.append(picker);
+  return picker;
+}
+
+/* Journal entries, likes, and comments. */
+function renderJournalEntry(entry) {
+  const card=el("article","journal-profile-card");
+  const poster=el("img","journal-profile-poster");
+  poster.alt=entry.title?`${entry.title} poster`:"Movie poster";
+  poster.loading="lazy";
+  if(posterUrl(entry.posterPath)) poster.src=posterUrl(entry.posterPath);
+  else poster.alt="Poster unavailable";
+  poster.onerror=()=>{poster.removeAttribute("src");poster.alt="Poster unavailable";};
+
+  const content=el("div","journal-profile-content");
+  content.append(
+    el("h3","",entry.title||"Untitled journal entry"),
+    el("p","journal-profile-date",`Last updated: ${formatDate(entry.updatedAt)}`),
+    el("p","journal-profile-text",entry.journalText||"No written entry.")
+  );
+
+  const social=el("div","journal-social");
+  const actions=el("div","journal-social-actions");
+  const like=el("button","journal-like-button","♥ 0");
+  const commentsToggle=el("button","journal-comments-toggle","Comments");
+  like.type="button";
+  like.disabled=!authToken;
+  like.title=authToken?"Like or unlike this entry":"Log in to like this entry";
+  commentsToggle.type="button";
+  commentsToggle.setAttribute("aria-expanded","false");
+
+  const commentsHeading=el("strong","","Comments");
+  commentsHeading.hidden=true;
+  const commentsList=el("div","journal-comments");
+  commentsList.hidden=true;
+  const viewAll=el("button","journal-view-all","View all comments");
+  viewAll.type="button";
+  viewAll.hidden=true;
+  const status=el("p","journal-social-message");
+  status.hidden=true;
+
+  const form=el("form","journal-comment-form");
+  const input=el("input","journal-comment-input");
+  input.type="text";
+  input.maxLength=1000;
+  input.placeholder=authToken?"Write a comment...":"Log in to comment";
+  input.setAttribute("aria-label","Write a comment");
+  input.disabled=!authToken;
+  input.required=true;
+
+  const emojiPicker=makeEmojiPicker(input,form);
+  const submit=el("button","","Comment");
+  submit.type="submit";
+  submit.disabled=!authToken;
+  form.append(input,submit);
+  form.hidden=true;
+
+  social.append(actions,commentsHeading,commentsList,viewAll,status,form);
+  content.append(social);
+  card.append(poster,content);
+
+  const journalId=Number(entry.id);
+  let expanded=false;
+  let showAll=false;
+
+  function showStatus(text,error=false) {
+    status.textContent=text;
+    status.hidden=!text;
+    status.style.color=error?"#e88b82":"#aaa";
+  }
+
+  commentsToggle.addEventListener("click",()=>{
+    expanded=!expanded;
+    commentsList.hidden=!expanded;
+    commentsHeading.hidden=!expanded;
+    form.hidden=!expanded;
+    emojiPicker.hidden=true;
+    commentsToggle.setAttribute("aria-expanded",String(expanded));
+    commentsToggle.textContent=expanded?"Hide comments":"Comments";
+    if(expanded) loadSocial();
+  });
+
+  viewAll.addEventListener("click",()=>{
+    showAll=!showAll;
+    loadSocial();
+  });
+
+  like.addEventListener("click",async()=>{
+    if(!authToken) return;
+    like.disabled=true;
+    try {
+      const response=await fetch(`${API_BASE}/journal/${journalId}/like`,{
+        method:"POST",headers:authHeaders()
+      });
+      const data=await readJson(response);
+      if(!response.ok) throw Error(data.error||"Could not update like.");
+      await loadSocial();
+    } catch(error) {
+      showStatus(error.message,true);
+    } finally {
+      like.disabled=false;
+    }
+  });
+
+  form.addEventListener("submit",async event=>{
+    event.preventDefault();
+    const commentText=input.value.trim();
+    if(!commentText||!authToken) return;
+
+    submit.disabled=true;
+    try {
+      const response=await fetch(`${API_BASE}/journal/${journalId}/comments`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json",...authHeaders()},
+        body:JSON.stringify({commentText})
+      });
+      const data=await readJson(response);
+      if(!response.ok) throw Error(data.error||"Could not post comment.");
+      input.value="";
+      showAll=true;
+      await loadSocial();
+    } catch(error) {
+      showStatus(error.message,true);
+    } finally {
+      submit.disabled=false;
+    }
+  });
+
+  async function loadSocial() {
+    if(!Number.isSafeInteger(journalId)||journalId<=0) {
+      showStatus("Interactions unavailable.",true);
+      return;
+    }
 
     try {
-        const response = await fetch(
-            `${API_BASE}/users/${encodeURIComponent(loggedInUserId)}/avatar`,
-            {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${authToken}`
-                },
-                body: JSON.stringify({ avatarId: selectedAvatar })
-            }
+      const response=await fetch(`${API_BASE}/journal/${journalId}/social`,{
+        headers:authHeaders()
+      });
+      const data=await readJson(response);
+      if(!response.ok) throw Error(data.error||"Could not load interactions.");
+
+      const likeCount=Number(data.likeCount)||0;
+      const commentCount=Number(data.commentCount)||0;
+      like.textContent=`♥ ${likeCount}`;
+      like.classList.toggle("liked",Boolean(data.liked));
+      like.setAttribute("aria-label",`${data.liked?"Unlike":"Like"} journal entry, ${likeCount} likes`);
+      commentsToggle.textContent=expanded?"Hide comments":`Comments (${commentCount})`;
+
+      const allComments=Array.isArray(data.comments)?data.comments:[];
+      const visibleComments=showAll?allComments:allComments.slice(0,3);
+      commentsList.replaceChildren();
+
+      if(!allComments.length) {
+        commentsList.append(el("p","journal-social-message","No comments yet."));
+      }
+
+      visibleComments.forEach(comment=>{
+        const item=el("div","journal-comment");
+        const header=el("div","journal-comment-header");
+        header.append(
+          el("span","journal-comment-author",comment.username||"User"),
+          el("span","journal-comment-date",formatDate(comment.createdAt))
+        );
+        item.append(header,el("p","journal-comment-text",comment.commentText||""));
+
+        const canDelete=authToken&&(
+          Number(comment.userId)===Number(loggedInUserId)||isOwner
         );
 
-        const data = await readJson(response);
-
-        if (!response.ok) {
-            throw new Error(data.error || "Unable to save avatar.");
+        if(canDelete) {
+          const deleteButton=el("button","journal-comment-delete","Delete");
+          deleteButton.type="button";
+          deleteButton.addEventListener("click",async()=>{
+            if(!confirm("Delete this comment?")) return;
+            deleteButton.disabled=true;
+            try {
+              const response=await fetch(`${API_BASE}/journal/comments/${comment.id}`,{
+                method:"DELETE",headers:authHeaders()
+              });
+              const result=await readJson(response);
+              if(!response.ok) throw Error(result.error||"Could not delete comment.");
+              await loadSocial();
+            } catch(error) {
+              showStatus(error.message,true);
+            } finally {
+              deleteButton.disabled=false;
+            }
+          });
+          item.append(deleteButton);
         }
 
-        savedAvatar = selectedAvatar;
-displayAvatar(avatarElement, savedAvatar);
-avatarStatus.textContent = "Avatar saved successfully!";
+        commentsList.append(item);
+      });
 
-avatarDropdownPanel.hidden = true;
-avatarDropdownToggle.setAttribute("aria-expanded", "false");
-        avatarStatus.textContent = error.message;
-    } finally {
-        saveAvatarButton.disabled = false;
+      viewAll.hidden=allComments.length<=3;
+      viewAll.textContent=showAll?"Show fewer comments":"View all comments";
+    } catch(error) {
+      showStatus(error.message,true);
     }
+  }
+
+  actions.append(like,commentsToggle);
+  loadSocial();
+  return card;
 }
 
-saveAvatarButton.addEventListener("click", saveAvatar);
+async function loadProfileJournal() {
+  journalEl.replaceChildren();
+  $("openMyJournal").hidden=!(isOwner&&authToken);
 
+  if(!profileUserId||! /^\d+$/.test(profileUserId)) {
+    message(journalEl,"Unable to identify this profile.",true);
+    return;
+  }
 
-        // ---------------- GENERAL HELPERS ----------------
+  journalEl.append(el("div","profile-message","Loading journal entries..."));
 
-        function posterUrl(path, size = "w342") {
-            if (!path) return "";
-            return path.startsWith("http")
-                ? path
-                : `https://image.tmdb.org/t/p/${size}${path}`;
-        }
+  try {
+    const response=await fetch(`${API_BASE}/users/${encodeURIComponent(profileUserId)}/journal`);
+    const data=await readJson(response);
+    if(!response.ok) throw Error(data.error||"Could not load journal entries.");
 
-        async function readJson(response) {
-            return response.json().catch(() => ({}));
-        }
+    const entries=Array.isArray(data)?data:
+      Array.isArray(data.entries)?data.entries:null;
 
-        function showMovieMessage(message, isError = false) {
-            moviesElement.replaceChildren();
+    if(!entries) throw Error("The journal API did not return a list of entries.");
 
-            const box = document.createElement("div");
-            box.className = "profile-message";
+    journalEl.replaceChildren();
 
-            if (isError) box.classList.add("profile-error");
+    if(!entries.length) {
+      message(journalEl,isOwner
+        ?"Your journal is empty. Add entries through My Journal!"
+        :"This user hasn't added any journal entries yet.");
+      return;
+    }
 
-            box.textContent = message;
-            moviesElement.appendChild(box);
-        }
-
-        function showJournalMessage(message, isError = false) {
-            journalElement.replaceChildren();
-
-            const box = document.createElement("div");
-            box.className = "profile-message";
-
-            if (isError) box.classList.add("profile-error");
-
-            box.textContent = message;
-            journalElement.appendChild(box);
-        }
-
-        function formatJournalDate(value) {
-            if (!value) return "Date unavailable";
-
-            const date = new Date(value);
-
-            if (Number.isNaN(date.getTime())) {
-                return "Date unavailable";
-            }
-
-            return date.toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "short",
-                year: "numeric"
-            });
-        }
-
-        // ---------------- PROFILE AND TOP 5 ----------------
-
-        async function loadProfile() {
-            if (!profileUserId || !/^\d+$/.test(profileUserId) ||
-                Number(profileUserId) <= 0) {
-                usernameElement.textContent = "Profile";
-                showMovieMessage("No valid user ID provided.", true);
-                return;
-            }
-
-            try {
-                const [userResponse, moviesResponse] = await Promise.all([
-                    fetch(`${API_BASE}/users/${encodeURIComponent(profileUserId)}`),
-                    fetch(`${API_BASE}/top-movies/${encodeURIComponent(profileUserId)}`)
-                ]);
-
-                const userData = await readJson(userResponse);
-                const moviesData = await readJson(moviesResponse);
-
-                let username =
-                    userData.username ||
-                    userData.user?.username ||
-                    userData.user?.[0]?.username ||
-                    userData[0]?.username ||
-                    `User ${profileUserId}`;
-
-                const storedUsername = sessionStorage.getItem("vaultUsername");
-
-                if (
-                    isOwner &&
-                    storedUsername &&
-                    username === `User ${profileUserId}`
-                ) {
-                    username = storedUsername;
-                }
-
-                usernameElement.textContent = username;
-                
-savedAvatar = avatarIds.includes(userData.avatarId)
-    ? userData.avatarId
-    : "cat";
-
-selectedAvatar = savedAvatar;
-displayAvatar(avatarElement, savedAvatar);
-
-avatarPickerSection.hidden = !(isOwner && authToken);
-
-if (isOwner && authToken) {
-    renderAvatarOptions();
+    entries.forEach(entry=>journalEl.append(renderJournalEntry(entry)));
+  } catch(error) {
+    console.error(error);
+    message(journalEl,"Unable to load journal entries. Please refresh and try again.",true);
+  }
 }
 
+/* Follow/unfollow and follower counts. */
+const followButton=$("followProfileButton");
+const followStatus=$("followProfileStatus");
 
-                if (!userResponse.ok && !moviesResponse.ok) {
-                    throw new Error("Could not load the profile.");
-                }
+async function loadFollowInfo() {
+  if(!profileUserId||! /^\d+$/.test(profileUserId)) return;
 
-                if (!moviesResponse.ok) {
-                    throw new Error(
-                        moviesData.error || "Could not load Top 5 movies."
-                    );
-                }
+  try {
+    const response=await fetch(`${API_BASE}/follow/${profileUserId}/counts`);
+    if(response.ok) {
+      const data=await readJson(response);
+      $("followerCount").textContent=data.followers??0;
+      $("followingCount").textContent=data.following??0;
+    }
+  } catch(error) {
+    console.error(error);
+  }
 
-                savedMovies = Array.isArray(moviesData) ? moviesData : [];
-                renderTopMovies();
+  const canFollow=Boolean(authToken&&loggedInUserId&&!isOwner);
+  followButton.hidden=!canFollow;
+  if(!canFollow) return;
 
-                editButton.hidden = !(isOwner && authToken);
-                manageJournalButton.hidden = !(isOwner && authToken);
-                $("settingsButton").hidden = !isOwner;
-            } catch (error) {
-                console.error("Profile loading error:", error);
+  try {
+    const response=await fetch(`${API_BASE}/follow/${profileUserId}/status`,{
+      headers:authHeaders()
+    });
+    if(response.ok) {
+      const data=await readJson(response);
+      setFollowButton(Boolean(data.following));
+    }
+  } catch(error) {
+    console.error(error);
+  }
+}
 
-                showMovieMessage(
-                    "Unable to load Top 5 movies. Please refresh and try again.",
-                    true
-                );
-            }
+function setFollowButton(following) {
+  followButton.dataset.following=String(following);
+  followButton.textContent=following?"Following":"Follow";
+}
+
+async function toggleProfileFollow() {
+  const following=followButton.dataset.following==="true";
+  followButton.disabled=true;
+  followStatus.textContent=following?"Unfollowing...":"Following...";
+
+  try {
+    const response=await fetch(`${API_BASE}/follow/${profileUserId}`,{
+      method:following?"DELETE":"POST",headers:authHeaders()
+    });
+    const data=await readJson(response);
+    if(!response.ok) throw Error(data.error||"Could not update follow status.");
+    setFollowButton(!following);
+    followStatus.textContent="";
+    await loadFollowInfo();
+  } catch(error) {
+    followStatus.textContent=error.message;
+  } finally {
+    followButton.disabled=false;
+  }
+}
+
+followButton.addEventListener("click",toggleProfileFollow);
+
+/* Followers/following modal. */
+const modal=$("followModal");
+const list=$("followList");
+
+function closeModal() {
+  modal.hidden=true;
+}
+
+async function openFollowList(type) {
+  currentFollowListType=type;
+  $("followModalTitle").textContent=type==="followers"?"Followers":"Following";
+  list.replaceChildren(el("p","follow-list-message","Loading..."));
+  modal.hidden=false;
+
+  try {
+    const response=await fetch(`${API_BASE}/follow/${profileUserId}/${type}`);
+    const data=await readJson(response);
+    if(!response.ok) throw Error(data.error||"Could not load users.");
+
+    list.replaceChildren();
+
+    if(!Array.isArray(data)||!data.length) {
+      list.append(el("p","follow-list-message",
+        type==="followers"?"No followers yet.":"Not following anyone yet."));
+      return;
+    }
+
+    for(const user of data) {
+      const id=user.userId??user.id;
+      const row=el("div","follow-list-row");
+      const name=el("button","follow-list-user",user.username||`User ${id}`);
+      name.type="button";
+      name.addEventListener("click",()=>{
+        location.href=`profile.html?id=${encodeURIComponent(id)}`;
+      });
+      row.append(name);
+
+      if(authToken&&loggedInUserId&&String(id)!==String(loggedInUserId)) {
+        const button=el("button","follow-list-action","Follow");
+        button.type="button";
+
+        try {
+          const statusResponse=await fetch(`${API_BASE}/follow/${id}/status`,{
+            headers:authHeaders()
+          });
+          if(statusResponse.ok) {
+            const statusData=await readJson(statusResponse);
+            button.textContent=statusData.following?"Following":"Follow";
+          }
+        } catch(error) {
+          console.error(error);
         }
 
-        function renderTopMovies() {
-            moviesElement.replaceChildren();
+        button.addEventListener("click",async()=>{
+          const wasFollowing=button.textContent==="Following";
+          button.disabled=true;
 
-            if (!savedMovies.length) {
-                showMovieMessage("No Top 5 movies added yet.");
-                return;
-            }
-
-            savedMovies.forEach((movie, index) => {
-                const card = document.createElement("article");
-                card.className = "top-movie";
-
-                const poster = document.createElement("img");
-                poster.alt = `${movie.title || "Movie"} poster`;
-                poster.loading = "lazy";
-
-                const imageUrl = posterUrl(movie.posterPath);
-
-                if (imageUrl) {
-                    poster.src = imageUrl;
-                } else {
-                    poster.alt = "Poster unavailable";
-                }
-
-                poster.addEventListener("error", () => {
-                    poster.removeAttribute("src");
-                    poster.alt = "Poster unavailable";
-                }, { once: true });
-
-                const info = document.createElement("div");
-                info.className = "movie-info";
-
-                const rank = document.createElement("div");
-                rank.className = "movie-rank";
-                rank.textContent = `#${movie.rankPosition || index + 1}`;
-
-                const title = document.createElement("h3");
-                title.textContent = movie.title || "Untitled";
-
-                info.append(rank, title);
-                card.append(poster, info);
-                moviesElement.appendChild(card);
+          try {
+            const actionResponse=await fetch(`${API_BASE}/follow/${id}`,{
+              method:wasFollowing?"DELETE":"POST",headers:authHeaders()
             });
-        }
+            const actionData=await readJson(actionResponse);
+            if(!actionResponse.ok) throw Error(actionData.error||"Could not update follow status.");
 
-        function openEditor() {
-            if (!isOwner || !authToken) return;
-
-            selectedMovies = savedMovies.map(movie => ({
-                movieId: Number(movie.movieId),
-                title: movie.title,
-                posterPath: movie.posterPath || null
-            }));
-
-            resultsElement.replaceChildren();
-            searchInput.value = "";
-            statusElement.textContent = "";
-
-            renderSelectedMovies();
-            editor.hidden = false;
-            editButton.hidden = true;
-            searchInput.focus();
-        }
-
-        function closeEditor() {
-            editor.hidden = true;
-            editButton.hidden = !(isOwner && authToken);
-            resultsElement.replaceChildren();
-            statusElement.textContent = "";
-        }
-
-        function renderSelectedMovies() {
-            selectedElement.replaceChildren();
-
-            if (!selectedMovies.length) {
-                selectedElement.textContent = "No movies selected yet.";
-                return;
-            }
-
-            selectedMovies.forEach((movie, index) => {
-                const row = document.createElement("div");
-                row.className = "top5-selected-row";
-
-                const label = document.createElement("span");
-                label.textContent = `#${index + 1} — ${movie.title}`;
-
-                const controls = document.createElement("div");
-                controls.style.cssText =
-                    "display:flex;gap:6px;flex-wrap:wrap;";
-
-                const upButton = document.createElement("button");
-                upButton.type = "button";
-                upButton.className = "profile-button";
-                upButton.textContent = "↑";
-                upButton.title = "Move up";
-                upButton.disabled = index === 0;
-
-                upButton.addEventListener("click", () => {
-                    [selectedMovies[index - 1], selectedMovies[index]] =
-                        [selectedMovies[index], selectedMovies[index - 1]];
-                    renderSelectedMovies();
-                });
-
-                const downButton = document.createElement("button");
-                downButton.type = "button";
-                downButton.className = "profile-button";
-                downButton.textContent = "↓";
-                downButton.title = "Move down";
-                downButton.disabled = index === selectedMovies.length - 1;
-
-                downButton.addEventListener("click", () => {
-                    [selectedMovies[index], selectedMovies[index + 1]] =
-                        [selectedMovies[index + 1], selectedMovies[index]];
-                    renderSelectedMovies();
-                });
-
-                const removeButton = document.createElement("button");
-                removeButton.type = "button";
-                removeButton.className = "profile-button";
-                removeButton.textContent = "Remove";
-
-                removeButton.addEventListener("click", () => {
-                    selectedMovies.splice(index, 1);
-                    renderSelectedMovies();
-                });
-
-                controls.append(upButton, downButton, removeButton);
-                row.append(label, controls);
-                selectedElement.appendChild(row);
-            });
-        }
-
-        function renderSearchResults(movies) {
-            resultsElement.replaceChildren();
-
-            if (!movies.length) {
-                resultsElement.textContent = "No movies found.";
-                return;
-            }
-
-            movies.forEach(movie => {
-                const card = document.createElement("article");
-                card.className = "top5-result";
-
-                if (movie.poster_path) {
-                    const poster = document.createElement("img");
-                    poster.src = posterUrl(movie.poster_path);
-                    poster.alt = `${movie.title || "Movie"} poster`;
-                    poster.loading = "lazy";
-                    card.appendChild(poster);
-                }
-
-                const title = document.createElement("p");
-                title.textContent = movie.title || "Untitled";
-
-                const year = document.createElement("small");
-                year.textContent = movie.release_date?.slice(0, 4) || "";
-
-                const addButton = document.createElement("button");
-                addButton.type = "button";
-                addButton.className = "profile-button";
-
-                function updateAddButton() {
-                    const alreadySelected = selectedMovies.some(
-                        item => Number(item.movieId) === Number(movie.id)
-                    );
-
-                    addButton.textContent =
-                        alreadySelected ? "Added" : "Add to Top 5";
-
-                    addButton.disabled =
-                        alreadySelected || selectedMovies.length >= 5;
-                }
-
-                updateAddButton();
-
-                addButton.addEventListener("click", () => {
-                    if (selectedMovies.length >= 5) {
-                        statusElement.textContent =
-                            "You can select a maximum of five movies.";
-                        return;
-                    }
-
-                    if (selectedMovies.some(
-                        item => Number(item.movieId) === Number(movie.id)
-                    )) {
-                        return;
-                    }
-
-                    selectedMovies.push({
-                        movieId: Number(movie.id),
-                        title: movie.title || "Untitled",
-                        posterPath: movie.poster_path || null
-                    });
-
-                    renderSelectedMovies();
-                    renderSearchResults(movies);
-                    statusElement.textContent =
-                        `${movie.title} added to your selection.`;
-                });
-
-                card.append(title, year, document.createElement("br"), addButton);
-                resultsElement.appendChild(card);
-            });
-        }
-
-        async function searchMovies() {
-            const query = searchInput.value.trim();
-
-            if (!query) {
-                statusElement.textContent = "Enter a movie title first.";
-                return;
-            }
-
-            searchButton.disabled = true;
-            statusElement.textContent = "Searching...";
-            resultsElement.replaceChildren();
-
-            try {
-                const params = new URLSearchParams({
-                    path: "/search/movie",
-                    query,
-                    include_adult: "false"
-                });
-
-                const response = await fetch(`${API_BASE}/tmdb?${params}`);
-                const data = await readJson(response);
-
-                if (!response.ok) {
-                    throw new Error(data.error || "Movie search failed.");
-                }
-
-                const movies = (data.results || []).slice(0, 10);
-                renderSearchResults(movies);
-
-                statusElement.textContent = movies.length
-                    ? "Select a movie to add it to your Top 5."
-                    : "No movies found.";
-            } catch (error) {
-                statusElement.textContent = error.message;
-            } finally {
-                searchButton.disabled = false;
-            }
-        }
-
-        async function saveTop5() {
-            if (!isOwner || !authToken) {
-                statusElement.textContent =
-                    "You must be logged in to edit your Top 5.";
-                return;
-            }
-
-            saveButton.disabled = true;
-            statusElement.textContent = "Saving your Top 5...";
-
-            try {
-                const response = await fetch(
-                    `${API_BASE}/top-movies/${encodeURIComponent(loggedInUserId)}`,
-                    {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${authToken}`
-                        },
-                        body: JSON.stringify({
-                            movies: selectedMovies.map(movie => ({
-                                movieId: movie.movieId,
-                                title: movie.title,
-                                posterPath: movie.posterPath
-                            }))
-                        })
-                    }
-                );
-
-                const data = await readJson(response);
-
-                if (!response.ok) {
-                    throw new Error(data.error || "Could not save Top 5.");
-                }
-
-                savedMovies = selectedMovies.map((movie, index) => ({
-                    ...movie,
-                    rankPosition: index + 1
-                }));
-
-                renderTopMovies();
-                closeEditor();
-            } catch (error) {
-                statusElement.textContent = error.message;
-            } finally {
-                saveButton.disabled = false;
-            }
-        }
-
-        editButton.addEventListener("click", openEditor);
-        cancelButton.addEventListener("click", closeEditor);
-        searchButton.addEventListener("click", searchMovies);
-        saveButton.addEventListener("click", saveTop5);
-
-        searchInput.addEventListener("keydown", event => {
-            if (event.key === "Enter") searchMovies();
-        });
-
-        // ---------------- JOURNAL ----------------
-
-        function renderJournalEntry(entry) {
-            const card = document.createElement("article");
-            card.className = "journal-profile-card";
-
-            const poster = document.createElement("img");
-            poster.className = "journal-profile-poster";
-            poster.alt = entry.title
-                ? `${entry.title} poster`
-                : "Movie poster";
-            poster.loading = "lazy";
-
-            const imageUrl = posterUrl(entry.posterPath);
-
-            if (imageUrl) {
-                poster.src = imageUrl;
-
-                poster.addEventListener("error", () => {
-                    poster.removeAttribute("src");
-                    poster.alt = "Poster unavailable";
-                }, { once: true });
+            if(currentFollowListType==="following"&&wasFollowing) {
+              row.remove();
+              if(!list.querySelector(".follow-list-row")) {
+                list.append(el("p","follow-list-message","Not following anyone yet."));
+              }
             } else {
-                poster.alt = "Poster unavailable";
+              button.textContent=wasFollowing?"Follow":"Following";
             }
 
-            const content = document.createElement("div");
-            content.className = "journal-profile-content";
-
-            const title = document.createElement("h3");
-            title.textContent = entry.title || "Untitled journal entry";
-
-            const date = document.createElement("p");
-            date.className = "journal-profile-date";
-            date.textContent =
-                `Last updated: ${formatJournalDate(entry.updatedAt)}`;
-
-            const text = document.createElement("p");
-            text.className = "journal-profile-text";
-            text.textContent = entry.journalText || "No written entry.";
-
-            content.append(title, date, text);
-            card.append(poster, content);
-
-            return card;
-        }
-
-        async function loadProfileJournal() {
-            journalElement.replaceChildren();
-            manageJournalButton.hidden = !(isOwner && authToken);
-
-            if (!profileUserId || !/^\d+$/.test(profileUserId) ||
-                Number(profileUserId) <= 0) {
-                showJournalMessage("Unable to identify this profile.", true);
-                return;
-            }
-
-            const loading = document.createElement("div");
-            loading.className = "profile-message";
-            loading.textContent = "Loading journal entries...";
-            journalElement.appendChild(loading);
-
-            try {
-                const response = await fetch(
-                    `${API_BASE}/users/${encodeURIComponent(profileUserId)}/journal`
-                );
-
-                const data = await readJson(response);
-
-                if (!response.ok) {
-                    throw new Error(
-                        data.error || "Could not load journal entries."
-                    );
-                }
-
-                // The API should return an array of journal entries.
-                const entries = Array.isArray(data)
-                    ? data
-                    : Array.isArray(data.entries)
-                        ? data.entries
-                        : null;
-
-                if (!entries) {
-                    throw new Error(
-                        "The journal API did not return a list of entries."
-                    );
-                }
-
-                journalElement.replaceChildren();
-
-                if (entries.length === 0) {
-                    showJournalMessage(
-                        isOwner
-                            ? "Your journal is empty. Add entries through My Journal!"
-                            : "This user hasn't added any journal entries yet."
-                    );
-                    return;
-                }
-
-                entries.forEach(entry => {
-                    journalElement.appendChild(renderJournalEntry(entry));
-                });
-            } catch (error) {
-                console.error("Profile journal error:", error);
-
-                showJournalMessage(
-                    "Unable to load journal entries. Check that the backend journal endpoint exists and is running.",
-                    true
-                );
-            }
-        }
-
-        // ---------------- FOLLOW COUNTS AND BUTTON ----------------
-
-        function setFollowButton(following) {
-            followButton.dataset.following = String(following);
-            followButton.textContent = following ? "Following" : "Follow";
-        }
-
-        async function loadFollowInfo() {
-            if (!profileUserId || !/^\d+$/.test(profileUserId)) return;
-
-            try {
-                const response = await fetch(
-                    `${API_BASE}/follow/${encodeURIComponent(profileUserId)}/counts`
-                );
-
-                if (response.ok) {
-                    const counts = await readJson(response);
-                    followerCountElement.textContent = counts.followers ?? 0;
-                    followingCountElement.textContent = counts.following ?? 0;
-                }
-            } catch (error) {
-                console.error("Follow counts error:", error);
-            }
-
-            const canFollow =
-                Boolean(authToken) &&
-                Boolean(loggedInUserId) &&
-                !isOwner;
-
-            followButton.hidden = !canFollow;
-
-            if (!canFollow) return;
-
-            try {
-                const response = await fetch(
-                    `${API_BASE}/follow/${encodeURIComponent(profileUserId)}/status`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${authToken}`
-                        }
-                    }
-                );
-
-                if (response.ok) {
-                    const data = await readJson(response);
-                    setFollowButton(Boolean(data.following));
-                }
-            } catch (error) {
-                console.error("Follow status error:", error);
-            }
-        }
-
-        async function toggleProfileFollow() {
-            if (!authToken || !loggedInUserId || !profileUserId) return;
-
-            const wasFollowing = followButton.dataset.following === "true";
-
-            followButton.disabled = true;
-            followStatus.textContent =
-                wasFollowing ? "Unfollowing..." : "Following...";
-
-            try {
-                const response = await fetch(
-                    `${API_BASE}/follow/${encodeURIComponent(profileUserId)}`,
-                    {
-                        method: wasFollowing ? "DELETE" : "POST",
-                        headers: {
-                            Authorization: `Bearer ${authToken}`
-                        }
-                    }
-                );
-
-                const data = await readJson(response);
-
-                if (!response.ok) {
-                    throw new Error(
-                        data.error || "Could not update follow status."
-                    );
-                }
-
-                setFollowButton(!wasFollowing);
-                followStatus.textContent = "";
-                await loadFollowInfo();
-            } catch (error) {
-                followStatus.textContent = error.message;
-            } finally {
-                followButton.disabled = false;
-            }
-        }
-
-        // ---------------- FOLLOWERS / FOLLOWING LIST ----------------
-
-        function closeFollowModal() {
-            followModal.hidden = true;
-        }
-
-        function showEmptyFollowList(type) {
-            followListElement.replaceChildren();
-
-            const message = document.createElement("p");
-            message.className = "follow-list-message";
-            message.textContent = type === "followers"
-                ? "No followers yet."
-                : "Not following anyone yet.";
-
-            followListElement.appendChild(message);
-        }
-
-        async function openFollowList(type) {
-            currentFollowListType = type;
-
-            followModalTitle.textContent =
-                type === "followers" ? "Followers" : "Following";
-
-            followListElement.replaceChildren();
-
-            const loading = document.createElement("p");
-            loading.className = "follow-list-message";
-            loading.textContent = "Loading...";
-            followListElement.appendChild(loading);
-
-            followModal.hidden = false;
-            closeFollowModalButton.focus();
-
-            try {
-                const response = await fetch(
-                    `${API_BASE}/follow/${encodeURIComponent(profileUserId)}/${type}`
-                );
-
-                const data = await readJson(response);
-
-                if (!response.ok) {
-                    throw new Error(data.error || "Could not load users.");
-                }
-
-                if (!Array.isArray(data) || data.length === 0) {
-                    showEmptyFollowList(type);
-                    return;
-                }
-
-                followListElement.replaceChildren();
-
-                for (const user of data) {
-                    const row = document.createElement("div");
-                    row.className = "follow-list-row";
-
-                    const userId = user.userId ?? user.id;
-
-                    const usernameButton = document.createElement("button");
-                    usernameButton.type = "button";
-                    usernameButton.className = "follow-list-user";
-                    usernameButton.textContent =
-                        user.username || `User ${userId}`;
-
-                    usernameButton.addEventListener("click", () => {
-                        location.href =
-                            `profile.html?id=${encodeURIComponent(userId)}`;
-                    });
-
-                    row.appendChild(usernameButton);
-
-                    const isSelf =
-                        String(userId) === String(loggedInUserId);
-
-                    if (authToken && loggedInUserId && !isSelf) {
-                        const actionButton = document.createElement("button");
-                        actionButton.type = "button";
-                        actionButton.className = "follow-list-action";
-                        actionButton.textContent = "Follow";
-
-                        try {
-                            const statusResponse = await fetch(
-                                `${API_BASE}/follow/${encodeURIComponent(userId)}/status`,
-                                {
-                                    headers: {
-                                        Authorization: `Bearer ${authToken}`
-                                    }
-                                }
-                            );
-
-                            if (statusResponse.ok) {
-                                const statusData = await readJson(statusResponse);
-                                actionButton.textContent =
-                                    statusData.following ? "Following" : "Follow";
-                            }
-                        } catch (error) {
-                            console.error("Follow status error:", error);
-                        }
-
-                        actionButton.addEventListener("click", async () => {
-                            const wasFollowing =
-                                actionButton.textContent === "Following";
-
-                            actionButton.disabled = true;
-                            actionButton.textContent = "Please wait...";
-
-                            try {
-                                const actionResponse = await fetch(
-                                    `${API_BASE}/follow/${encodeURIComponent(userId)}`,
-                                    {
-                                        method: wasFollowing ? "DELETE" : "POST",
-                                        headers: {
-                                            Authorization: `Bearer ${authToken}`
-                                        }
-                                    }
-                                );
-
-                                const result = await readJson(actionResponse);
-
-                                if (!actionResponse.ok) {
-                                    throw new Error(
-                                        result.error || "Could not update follow status."
-                                    );
-                                }
-
-                                if (
-                                    currentFollowListType === "following" &&
-                                    wasFollowing
-                                ) {
-                                    row.remove();
-
-                                    if (!followListElement.querySelector(
-                                        ".follow-list-row"
-                                    )) {
-                                        showEmptyFollowList("following");
-                                    }
-                                } else {
-                                    actionButton.textContent =
-                                        wasFollowing ? "Follow" : "Following";
-                                    actionButton.disabled = false;
-                                }
-
-                                await loadFollowInfo();
-                            } catch (error) {
-                                actionButton.textContent =
-                                    wasFollowing ? "Following" : "Follow";
-                                actionButton.disabled = false;
-                                alert(error.message);
-                            }
-                        });
-
-                        row.appendChild(actionButton);
-                    }
-
-                    followListElement.appendChild(row);
-                }
-            } catch (error) {
-                followListElement.replaceChildren();
-
-                const message = document.createElement("p");
-                message.className = "follow-list-message";
-                message.textContent = error.message;
-                followListElement.appendChild(message);
-            }
-        }
-
-        openFollowersButton.addEventListener("click", () => {
-            openFollowList("followers");
+            await loadFollowInfo();
+          } catch(error) {
+            alert(error.message);
+          } finally {
+            button.disabled=false;
+          }
         });
 
-        openFollowingButton.addEventListener("click", () => {
-            openFollowList("following");
-        });
+        row.append(button);
+      }
 
-        closeFollowModalButton.addEventListener("click", closeFollowModal);
+      list.append(row);
+    }
+  } catch(error) {
+    list.replaceChildren(el("p","follow-list-message",error.message));
+  }
+}
 
-        followModal.addEventListener("click", event => {
-            if (event.target === followModal) closeFollowModal();
-        });
+$("openFollowers").addEventListener("click",()=>openFollowList("followers"));
+$("openFollowing").addEventListener("click",()=>openFollowList("following"));
+$("closeFollowModal").addEventListener("click",closeModal);
 
-        document.addEventListener("keydown", event => {
-            if (event.key === "Escape" && !followModal.hidden) {
-                closeFollowModal();
-            }
-        });
+modal.addEventListener("click",event=>{
+  if(event.target===modal) closeModal();
+});
 
-        followButton.addEventListener("click", toggleProfileFollow);
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape") closeModal();
+});
 
-        // ---------------- BACK BUTTON ----------------
+/* Start loading the profile. */
+loadProfile();
+loadFollowInfo();
+loadProfileJournal();
 
-        const backButton = document.createElement("button");
-        backButton.type = "button";
-        backButton.className = "vault-back-btn";
-        backButton.textContent = "← Back";
-
-        backButton.addEventListener("click", () => {
-            if (history.length > 1 && document.referrer) {
-                history.back();
-            } else {
-                location.href = "index.html";
-            }
-        });
-
-        document.querySelector("main").prepend(backButton);
-
-        // ---------------- INITIAL LOAD ----------------
-
-        loadProfile();
-        loadFollowInfo();
-        loadProfileJournal();
-    })();
-    </script>
+})();
+</script>
 </body>
 </html>

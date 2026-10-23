@@ -341,6 +341,7 @@ const allowedQueryKeys = new Set([
 ]);
 
 
+
 function isAllowedTmdbPath(path) {
     if (allowedFixedPaths.has(path)) {
         return true;
@@ -352,9 +353,12 @@ function isAllowedTmdbPath(path) {
         /^\/movie\/\d+\/credits$/.test(path) ||
         /^\/tv\/\d+$/.test(path) ||
         /^\/tv\/\d+\/videos$/.test(path) ||
-        /^\/tv\/\d+\/credits$/.test(path)
+        /^\/tv\/\d+\/credits$/.test(path) ||
+        /^\/person\/\d+$/.test(path) ||
+        /^\/person\/\d+\/combined_credits$/.test(path)
     );
 }
+
 
 
 app.get("/api/tmdb", async (req, res) => {
@@ -771,22 +775,22 @@ app.get(
     async (req, res) => {
         try {
             if (!checkUserAccess(req, res)) return;
-
-            const [entries] = await pool.execute(
-                `SELECT
-                    id,
-                    tmdb_movie_id AS movieId,
-                    media_type AS mediaType,
-                    movie_title AS title,
-                    poster_path AS posterPath,
-                    journal_text AS journalText,
-                    created_at AS createdAt,
-                    updated_at AS updatedAt
-                 FROM movie_journal
-                 WHERE user_id = ?
-                 ORDER BY updated_at DESC`,
-                [req.user.id]
-            );
+const [entries] = await pool.execute(
+    `SELECT
+        id,
+        tmdb_movie_id AS movieId,
+        media_type AS mediaType,
+        movie_title AS title,
+        poster_path AS posterPath,
+        journal_text AS journalText,
+        created_at AS createdAt,
+        updated_at AS updatedAt,
+        is_public AS isPublic
+     FROM movie_journal
+     WHERE user_id = ?
+     ORDER BY updated_at DESC`,
+    [req.user.id]
+);
 
             res.json(entries);
         } catch (error) {
@@ -807,7 +811,8 @@ app.post(
         try {
             if (!checkUserAccess(req, res)) return;
 
-            const { movieId, title, posterPath, journalText } = req.body;
+           const { movieId, title, posterPath, journalText } = req.body;
+const isPublic = req.body.isPublic !== false;
 
             const validMovieId = Number(movieId);
             const mediaType =
@@ -837,23 +842,25 @@ app.post(
             }
 
             await pool.execute(
-                `INSERT INTO movie_journal
-                    (user_id, tmdb_movie_id, media_type,
-                     movie_title, poster_path, journal_text)
-                 VALUES (?, ?, ?, ?, ?, ?)
-                 ON DUPLICATE KEY UPDATE
-                    movie_title = VALUES(movie_title),
-                    poster_path = VALUES(poster_path),
-                    journal_text = VALUES(journal_text)`,
-                [
-                    req.user.id,
-                    validMovieId,
-                    mediaType,
-                    title.trim(),
-                    posterPath || null,
-                    journalText.trim()
-                ]
-            );
+    `INSERT INTO movie_journal
+        (user_id, tmdb_movie_id, media_type,
+         movie_title, poster_path, journal_text, is_public)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+        movie_title = VALUES(movie_title),
+        poster_path = VALUES(poster_path),
+        journal_text = VALUES(journal_text),
+        is_public = VALUES(is_public)`,
+    [
+        req.user.id,
+        validMovieId,
+        mediaType,
+        title.trim(),
+        posterPath || null,
+        journalText.trim(),
+        isPublic ? 1 : 0
+    ]
+);
 
             res.json({
                 message: "Journal entry saved successfully",
@@ -1724,19 +1731,21 @@ app.get("/api/users/:id/journal", async (req, res) => {
         }
 
         const [entries] = await pool.execute(
-            `SELECT
-                tmdb_movie_id AS movieId,
-                media_type AS mediaType,
-                movie_title AS title,
-                poster_path AS posterPath,
-                journal_text AS journalText,
-                created_at AS createdAt,
-                updated_at AS updatedAt
-             FROM movie_journal
-             WHERE user_id = ?
-             ORDER BY updated_at DESC`,
-            [users[0].id]
-        );
+    `SELECT
+        id,
+        tmdb_movie_id AS movieId,
+        media_type AS mediaType,
+        movie_title AS title,
+        poster_path AS posterPath,
+        journal_text AS journalText,
+        created_at AS createdAt,
+        updated_at AS updatedAt
+     FROM movie_journal
+     WHERE user_id = ?
+       AND is_public = 1
+     ORDER BY updated_at DESC`,
+    [users[0].id]
+);
 
         res.set("Cache-Control", "no-store");
         return res.status(200).json(entries);
@@ -1747,6 +1756,286 @@ app.get("/api/users/:id/journal", async (req, res) => {
         });
     }
 });
+
+
+/* =========================
+   PUBLIC JOURNAL LIKES & COMMENTS
+   ========================= */
+
+// Get likes, comments, and the logged-in user's like status.
+app.get("/api/journal/:journalId/social", async (req, res) => {
+    try {
+        const journalId = Number(req.params.journalId);
+
+        if (!Number.isSafeInteger(journalId) || journalId <= 0) {
+            return res.status(400).json({ error: "Invalid journal ID" });
+        }
+
+        const [entries] = await pool.execute(
+            `SELECT id FROM movie_journal
+             WHERE id = ? AND is_public = 1`,
+            [journalId]
+        );
+
+        if (!entries.length) {
+            return res.status(404).json({
+                error: "Public journal entry not found"
+            });
+        }
+
+        const [likes] = await pool.execute(
+            `SELECT COUNT(*) AS count
+             FROM journal_likes WHERE journal_id = ?`,
+            [journalId]
+        );
+
+        const [comments] = await pool.execute(
+            `SELECT
+                c.id,
+                c.user_id AS userId,
+                u.username,
+                c.comment_text AS commentText,
+                c.created_at AS createdAt
+             FROM journal_comments c
+             JOIN users u ON u.id = c.user_id
+             WHERE c.journal_id = ?
+             ORDER BY c.created_at ASC`,
+            [journalId]
+        );
+
+        let viewerId = null;
+        const authHeader = req.headers.authorization;
+        const token = authHeader?.startsWith("Bearer ")
+            ? authHeader.slice(7)
+            : null;
+
+        if (token && process.env.JWT_SECRET) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                viewerId = Number(decoded.userId);
+            } catch {
+                // Public counts and comments remain available to logged-out users.
+            }
+        }
+
+        let liked = false;
+
+        if (viewerId) {
+            const [existingLike] = await pool.execute(
+                `SELECT id FROM journal_likes
+                 WHERE journal_id = ? AND user_id = ?`,
+                [journalId, viewerId]
+            );
+
+            liked = existingLike.length > 0;
+        }
+
+        res.set("Cache-Control", "no-store");
+
+        return res.json({
+            likeCount: Number(likes[0].count),
+            commentCount: comments.length,
+            liked,
+            comments
+        });
+    } catch (error) {
+        console.error("Load journal interactions error:", error.message);
+        return res.status(500).json({
+            error: "Unable to load journal interactions"
+        });
+    }
+});
+
+
+// Like or unlike a public journal entry.
+app.post(
+    "/api/journal/:journalId/like",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const journalId = Number(req.params.journalId);
+
+            if (!Number.isSafeInteger(journalId) || journalId <= 0) {
+                return res.status(400).json({ error: "Invalid journal ID" });
+            }
+
+            const [entries] = await pool.execute(
+                `SELECT id FROM movie_journal
+                 WHERE id = ? AND is_public = 1`,
+                [journalId]
+            );
+
+            if (!entries.length) {
+                return res.status(404).json({
+                    error: "Public journal entry not found"
+                });
+            }
+
+            const [existing] = await pool.execute(
+                `SELECT id FROM journal_likes
+                 WHERE journal_id = ? AND user_id = ?`,
+                [journalId, req.user.id]
+            );
+
+            let liked;
+
+            if (existing.length) {
+                await pool.execute(
+                    `DELETE FROM journal_likes
+                     WHERE journal_id = ? AND user_id = ?`,
+                    [journalId, req.user.id]
+                );
+                liked = false;
+            } else {
+                await pool.execute(
+                    `INSERT IGNORE INTO journal_likes (journal_id, user_id)
+                     VALUES (?, ?)`,
+                    [journalId, req.user.id]
+                );
+                liked = true;
+            }
+
+            const [counts] = await pool.execute(
+                `SELECT COUNT(*) AS count
+                 FROM journal_likes WHERE journal_id = ?`,
+                [journalId]
+            );
+
+            return res.json({
+                liked,
+                likeCount: Number(counts[0].count)
+            });
+        } catch (error) {
+            console.error("Toggle journal like error:", error.message);
+            return res.status(500).json({
+                error: "Unable to update like"
+            });
+        }
+    }
+);
+
+
+// Add a comment to a public journal entry.
+app.post(
+    "/api/journal/:journalId/comments",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const journalId = Number(req.params.journalId);
+            const commentText = req.body.commentText;
+
+            if (!Number.isSafeInteger(journalId) || journalId <= 0) {
+                return res.status(400).json({ error: "Invalid journal ID" });
+            }
+
+            if (
+                typeof commentText !== "string" ||
+                !commentText.trim() ||
+                commentText.trim().length > 1000
+            ) {
+                return res.status(400).json({
+                    error: "Comment must contain 1–1000 characters"
+                });
+            }
+
+            const [entries] = await pool.execute(
+                `SELECT id FROM movie_journal
+                 WHERE id = ? AND is_public = 1`,
+                [journalId]
+            );
+
+            if (!entries.length) {
+                return res.status(404).json({
+                    error: "Public journal entry not found"
+                });
+            }
+
+            const [result] = await pool.execute(
+                `INSERT INTO journal_comments
+                    (journal_id, user_id, comment_text)
+                 VALUES (?, ?, ?)`,
+                [journalId, req.user.id, commentText.trim()]
+            );
+
+            const [comments] = await pool.execute(
+                `SELECT
+                    c.id,
+                    c.user_id AS userId,
+                    u.username,
+                    c.comment_text AS commentText,
+                    c.created_at AS createdAt
+                 FROM journal_comments c
+                 JOIN users u ON u.id = c.user_id
+                 WHERE c.id = ?`,
+                [result.insertId]
+            );
+
+            return res.status(201).json({
+                message: "Comment added",
+                comment: comments[0]
+            });
+        } catch (error) {
+            console.error("Add journal comment error:", error.message);
+            return res.status(500).json({
+                error: "Unable to add comment"
+            });
+        }
+    }
+);
+
+
+// Delete a comment if you're its author or own the journal entry.
+app.delete(
+    "/api/journal/comments/:commentId",
+    authenticateToken,
+    async (req, res) => {
+        try {
+            const commentId = Number(req.params.commentId);
+
+            if (!Number.isSafeInteger(commentId) || commentId <= 0) {
+                return res.status(400).json({ error: "Invalid comment ID" });
+            }
+
+            const [rows] = await pool.execute(
+                `SELECT
+                    c.id,
+                    c.user_id AS commentOwnerId,
+                    j.user_id AS journalOwnerId
+                 FROM journal_comments c
+                 JOIN movie_journal j ON j.id = c.journal_id
+                 WHERE c.id = ?`,
+                [commentId]
+            );
+
+            if (!rows.length) {
+                return res.status(404).json({ error: "Comment not found" });
+            }
+
+            const comment = rows[0];
+
+            if (
+                Number(comment.commentOwnerId) !== req.user.id &&
+                Number(comment.journalOwnerId) !== req.user.id
+            ) {
+                return res.status(403).json({
+                    error: "You cannot delete this comment"
+                });
+            }
+
+            await pool.execute(
+                `DELETE FROM journal_comments WHERE id = ?`,
+                [commentId]
+            );
+
+            return res.json({ message: "Comment deleted" });
+        } catch (error) {
+            console.error("Delete journal comment error:", error.message);
+            return res.status(500).json({
+                error: "Unable to delete comment"
+            });
+        }
+    }
+);
 
 
 // =========================
@@ -1815,9 +2104,10 @@ app.patch(
 );
 
 
-// =========================
-// START SERVER
-// =========================
+
+ // =========================
+ // START SERVER
+ // =========================
 
 async function startServer() {
     try {
@@ -1844,6 +2134,7 @@ async function startServer() {
                 movie_title VARCHAR(255) NOT NULL,
                 poster_path VARCHAR(255),
                 journal_text TEXT NOT NULL,
+                is_public TINYINT(1) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     ON UPDATE CURRENT_TIMESTAMP,
@@ -1858,7 +2149,7 @@ async function startServer() {
         );
 
         if (journalMediaColumn.length === 0) {
-            await pool.execute(`
+            await pool.query(`
                 ALTER TABLE movie_journal
                 ADD COLUMN media_type VARCHAR(10)
                 NOT NULL DEFAULT 'movie'
@@ -1866,13 +2157,54 @@ async function startServer() {
             `);
         }
 
+        // Add public/private visibility if needed.
+        const [journalVisibilityColumn] = await pool.execute(
+            "SHOW COLUMNS FROM movie_journal LIKE 'is_public'"
+        );
+
+        if (journalVisibilityColumn.length === 0) {
+            await pool.query(`
+                ALTER TABLE movie_journal
+                ADD COLUMN is_public TINYINT(1) NOT NULL DEFAULT 1
+            `);
+        } else {
+            await pool.query(`
+                ALTER TABLE movie_journal
+                MODIFY COLUMN is_public TINYINT(1) NOT NULL DEFAULT 1
+            `);
+        }
+
+        // Create likes table.
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS journal_likes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                journal_id INT NOT NULL,
+                user_id INT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_journal_like (journal_id, user_id),
+                INDEX idx_journal_likes_entry (journal_id)
+            )
+        `);
+
+        // Create comments table.
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS journal_comments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                journal_id INT NOT NULL,
+                user_id INT NOT NULL,
+                comment_text VARCHAR(1000) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_journal_comments_entry (journal_id)
+            )
+        `);
+
         // Add avatar_id to existing user tables if needed.
         const [avatarColumn] = await pool.execute(
             "SHOW COLUMNS FROM users LIKE 'avatar_id'"
         );
 
         if (avatarColumn.length === 0) {
-            await pool.execute(`
+            await pool.query(`
                 ALTER TABLE users
                 ADD COLUMN avatar_id VARCHAR(20)
                 NOT NULL DEFAULT 'cat'
@@ -1891,4 +2223,3 @@ async function startServer() {
 }
 
 startServer();
-

@@ -1,6 +1,9 @@
 
 const API_BASE =
-    "https://abrahams-vault-backend.onrender.com/api";
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+        ? "http://localhost:3000/api"
+        : "https://abrahams-vault-backend.onrender.com/api";
 
 const token = sessionStorage.getItem("vaultToken");
 const userId = sessionStorage.getItem("vaultUserId");
@@ -17,13 +20,8 @@ function showMessage(message, isError = false) {
 function createElement(tag, className, text) {
     const element = document.createElement(tag);
 
-    if (className) {
-        element.className = className;
-    }
-
-    if (text !== undefined) {
-        element.textContent = text;
-    }
+    if (className) element.className = className;
+    if (text !== undefined) element.textContent = text;
 
     return element;
 }
@@ -52,9 +50,7 @@ function formatDate(dateString) {
 
     const date = new Date(dateString);
 
-    if (Number.isNaN(date.getTime())) {
-        return "Date unavailable";
-    }
+    if (Number.isNaN(date.getTime())) return "Date unavailable";
 
     return date.toLocaleDateString("en-IN", {
         day: "numeric",
@@ -63,17 +59,66 @@ function formatDate(dateString) {
     });
 }
 
+function createEmojiPicker(textarea) {
+    const toolbar = createElement("div", "journal-emoji-toolbar");
+
+    const toggle = createElement("button", "journal-emoji-toggle", "😀");
+    toggle.type = "button";
+    toggle.title = "Insert emoji";
+    toggle.setAttribute("aria-label", "Insert emoji");
+    toggle.setAttribute("aria-expanded", "false");
+
+    const picker = createElement("div", "journal-emoji-picker");
+    picker.hidden = true;
+    picker.setAttribute("aria-label", "Choose an emoji");
+
+    const emojis = [
+        "😀", "😂", "🥹", "😍", "🥰",
+        "😎", "😭", "😮", "🤔", "😡",
+        "❤️", "💔", "💯", "👏", "🔥",
+        "🎬", "🍿", "⭐", "✨", "🙌"
+    ];
+
+    emojis.forEach(emoji => {
+        const option = createElement("button", "", emoji);
+        option.type = "button";
+        option.title = emoji;
+        option.setAttribute("aria-label", `Insert ${emoji}`);
+
+        option.addEventListener("click", () => {
+            const start = textarea.selectionStart ?? textarea.value.length;
+            const end = textarea.selectionEnd ?? start;
+
+            textarea.setRangeText(emoji, start, end, "end");
+            textarea.focus();
+
+            toggle.setAttribute("aria-expanded", "false");
+            picker.hidden = true;
+        });
+
+        picker.appendChild(option);
+    });
+
+    toggle.addEventListener("click", () => {
+        picker.hidden = !picker.hidden;
+        toggle.setAttribute("aria-expanded", String(!picker.hidden));
+    });
+
+    toolbar.append(toggle, picker);
+    return toolbar;
+}
+
 function renderEntry(entry) {
     const card = createElement("article", "journal-card");
 
     const poster = createElement("img", "journal-poster");
-    poster.alt = `${entry.title} poster`;
+    poster.alt = entry.title
+        ? `${entry.title} poster`
+        : "Poster unavailable";
     poster.loading = "lazy";
 
     if (entry.posterPath) {
         poster.src = `https://image.tmdb.org/t/p/w500${entry.posterPath}`;
-    } else {
-        poster.alt = "Poster unavailable";
     }
 
     poster.addEventListener("error", () => {
@@ -82,7 +127,8 @@ function renderEntry(entry) {
     }, { once: true });
 
     const content = createElement("div", "journal-card-content");
-    const title = createElement("h2", "", entry.title);
+    const title = createElement("h2", "", entry.title || "Untitled");
+
     const date = createElement(
         "p",
         "journal-date",
@@ -92,7 +138,7 @@ function renderEntry(entry) {
     const journalText = createElement(
         "p",
         "journal-text",
-        entry.journalText
+        entry.journalText || ""
     );
 
     const actions = createElement("div", "journal-actions");
@@ -112,11 +158,9 @@ function renderEntry(entry) {
     });
 
     deleteButton.addEventListener("click", async () => {
-        const confirmed = window.confirm(
+        if (!window.confirm(
             `Delete your journal entry for "${entry.title}"?`
-        );
-
-        if (!confirmed) return;
+        )) return;
 
         deleteButton.disabled = true;
 
@@ -144,16 +188,56 @@ function renderEntry(entry) {
 function showEditor(entry, content) {
     content.replaceChildren();
 
-    const title = createElement("h2", "", entry.title);
-    const label = createElement("label", "", "Your thoughts and memories");
+    const title = createElement("h2", "", entry.title || "Untitled");
+
+    const visibilityLabel = createElement(
+        "label",
+        "",
+        "Who can see this entry?"
+    );
+
+    const visibilitySelect = createElement("select", "journal-visibility");
+
+    const privateOption = createElement("option", "", "Private — only me");
+    privateOption.value = "false";
+
+    const publicOption = createElement("option", "", "Public — others can see");
+    publicOption.value = "true";
+
+    visibilitySelect.append(privateOption, publicOption);
+
+    const isPublic =
+        entry.isPublic === true ||
+        entry.isPublic === 1 ||
+        entry.isPublic === "1" ||
+        entry.isPublic === "true";
+
+    visibilitySelect.value = String(isPublic);
+    visibilitySelect.id = `journal-visibility-${entry.movieId}`;
+    visibilityLabel.htmlFor = visibilitySelect.id;
+
+    const label = createElement(
+        "label",
+        "",
+        "Your thoughts and memories"
+    );
 
     const textarea = createElement("textarea", "journal-editor");
-    textarea.value = entry.journalText;
+    textarea.value = entry.journalText || "";
     textarea.maxLength = 10000;
     textarea.required = true;
     textarea.setAttribute("aria-label", "Your journal entry");
+    textarea.id = `journal-editor-${entry.movieId}`;
+    label.htmlFor = textarea.id;
 
-    const saveButton = createElement("button", "journal-save", "Save Changes");
+    const emojiToolbar = createEmojiPicker(textarea);
+
+    const saveButton = createElement(
+        "button",
+        "journal-save",
+        "Save Changes"
+    );
+
     const cancelButton = createElement("button", "", "Cancel");
 
     saveButton.type = "button";
@@ -162,18 +246,17 @@ function showEditor(entry, content) {
     cancelButton.style.padding = "10px";
     cancelButton.style.cursor = "pointer";
 
-    label.htmlFor = `journal-editor-${entry.movieId}`;
-    textarea.id = label.htmlFor;
-
     saveButton.addEventListener("click", async () => {
         const journalText = textarea.value.trim();
 
         if (!journalText) {
             showMessage("Please write something before saving.", true);
+            textarea.focus();
             return;
         }
 
         saveButton.disabled = true;
+        cancelButton.disabled = true;
         showMessage("Saving your changes...");
 
         try {
@@ -183,7 +266,8 @@ function showEditor(entry, content) {
                     movieId: entry.movieId,
                     title: entry.title,
                     posterPath: entry.posterPath,
-                    journalText
+                    journalText,
+                    isPublic: visibilitySelect.value === "true"
                 })
             });
 
@@ -192,6 +276,7 @@ function showEditor(entry, content) {
         } catch (error) {
             showMessage(error.message, true);
             saveButton.disabled = false;
+            cancelButton.disabled = false;
         }
     });
 
@@ -201,8 +286,11 @@ function showEditor(entry, content) {
 
     content.append(
         title,
+        visibilityLabel,
+        visibilitySelect,
         label,
         textarea,
+        emojiToolbar,
         document.createElement("br"),
         saveButton,
         cancelButton
@@ -217,9 +305,17 @@ async function loadJournal() {
 
     if (!token || !userId) {
         entriesContainer.append(
-            createElement("p", "journal-loading", "Please log in to view My Journal.")
+            createElement(
+                "p",
+                "journal-loading",
+                "Please log in to view My Journal."
+            )
         );
-        showMessage("Your session may have expired. Please log in again.", true);
+
+        showMessage(
+            "Your session may have expired. Please log in again.",
+            true
+        );
         return;
     }
 

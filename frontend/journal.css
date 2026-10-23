@@ -243,3 +243,59 @@
         font-size: 1.05rem;
     }
 }
+.journal-visibility {
+    display: block;
+    width: 100%;
+    max-width: 280px;
+    margin: 8px 0 16px;
+    padding: 10px;
+    border: 1px solid #555;
+    border-radius: 7px;
+    background: #202020;
+    color: #fff;
+    font: inherit;
+}
+.journal-emoji-toolbar {
+    position: relative;
+    margin: 7px 0 12px;
+}
+
+.journal-emoji-toggle {
+    padding: 5px 8px;
+    border: 1px solid #454545;
+    border-radius: 6px;
+    background: #252525;
+    color: #fff;
+    cursor: pointer;
+    font-size: 17px;
+}
+
+.journal-emoji-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    max-width: 310px;
+    margin-top: 7px;
+    padding: 7px;
+    border: 1px solid #383838;
+    border-radius: 8px;
+    background: #191919;
+}
+
+.journal-emoji-picker[hidden] {
+    display: none !important;
+}
+
+.journal-emoji-picker button {
+    padding: 5px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    font-size: 19px;
+}
+
+.journal-emoji-picker button:hover {
+    background: #333;
+}

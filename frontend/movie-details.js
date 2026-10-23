@@ -151,6 +151,162 @@ function formatRuntime(minutes) {
     return `${hours}h ${remainingMinutes}m`;
 }
 
+
+async function openPersonDetails(personId) {
+    if (!Number.isSafeInteger(personId) || personId <= 0) return;
+
+    let modal = document.getElementById("person-details-modal");
+
+    if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "person-details-modal";
+        modal.className = "person-modal";
+        modal.innerHTML = `
+            <div class="person-modal-panel" role="dialog"
+                aria-modal="true" aria-labelledby="person-modal-name">
+                <button type="button" class="person-modal-close"
+                    aria-label="Close person details">✕</button>
+                <div class="person-modal-content">
+                    <p>Loading person details...</p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+       modal.querySelector(".person-modal-close").addEventListener("click", () => {
+    modal.hidden = true;
+});
+
+modal.addEventListener("click", event => {
+    if (event.target === modal) {
+        modal.hidden = true;
+    }
+});
+
+        modal.querySelector(".person-modal-panel")
+            .addEventListener("click", event => event.stopPropagation());
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && modal && !modal.hidden) {
+                modal.hidden = true;
+            }
+        });
+    }
+
+    modal.hidden = false;
+    const content = modal.querySelector(".person-modal-content");
+    content.innerHTML = "<p>Loading biography and filmography...</p>";
+
+    try {
+        const [person, credits] = await Promise.all([
+            tmdbRequest(`/person/${personId}?language=en-US`),
+            tmdbRequest(`/person/${personId}/combined_credits?language=en-US`)
+        ]);
+
+        const photo = person.profile_path
+            ? `${IMAGE_BASE_URL}w500${person.profile_path}`
+            : "";
+
+        const filmography = [
+            ...(credits.cast || []),
+            ...(credits.crew || [])
+        ]
+            .filter(item => item.id && (item.title || item.name))
+            .filter((item, index, array) =>
+                array.findIndex(other =>
+                    other.id === item.id &&
+                    other.media_type === item.media_type
+                ) === index
+            )
+            .sort((a, b) =>
+                (b.popularity || 0) - (a.popularity || 0)
+            )
+            .slice(0, 18);
+
+        content.innerHTML = `
+            <div class="person-profile">
+                <div class="person-profile-photo">
+                    ${photo
+                        ? `<img src="${photo}"
+                            alt="${escapeHTML(person.name)}">`
+                        : `<div class="cast-photo-placeholder">?</div>`
+                    }
+                </div>
+
+                <div class="person-profile-info">
+                    <h2 id="person-modal-name">
+                        ${escapeHTML(person.name || "Unknown")}
+                    </h2>
+                    <p class="person-department">
+                        ${escapeHTML(person.known_for_department || "Film professional")}
+                        ${person.birthday
+                            ? ` · Born ${escapeHTML(person.birthday)}`
+                            : ""}
+                    </p>
+                    <h3>Biography</h3>
+                    <p class="person-biography">
+                        ${escapeHTML(
+                            person.biography || "No biography is available."
+                        )}
+                    </p>
+                </div>
+            </div>
+
+            <section class="person-filmography">
+                <h3>Known Filmography</h3>
+                <div class="person-film-grid">
+                    ${filmography.length
+                        ? filmography.map(item => {
+                            const title = item.title || item.name;
+                            const year = (
+                                item.release_date || item.first_air_date || ""
+                            ).slice(0, 4);
+                            const poster = item.poster_path
+                                ? `${IMAGE_BASE_URL}w185${item.poster_path}`
+                                : "";
+
+                            return `
+                                <button type="button"
+                                    class="person-film-card"
+                                    data-film-id="${Number(item.id)}"
+                                    data-film-type="${item.media_type === "tv" ? "tv" : "movie"}">
+                                    ${poster
+                                        ? `<img src="${poster}"
+                                            alt="${escapeHTML(title)}"
+                                            loading="lazy">`
+                                        : `<div class="person-film-no-poster">No poster</div>`
+                                    }
+                                    <span>${escapeHTML(title)}</span>
+                                    <small>${escapeHTML(year || "Year unknown")}</small>
+                                </button>
+                            `;
+                        }).join("")
+                        : "<p>No filmography is available.</p>"
+                    }
+                </div>
+            </section>
+        `;
+
+        content.querySelectorAll(".person-film-card").forEach(button => {
+            button.addEventListener("click", () => {
+                const id = Number(button.dataset.filmId);
+                const type = button.dataset.filmType === "tv" ? "tv" : "movie";
+
+                if (Number.isSafeInteger(id) && id > 0) {
+                    window.location.href =
+                        `movie-details.html?id=${id}&type=${type}`;
+                }
+            });
+        });
+    } catch (error) {
+        console.error("Person details error:", error);
+        content.innerHTML = `
+            <p>Could not load this person's details.
+                Please try again.</p>
+        `;
+    }
+}
+
 // =====================================
 // LOAD MOVIE OR TV DETAILS
 // =====================================
@@ -227,7 +383,11 @@ async function loadMovieDetails() {
                     : "";
 
                 return `
-                    <article class="cast-card">
+    <article class="cast-card"
+        data-person-id="${Number(person.id)}"
+        tabindex="0"
+        role="button"
+        aria-label="View ${escapeHTML(person.name || "person")} details">
                         <div class="cast-photo">
                             ${
                                 profile
@@ -447,6 +607,26 @@ async function loadMovieDetails() {
 
         document.getElementById("journal-button")
             .addEventListener("click", openMovieJournal);
+            const castGrid = document.querySelector(".cast-grid");
+
+if (castGrid) {
+    castGrid.addEventListener("click", event => {
+        const card = event.target.closest("[data-person-id]");
+        if (card) {
+            openPersonDetails(Number(card.dataset.personId));
+        }
+    });
+
+    castGrid.addEventListener("keydown", event => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+
+        const card = event.target.closest("[data-person-id]");
+        if (!card) return;
+
+        event.preventDefault();
+        openPersonDetails(Number(card.dataset.personId));
+    });
+}
         const trailerButton = document.getElementById("watch-trailer-button");
 const trailerSection = document.getElementById("trailer-player-section");
 const trailerIframe = document.getElementById("trailer-iframe");
@@ -1022,7 +1202,9 @@ async function saveMovieJournalEntry(event) {
                 mediaType,
                 title: currentMovie.title,
                 posterPath: currentMovie.poster_path || null,
-                journalText
+                journalText,
+                isPublic: true
+
             })
         });
 
@@ -1032,7 +1214,8 @@ async function saveMovieJournalEntry(event) {
             mediaType,
             title: currentMovie.title,
             posterPath: currentMovie.poster_path || null,
-            journalText
+            journalText,
+            isPublic: true
         };
 
         journalLoaded = true;

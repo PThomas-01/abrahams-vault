@@ -76,14 +76,19 @@
         }
 
         .top100-title {
-            display: block;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            overflow: hidden;
+            min-height: 2.9em;
             color: #f4f1eb;
             text-decoration: none;
             font-size: 15px;
             font-weight: 700;
             line-height: 1.45;
             margin-bottom: 8px;
-        }
+}
 
         .top100-title:hover {
             color: #ffb547;
