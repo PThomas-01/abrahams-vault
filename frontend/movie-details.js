@@ -650,7 +650,9 @@ if (trailerButton && trailerSection && trailerIframe) {
 function stopTrailer() {
     if (!trailerIframe || !trailerSection) return;
 
-    trailerIframe.src = "about:blank";
+    // Stop playback immediately by removing the embedded video.
+    trailerIframe.src = "";
+    trailerIframe.removeAttribute("src");
     trailerSection.hidden = true;
 }
 
