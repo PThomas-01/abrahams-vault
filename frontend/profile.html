@@ -537,63 +537,83 @@ $("saveAvatarButton").addEventListener("click",async()=>{
 });
 
 /* Load profile and Top 5 movies. */
+
 async function loadProfile() {
-  if(!profileUserId || !/^\d+$/.test(profileUserId) || Number(profileUserId)<=0) {
-    usernameEl.textContent="Profile";
-    message(moviesEl,"No valid user ID. Log in to view your profile, or open another user's profile by ID.",true);
+  if (!profileUserId || !/^\d+$/.test(profileUserId) || Number(profileUserId) <= 0) {
+    usernameEl.textContent = "Profile";
+    message(moviesEl, "No valid user ID. Log in to view your profile, or open another user's profile by ID.", true);
     return;
   }
 
+  // Load the user profile independently of Top 5.
   try {
-    const [userResponse,moviesResponse]=await Promise.all([
-      fetch(`${API_BASE}/users/${encodeURIComponent(profileUserId)}`),
-      fetch(`${API_BASE}/top-movies/${encodeURIComponent(profileUserId)}`)
-    ]);
+    const userResponse = await fetch(
+      `${API_BASE}/users/${encodeURIComponent(profileUserId)}`
+    );
+    const userData = await readJson(userResponse);
 
-    const userData=await readJson(userResponse);
-    const moviesData=await readJson(moviesResponse);
+    if (!userResponse.ok) {
+      throw Error(userData.error || "Could not load profile.");
+    }
 
-    let username=userData.username ||
+    let username = userData.username ||
       userData.user?.username ||
       userData.user?.[0]?.username ||
       userData[0]?.username ||
       `User ${profileUserId}`;
 
-    if(isOwner && sessionStorage.getItem("vaultUsername") &&
-       username===`User ${profileUserId}`) {
-      username=sessionStorage.getItem("vaultUsername");
+    if (
+      isOwner &&
+      sessionStorage.getItem("vaultUsername") &&
+      username === `User ${profileUserId}`
+    ) {
+      username = sessionStorage.getItem("vaultUsername");
     }
 
-    usernameEl.textContent=username;
-    $("vaultIdUsername").textContent=username;
-    $("accountJoinDate").textContent=formatDate(
-      userData.createdAt || userData.created_at ||
-      userData.joinedAt || userData.joined_at
-    );
+    usernameEl.textContent = username;
+    $("vaultIdUsername").textContent = username;
 
-    savedAvatar=avatarIds.includes(userData.avatarId) ? userData.avatarId : "cat";
-    selectedAvatar=savedAvatar;
+    savedAvatar = avatarIds.includes(userData.avatarId)
+      ? userData.avatarId
+      : "cat";
+    selectedAvatar = savedAvatar;
     displayAvatar(savedAvatar);
 
-    $("avatarPickerSection").hidden=!(isOwner&&authToken);
-    $("settingsButton").hidden=!isOwner;
-    $("sidebarSettingsLink").hidden=!isOwner;
-    $("openMyJournal").hidden=!(isOwner&&authToken);
+    $("avatarPickerSection").hidden = !(isOwner && authToken);
+    $("settingsButton").hidden = !isOwner;
+    $("sidebarSettingsLink").hidden = !isOwner;
+    $("openMyJournal").hidden = !(isOwner && authToken);
+  } catch (error) {
+    console.error("Profile loading failed:", error);
+    message(moviesEl, "Unable to load profile. Please refresh and try again.", true);
+    return;
+  }
 
-    if(!moviesResponse.ok) {
-      throw Error(moviesData.error||"Could not load Top 5 movies.");
+  // Load Top 5 separately so its failure cannot block profile initialization.
+  try {
+    const moviesResponse = await fetch(
+      `${API_BASE}/top-movies/${encodeURIComponent(profileUserId)}`
+    );
+    const moviesData = await readJson(moviesResponse);
+
+    if (!moviesResponse.ok) {
+      throw Error(moviesData.error || "Could not load Top 5 movies.");
     }
 
-    savedMovies=Array.isArray(moviesData) ? moviesData :
-      Array.isArray(moviesData.movies) ? moviesData.movies : [];
+    savedMovies = Array.isArray(moviesData)
+      ? moviesData
+      : Array.isArray(moviesData.movies)
+        ? moviesData.movies
+        : [];
 
     renderTopMovies();
-    editBtn.hidden=!(isOwner&&authToken);
-  } catch(error) {
-    console.error(error);
-    message(moviesEl,"Unable to load Top 5 movies. Please refresh and try again.",true);
+    editBtn.hidden = !(isOwner && authToken);
+  } catch (error) {
+    console.error("Top 5 loading failed:", error);
+    message(moviesEl, "Unable to load Top 5 movies. Please refresh and try again.", true);
   }
 }
+
 
 function renderTopMovies() {
   moviesEl.replaceChildren();
