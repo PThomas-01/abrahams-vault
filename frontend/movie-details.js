@@ -630,35 +630,42 @@ if (castGrid) {
        
 const trailerButton = document.getElementById("watch-trailer-button");
 const trailerSection = document.getElementById("trailer-player-section");
-const trailerIframe = document.getElementById("trailer-iframe");
+let trailerIframe = document.getElementById("trailer-iframe");
 const closeTrailerButton = document.getElementById("close-trailer-button");
 
 if (trailerButton && trailerSection && trailerIframe) {
     trailerButton.addEventListener("click", () => {
+        if (!trailerIframe.isConnected) {
+            const freshIframe = document.createElement("iframe");
+            freshIframe.id = "trailer-iframe";
+            freshIframe.title = `${movie.title || "Movie"} trailer`;
+            freshIframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+            freshIframe.loading = "lazy";
+            freshIframe.referrerPolicy = "strict-origin-when-cross-origin";
+            trailerIframe = freshIframe;
+            trailerSection.querySelector(".trailer-video-wrapper").appendChild(trailerIframe);
+        }
+
         trailerIframe.src =
             `https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&rel=0`;
 
         trailerSection.hidden = false;
-
-        trailerSection.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
+        trailerSection.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 }
 
 function stopTrailer() {
     if (!trailerIframe || !trailerSection) return;
 
-    // Stop playback immediately by removing the embedded video.
-    trailerIframe.src = "";
-    trailerIframe.removeAttribute("src");
+    trailerIframe.remove();
     trailerSection.hidden = true;
 }
 
 if (closeTrailerButton) {
     closeTrailerButton.addEventListener("click", stopTrailer);
 }
+
+
    
 
         await Promise.allSettled([
