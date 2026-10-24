@@ -6,9 +6,10 @@ const API_BASE_URL = window.location.hostname === "localhost" ||
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";
 
 const params = new URLSearchParams(window.location.search);
+
 const rawUrlId = params.get("id");
 const urlMovieId = Number(rawUrlId);
-
+const shouldPlayTrailer = params.get("playTrailer") === "1";
 const requestedMediaType = params.get("type");
 const mediaType = requestedMediaType === "tv" ? "tv" : "movie";
 
@@ -653,7 +654,9 @@ if (trailerButton && trailerSection && trailerIframe) {
         trailerSection.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 }
-
+if (shouldPlayTrailer && trailerButton) {
+    trailerButton.click();
+}
 function stopTrailer() {
     if (!trailerIframe || !trailerSection) return;
 

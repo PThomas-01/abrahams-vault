@@ -248,11 +248,9 @@ function renderWatchlist(movies) {
         const trailerLink = document.createElement("a");
         trailerLink.className = "watchlist-action-btn";
 
-        if (movie.trailerKey) {
+               if (movie.trailerKey) {
             trailerLink.href =
-                `https://www.youtube.com/watch?v=${encodeURIComponent(movie.trailerKey)}`;
-            trailerLink.target = "_blank";
-            trailerLink.rel = "noopener noreferrer";
+                `movie-details.html?id=${encodeURIComponent(movieId)}&type=movie&playTrailer=1`;
             trailerLink.textContent = "▶ Watch Trailer";
         } else {
             trailerLink.href = "#";
