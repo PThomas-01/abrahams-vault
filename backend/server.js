@@ -1641,10 +1641,15 @@ app.get("/api/users/:id", async (req, res) => {
 // SAVE PROFILE AVATAR
 // =========================
 
+
 const ALLOWED_AVATARS = [
     "cat", "dog", "fox", "bear", "panda", "rabbit",
-    "tiger", "lion", "wolf", "frog", "koala", "raccoon"
+    "tiger", "lion", "wolf", "frog", "koala", "raccoon",
+    ...Array.from({ length: 20 }, (_, i) =>
+        `anime-${String(i + 1).padStart(2, "0")}`
+    )
 ];
+
 
 app.patch(
     "/api/users/:id/avatar",

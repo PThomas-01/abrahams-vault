@@ -627,19 +627,18 @@ if (castGrid) {
         openPersonDetails(Number(card.dataset.personId));
     });
 }
-        const trailerButton = document.getElementById("watch-trailer-button");
+       
+const trailerButton = document.getElementById("watch-trailer-button");
 const trailerSection = document.getElementById("trailer-player-section");
 const trailerIframe = document.getElementById("trailer-iframe");
 const closeTrailerButton = document.getElementById("close-trailer-button");
 
 if (trailerButton && trailerSection && trailerIframe) {
     trailerButton.addEventListener("click", () => {
-        trailerSection.hidden = false;
+        trailerIframe.src =
+            `https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&rel=0`;
 
-        if (!trailerIframe.src || trailerIframe.src === window.location.href) {
-            trailerIframe.src =
-                `https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&rel=0`;
-        }
+        trailerSection.hidden = false;
 
         trailerSection.scrollIntoView({
             behavior: "smooth",
@@ -648,12 +647,17 @@ if (trailerButton && trailerSection && trailerIframe) {
     });
 }
 
-if (closeTrailerButton && trailerSection && trailerIframe) {
-    closeTrailerButton.addEventListener("click", () => {
-        trailerIframe.src = "";
-        trailerSection.hidden = true;
-    });
-}   
+function stopTrailer() {
+    if (!trailerIframe || !trailerSection) return;
+
+    trailerIframe.src = "about:blank";
+    trailerSection.hidden = true;
+}
+
+if (closeTrailerButton) {
+    closeTrailerButton.addEventListener("click", stopTrailer);
+}
+   
 
         await Promise.allSettled([
             loadCommunityRating(),
