@@ -117,5 +117,5 @@ The frontend and backend are hosted on Render, with MySQL database hosting provi
 
 ---
 
-**Developed by P Thomas Abraham**
+
 
